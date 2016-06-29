@@ -1,4 +1,6 @@
-using PyPlot, NRIRHOPM
+addprocs(2)
+using PyPlot
+using NRIRHOPM
 
 img = Float64[ 1  2  3  4  5;
               10  9  8  7  6;
@@ -37,4 +39,3 @@ dx = [ deformgrid[i,j][1] for i in 1:5, j in 1:5]
 dy = [ deformgrid[i,j][2] for i in 1:5, j in 1:5]
 
 plot_wireframe(x+dx,y+dy,ones(5,5))
-

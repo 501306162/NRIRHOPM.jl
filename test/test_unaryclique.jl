@@ -4,7 +4,7 @@ using Base.Test
 # data term
 function unaryclique{T,N}(fixedImg::Array{T,N},
                           movingImg::Array{T,N},
-                          deformers::Vector{Tuple{Int64,Int64}};
+                          deformers::Vector{Tuple{Int,Int}};
                           δ::Float64=1e2
                          )
     # get image dimensions and checkout whether fixedImg and movingImg are of the same size

@@ -6,7 +6,7 @@ include("cliques.jl")
 include("constraints.jl")
 
 
-export hopm
+export hopm, SharedSparseTensor, share, SparseArray
 export unaryclique, pairwiseclique, treyclique
 export integerlize, integerhopm
 

@@ -2,7 +2,7 @@ using TensorDecompositions
 using Base.Test
 
 # topology preserving term
-function treyclique(imageDims::Tuple{Int64, Int64}, deformers::Vector{Tuple{Int64, Int64}})
+function treyclique(imageDims::Tuple{Int, Int}, deformers::Vector{Tuple{Int, Int}})
     deformLen = length(deformers)
     imageLen = prod(imageDims)
     # set up tensor dimensions
@@ -12,7 +12,7 @@ function treyclique(imageDims::Tuple{Int64, Int64}, deformers::Vector{Tuple{Int6
     deep = 0
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
-    pos = Int64[]
+    pos = Int[]
     vals = Float64[]
     for ii in pixelRange
 		i = sub2ind(imageDims, ii.I...)
@@ -46,7 +46,7 @@ function treyclique(imageDims::Tuple{Int64, Int64}, deformers::Vector{Tuple{Int6
     SparseArray(vals, reshape(pos, 3, length(vals)), tensorDimsSymmetric)
 end
 
-function topology(s1::Tuple{Int64,Int64}, s2::Tuple{Int64,Int64}, s3::Tuple{Int64,Int64}, a::Tuple{Int64,Int64}, b::Tuple{Int64,Int64}, c::Tuple{Int64,Int64})
+function topology(s1::Tuple{Int,Int}, s2::Tuple{Int,Int}, s3::Tuple{Int,Int}, a::Tuple{Int,Int}, b::Tuple{Int,Int}, c::Tuple{Int,Int})
     ks1 = (s1[1]+a[1], s1[2]+a[2])
     ks2 = (s2[1]+b[1], s2[2]+b[2])
     ks3 = (s3[1]+c[1], s3[2]+c[2])
