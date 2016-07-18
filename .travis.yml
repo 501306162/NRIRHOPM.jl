@@ -11,6 +11,8 @@ notifications:
 # uncomment the following lines to override the default test script
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'Pkg.clone(pwd()); Pkg.build("NRIRHOPM"); Pkg.test("NRIRHOPM"; coverage=true)'
+ - julia -e 'Pkg.clone("https://github.com/Gnimuc/NRIRHOPM.jl");'
+# - julia -e 'Pkg.build("NRIRHOPM");'
+ - julia -e 'Pkg.test("NRIRHOPM"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("NRIRHOPM")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

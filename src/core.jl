@@ -1,5 +1,5 @@
 # The following code is mainly inspired by https://github.com/yunjhongwu/TensorDecompositions.jl
-
+# Need refinement and test
 immutable SparseArray{T, N} <: AbstractArray{T, N}
     vals::Vector{T}
     pos::Matrix{Int}
@@ -31,14 +31,14 @@ end
 """
 High Order (Mixed) Power Method
 """
-function hopm{T}(tensor¹::AbstractArray{T,1},
-                 tensor²::AbstractArray{T,2},
+function hopm{T}(tensor₁::AbstractArray{T,1},
+                 tensor₂::AbstractArray{T,2},
                  λ::Float64;
                  tol::Float64=1e-5,
-                 maxiter::Int=1000
+                 maxiter::Int=100
                 )
-    r = size(tensor¹, 1)
-    r != size(tensor², 1) && error("Tensor Dimension Mismatch.")
+    r = size(tensor₁, 1)
+    r != size(tensor₂, 1) && error("Tensor Dimension Mismatch!")
     x = randn(r)
     x .*= 1/vecnorm(x)
     x_old = similar(x)
@@ -46,14 +46,14 @@ function hopm{T}(tensor¹::AbstractArray{T,1},
     niters = 0
     while !converged && niters < maxiter
         x_old = deepcopy(x)
-        x = tensor¹ + λ * A_mul_B(tensor², share(x))
+        x = tensor₁ + λ * A_mul_B(tensor₂, share(x))
         x *= 1/vecnorm(x)
         converged = vecnorm(x - x_old) < tol
         niters += 1
 		@show niters
     end
     @show niters
-    return dot(x, tensor¹ + λ * A_mul_B(tensor², share(x))), x
+    return dot(x, tensor₁ + λ * A_mul_B(tensor₂, share(x))), x
 end
 
 """

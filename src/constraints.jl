@@ -12,26 +12,28 @@ end
 
 function integerhopm{T,N}(fixedImg::Array{T,N},
                           movingImg::Array{T,N},
-                          deformers::Vector{Tuple{Int,Int}};
-                          lambda::Float64=0.05,
-                          theta::Float64=0.0,
-                          delta::Float64=1e2
+                          deformableWindow::Matrix{Vector{Int}};
+                          λ::Real=0.05,
+                          δ::Real=1e2,
+                          γ::Real=1,
+                          τ::Real=Inf
                          )
     imageLen = length(fixedImg)
-    deformLen = length(deformers)
-    @time tensor₁ = unaryclique(fixedImg, movingImg, deformers, δ=delta)
+    deformLen = length(deformableWindow)
 
-	@show "pairwiseclique:"
-	@time tensor₂ = pairwiseclique(size(fixedImg), deformers, δ=delta)
+    # tic-tocing
+    @time tensor₁ = unaryclique(fixedImg, movingImg, deformableWindow; δ=δ)
+	@time tensor₂ = pairwiseclique(fixedImg, movingImg, deformableWindow; δ=δ, γ=γ, τ=τ)
     @time tensor₂ = SharedSparseTensor(share(tensor₂.vals), share(tensor₂.pos), tensor₂.dims)
+	@time e, x = hopm(tensor₁, tensor₂, Float64(λ))
 
-	@time e, x = hopm(tensor₁, tensor₂, lambda)
+    # greedy integer programming?
 	y = integerlize(x, imageLen, deformLen)
-	S̄ = dot(y, tensor₁ + lambda*A_mul_B(tensor₂, share(y)))
-	S = typemax(Float64)
+	S̄ = dot(y, tensor₁ + λ*A_mul_B(tensor₂, share(y)))
+	S = Inf
 	while S > S̄
-		x = integerlize(tensor₁ + lambda*A_mul_B(tensor₂, share(y)), imageLen, deformLen)
-		S = dot(x, tensor₁ + lambda*A_mul_B(tensor₂, share(x)))
+		x = integerlize(tensor₁ + λ*A_mul_B(tensor₂, share(y)), imageLen, deformLen)
+		S = dot(x, tensor₁ + λ*A_mul_B(tensor₂, share(x)))
 		if S > S̄
             @show "S > S̄"
 			S̄ = S
