@@ -31,7 +31,6 @@ function pairwiseclique(
     regularization::TAD;                    # regularization method
     γ::Real=1,                              # the rate of increase in the cost
     τ::Real=Inf,                            # controls when the cost stops increasing
-    δ::Real=1e2                             # interval to Inf
     )
     # get the total number of pixels in the image and the number of transform vectors in deformers
     deformLen = length(deformers)
@@ -70,22 +69,34 @@ function pairwiseclique(
             end
         end
     end
-    minVals = minimum(vals)
-    vals -= (minVals - δ)
-    SparseArray(vals, pos, tensorDimsSymmetric)
+
+    # force tensor₁ non-negative
+    vals -= 1.1minimum(vals)
+
+    return SparseArray(vals, pos, tensorDimsSymmetric)
 end
 
 """
 Construct the second-order potential tensor(matrix), also called **smooth term** or **regular term**.
+
+Requires arguments:
+
+- fixedImg::Array{T,N}                               # fixed(target) image
+- movingImg::Array{T,N}                              # moving(source) image
+- deformableWindow::Matrix{Vector{Int}}              # transform matrix
+- regularization::AbstractRegularization = TAD()     # keyword argument for regularization selection
+- γ::Real                                            # the rate of increase in the cost, argument for TAD
+- τ::Real                                            # controls when the cost stops increasing, argument for TAD
+
+The default regularization is TAD(Truncated Absolute Difference).
 """
 function pairwiseclique{T,N}(
     fixedImg::Array{T,N},                              # fixed(target) image
     movingImg::Array{T,N},                             # moving(source) image
     deformableWindow::Matrix{Vector{Int}};             # transform matrix
-    regularization::AbstractRegularization = TAD(),    # regularization option
+    regularization::AbstractRegularization = TAD(),    # regularization selection
     γ::Real=1,                                         # [TAD] the rate of increase in the cost
     τ::Real=Inf,                                       # [TAD] controls when the cost stops increasing
-    δ::Real=1e2                                        # interval to Inf
     )
     # get image dimensions and checkout whether fixedImg and movingImg are of the same size
     imageDims = size(fixedImg)
@@ -97,12 +108,11 @@ function pairwiseclique{T,N}(
 
     # call corresponding methods
     info("Calling pairwiseclique:")
-    δ == 1e2 && info("You may need to specify the parameter δ. The default value is 100.")
     if regularization == TAD()
         info("Regularization: TAD(Truncated Absolute Difference)")
         γ == 1 && info("You may need to specify the parameter γ when using TAD as regularization. The default value is 1, which means no scaling.")
         τ == Inf && info("You may need to specify the parameter τ when using TAD as regularization. The default value is Inf, which means no truncation.")
-        return pairwiseclique(imageDims, deformers, regularization; δ = δ, )
+        return pairwiseclique(imageDims, deformers, regularization; γ=γ, τ=τ)
     else
         error("The implementation of $(regularization) is missing.")
     end

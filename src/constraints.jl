@@ -13,17 +13,19 @@ end
 function integerhopm{T,N}(fixedImg::Array{T,N},
                           movingImg::Array{T,N},
                           deformableWindow::Matrix{Vector{Int}};
-                          λ::Real=0.05,
-                          δ::Real=1e2,
+                          metric::AbstractDataCost=SAD(),
+                          regularization::AbstractRegularization=TAD(),
+                          λ::Real=1,
                           γ::Real=1,
-                          τ::Real=Inf
+                          τ::Real=Inf,
+                          β::Int=0
                          )
     imageLen = length(fixedImg)
     deformLen = length(deformableWindow)
 
     # tic-tocing
-    @time tensor₁ = unaryclique(fixedImg, movingImg, deformableWindow; δ=δ)
-	@time tensor₂ = pairwiseclique(fixedImg, movingImg, deformableWindow; δ=δ, γ=γ, τ=τ)
+    @time tensor₁ = unaryclique(fixedImg, movingImg, deformableWindow; metric=metric, β=β)
+	@time tensor₂ = pairwiseclique(fixedImg, movingImg, deformableWindow; regularization=regularization, γ=γ, τ=τ)
     @time tensor₂ = SharedSparseTensor(share(tensor₂.vals), share(tensor₂.pos), tensor₂.dims)
 	@time e, x = hopm(tensor₁, tensor₂, Float64(λ))
 

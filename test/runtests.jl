@@ -16,7 +16,8 @@ movimg = Float64[ 1  2  3  4  5;
 deformableWindow = [[i,j] for i in -2:2, j in -2:2]
 
 # algorithm
-@time E, y = integerhopm(img, movimg, deformableWindow)
+@time E, y = integerhopm(img, movimg, deformableWindow;
+                         metric = SAD(), λ = 0.1)
 
 yMat = reshape(y, length(img), length(deformableWindow))
 
@@ -35,4 +36,6 @@ end
 
 fileDir = dirname(@__FILE__)
 include(joinpath(fileDir, "datacost/test_sum_absolute_diff.jl"))
+include(joinpath(fileDir, "datacost/test_mutual_info.jl"))
+include(joinpath(fileDir, "datacost/test_data_cost.jl"))
 include(joinpath(fileDir, "regularization/test_truncated_absolute_diff.jl"))

@@ -6,7 +6,6 @@ function sum_absolute_diff{T,N}(
     fixedImg::Array{T,N},                    # fixed(target) image
     movingImg::Array{T,N},                   # moving(source) image
     deformers::Vector{Vector{Int}},          # transform vectors
-    δ::Float64                               # interval to Inf
     )
     # get image dimensions and checkout whether fixedImg and movingImg are of the same size
     imageDims = size(fixedImg)
@@ -25,7 +24,7 @@ function sum_absolute_diff{T,N}(
         i = sub2ind(imageDims, ii.I...)
         # ϕ(i) = i + d(i)
         ϕᵢᵢ = collect(ii.I) + deformers[a]
-        if CartesianIndex(tuple(ϕᵢᵢ...)) in pixelRange
+        if CartesianIndex(tuple(ϕᵢᵢ...)) ∈ pixelRange
             ϕᵢ = sub2ind(imageDims, ϕᵢᵢ...)
             tensor₁[i,a] = -abs(fixedImg[i] - movingImg[ϕᵢ])
         else
@@ -34,8 +33,8 @@ function sum_absolute_diff{T,N}(
     end
 
     # force tensor₁ non-negative
-    minValue = minimum(tensor₁)
-    tensor₁ -= (minValue - δ)
+    tensor₁ -= 1.1minimum(tensor₁)
     tensor₁[tensor₁.==Inf] = 0
+    
     return reshape(tensor₁, imageLen * deformLen)
 end
