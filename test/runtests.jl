@@ -1,6 +1,12 @@
 using NRIRHOPM
 using Base.Test
 
+fileDir = dirname(@__FILE__)
+include(joinpath(fileDir, "core.jl"))
+include(joinpath(fileDir, "potential.jl"))
+include(joinpath(fileDir, "cliques.jl"))
+
+# test a simple 5x5 example
 img = Float64[ 1  2  3  4  5;
               10  9  8  7  6;
               11 12 13 14 15;
@@ -34,8 +40,4 @@ end
 @test deformed[3,4] == [1, -1]
 @test deformed[4,3] == [-1, 1]
 
-fileDir = dirname(@__FILE__)
-include(joinpath(fileDir, "datacost/test_sum_absolute_diff.jl"))
-include(joinpath(fileDir, "datacost/test_mutual_info.jl"))
-include(joinpath(fileDir, "datacost/test_data_cost.jl"))
-include(joinpath(fileDir, "regularization/test_truncated_absolute_diff.jl"))
+info("All tests passed.")

@@ -1,68 +1,104 @@
-# The following code is mainly inspired by https://github.com/yunjhongwu/TensorDecompositions.jl
-# Need refinement and test
-immutable SparseArray{T, N} <: AbstractArray{T, N}
-    vals::Vector{T}
-    pos::Matrix{Int}
-    dims::NTuple{N,Int}
+"""
+"Pure" Sparse Symmetric Tensor
+"""
+immutable PSSTensor{Tv<:Real,Ti<:Integer,Order} <: AbstractArray{Tv, Order}
+    data::Vector{Tv}
+    index::Vector{NTuple{Order,Ti}}
+    dims::NTuple{Order,Ti}
 end
 
-"""
-SharedSparseTensor
-"""
-immutable SharedSparseTensor{T, N} <: AbstractArray{T, N}
-    values::SharedArray{T, 1}
-    indices::SharedArray{Int, 2}
-    dims::NTuple{N, Int}
-end
+Base.nnz(A::PSSTensor) = length(A.data)
+Base.size(A::PSSTensor) = A.dims
+Base.size(A::PSSTensor, i::Integer) = A.dims[i]
+Base.length(A::PSSTensor) = prod(A.dims)
 
-Base.size(A::SharedSparseTensor) = A.dims
-Base.size(A::SharedSparseTensor, i::Int) = A.dims[i]
-Base.nnz(A::SharedSparseTensor) = length(A.values)
-Base.length(A::SharedSparseTensor) = prod(A.dims)
-
-function share{T}(A::AbstractArray{T})
-    sh = SharedArray(T, size(A))
-    for i=1:length(A)
-        sh.s[i] = A[i]
+function pcontract{Tv<:Real,Ti<:Integer}(𝐇::PSSTensor{Tv,Ti,2}, 𝐱::Vector{Tv})
+    𝐯 = zeros(Tv, size(𝐇,1))
+    @inbounds for i in 1:nnz(𝐇)
+        x, y = 𝐇.index[i]
+        value = 𝐇.data[i]
+        𝐯[x] += value * 𝐱[y]
+        𝐯[y] += value * 𝐱[x]
     end
-    return sh
+    return 𝐯
+end
+
+function pcontract{Tv<:Real,Ti<:Integer}(𝐇::PSSTensor{Tv,Ti,3}, 𝐱::Vector{Tv})
+    𝐯 = zeros(Tv, size(𝐇,1))
+    @inbounds for i in 1:nnz(𝐇)
+        x, y, z = 𝐇.index[i]
+        value = 𝐇.data[i]
+        𝐯[x] += 2.0 * value * 𝐱[y] * 𝐱[z]
+        𝐯[y] += 2.0 * value * 𝐱[x] * 𝐱[z]
+        𝐯[z] += 2.0 * value * 𝐱[x] * 𝐱[y]
+    end
+    return 𝐯
+end
+
+⊙ = pcontract
+
+"""
+    hopm(𝐇¹, 𝐇²) -> (s, 𝐯)
+
+The high order power method for first and second order tensor.
+
+Refer to the following paper(Algorithm 4) for further details:
+
+Duchenne, Olivier, et al. "A tensor-based algorithm for high-order graph matching."
+IEEE transactions on pattern analysis and machine intelligence 33.12 (2011): 2383-2395.
+"""
+function hopm{Tv,Ti}(
+    𝐇¹::AbstractArray{Tv,1},
+    𝐇²::PSSTensor{Tv,Ti,2},
+    tol::Float64=1e-5,
+    maxIter::Int=50
+    )
+    size(𝐇¹, 1) != size(𝐇², 1) && throw(ArgumentError("Tensor Dimension Mismatch!"))
+    𝐯 = rand(Tv, length(𝐇¹))
+    𝐯₀ = 𝐯/vecnorm(𝐯)
+    𝐯ᵢ = 𝐯₀
+    i = 0
+    while i < maxIter
+        𝐯ᵢ₊₁ = 𝐇¹ + 𝐇² ⊙ 𝐯ᵢ
+        𝐯ᵢ₊₁ = 𝐯ᵢ₊₁/vecnorm(𝐯ᵢ₊₁)
+        vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol && break
+        i += 1
+        𝐯ᵢ = 𝐯ᵢ₊₁
+    end
+    @show i
+    return 𝐯ᵢ ⋅ (𝐇¹ + 𝐇² ⊙ 𝐯ᵢ), 𝐯ᵢ
 end
 
 """
-High Order (Mixed) Power Method
-"""
-function hopm{T}(tensor₁::AbstractArray{T,1},
-                 tensor₂::AbstractArray{T,2},
-                 λ::Float64;
-                 tol::Float64=1e-5,
-                 maxiter::Int=100
-                )
-    r = size(tensor₁, 1)
-    r != size(tensor₂, 1) && error("Tensor Dimension Mismatch!")
-    x = randn(r)
-    x .*= 1/vecnorm(x)
-    x_old = similar(x)
-    converged = false
-    niters = 0
-    while !converged && niters < maxiter
-        x_old = deepcopy(x)
-        x = tensor₁ + λ * A_mul_B(tensor₂, share(x))
-        x *= 1/vecnorm(x)
-        converged = vecnorm(x - x_old) < tol
-        niters += 1
-		@show niters
-    end
-    @show niters
-    return dot(x, tensor₁ + λ * A_mul_B(tensor₂, share(x))), x
-end
+    hopm(𝐇¹, 𝐇², 𝐇³) -> (s, 𝐯)
 
+The high order power method for first, second and third order tensor.
+
+Refer to the following paper(Algorithm 4) for further details:
+
+Duchenne, Olivier, et al. "A tensor-based algorithm for high-order graph matching."
+IEEE transactions on pattern analysis and machine intelligence 33.12 (2011): 2383-2395.
 """
-Tensor Contraction
-"""
-function A_mul_B{T,N}(tensor::SharedSparseTensor{T,N}, x::SharedArray{T,1})
-	v = SharedArray(T, size(tensor, 1))
-    @sync @parallel for i in 1:nnz(tensor)
-        v[tensor.indices[1, i]] += tensor.values[i] * prod(x[tensor.indices[2:N, i]])
+function hopm{Tv,Ti}(
+    𝐇¹::AbstractArray{Tv,1},
+    𝐇²::PSSTensor{Tv,Ti,2},
+    𝐇³::PSSTensor{Tv,Ti,3},
+    tol::Float64=1e-5,
+    maxIter::Int=50
+    )
+    size(𝐇¹, 1) != size(𝐇², 1) && throw(ArgumentError("Tensor Dimension Mismatch!"))
+    size(𝐇¹, 1) != size(𝐇³, 1) && throw(ArgumentError("Tensor Dimension Mismatch!"))
+    𝐯 = rand(Tv, length(𝐇¹))
+    𝐯₀ = 𝐯/vecnorm(𝐯)
+    𝐯ᵢ = 𝐯₀
+    i = 0
+    while i < maxIter
+        𝐯ᵢ₊₁ = 𝐇¹ + 𝐇² ⊙ 𝐯ᵢ + 𝐇³ ⊙ 𝐯ᵢ
+        𝐯ᵢ₊₁ = 𝐯ᵢ₊₁/vecnorm(𝐯ᵢ₊₁)
+        vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol && break
+        i += 1
+        𝐯ᵢ = 𝐯ᵢ₊₁
     end
-    return sdata(v)
+    @show i
+    return 𝐯ᵢ ⋅ (𝐇¹ + 𝐇² ⊙ 𝐯ᵢ + 𝐇³ ⊙ 𝐯ᵢ), 𝐯ᵢ
 end
