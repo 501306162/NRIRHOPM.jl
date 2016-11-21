@@ -22,8 +22,7 @@ movimg = Float64[ 1  2  3  4  5;
 deformableWindow = [[i,j] for i in -2:2, j in -2:2]
 
 # algorithm
-@time E, y = integerhopm(img, movimg, deformableWindow;
-                         metric = SAD(), λ = 0.1)
+@time x, spectrum = dirhop(img, movimg, deformableWindow, datacost=SAD(), β=0.1)
 
 yMat = reshape(y, length(img), length(deformableWindow))
 
