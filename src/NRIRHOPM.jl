@@ -3,7 +3,7 @@ using StatsBase
 
 export AbstractPotential, UnaryPotential, DataTerm, DataCost,
        PairwisePotential, SmoothTerm, RegularTerm, TreyPotential
-export SAD, Potts, TAD, Quadratic, Topology
+export SAD, Potts, TAD, Quadratic, TP
 export unaryclique, pairwiseclique, treyclique
 export PSSTensor, ⊙, hopm
 export dirhop
@@ -24,7 +24,9 @@ function dirhop{T,N}(
     deformableWindow::Matrix{Vector{Int}};
     datacost::DataCost=SAD(),
     smooth::SmoothTerm=TAD(),
+    trey::TreyPotential=TP(),
     β::Real=1,
+    γ::Real=0,
     χ::Real=1,
     δ::Real=Inf
     )
@@ -33,7 +35,12 @@ function dirhop{T,N}(
 
     @time 𝐇¹ = unaryclique(fixedImg, movingImg, deformableWindow; algorithm=datacost)
 	@time 𝐇² = pairwiseclique(fixedImg, movingImg, deformableWindow; algorithm=smooth, ω=β, χ=χ, δ=δ)
-	@time score, 𝐯 = hopm(𝐇¹, 𝐇²)
+    if γ == 0
+        @time score, 𝐯 = hopm(𝐇¹, 𝐇²)
+    else
+        @time 𝐇³ = treyclique(fixedImg, movingImg, deformableWindow; algorithm=trey, ω=γ)
+        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇³)
+    end
 
     𝐌 = reshape(𝐯, imageLen, deformLen)
 

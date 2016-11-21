@@ -1,7 +1,7 @@
 using NRIRHOPM
 using Base.Test
 
-import NRIRHOPM: sum_absolute_diff, truncated_absolute_diff
+import NRIRHOPM: sum_absolute_diff, truncated_absolute_diff, topology_preserving
 
 # construct simple 0-1 images
 targetImage = Float64[1 0 1;
@@ -47,4 +47,19 @@ rate = rand(1)[]
 
 # d = 0
 @test truncated_absolute_diff(fp, fq, 2.0, 0.0) == 0
+println("Passed.")
+
+# test for topology_preserving
+info("Testing topology_preserving:")
+@test topology_preserving([3,2], [3,3], [2,3], [0,-1], [1,1], [-1,1]) == 0
+@test topology_preserving([3,2], [3,3], [2,3], [0,-1], [-1,-1], [-1,1]) == 1
+
+@test topology_preserving([3,4], [3,3], [2,3], [0,0], [1,-1], [0,-1]) == 0
+@test topology_preserving([3,4], [3,3], [2,3], [0,0], [-1,1], [0,-1]) == 1
+
+@test topology_preserving([3,4], [3,3], [4,3], [0,1], [-1,-1], [0,-1]) == 0
+@test topology_preserving([3,4], [3,3], [4,3], [0,1], [1,1], [0,-1]) == 1
+
+@test topology_preserving([3,2], [3,3], [4,3], [0,0], [-1,1], [0,1]) == 0
+@test topology_preserving([3,2], [3,3], [4,3], [0,0], [1,-1], [0,1]) == 1
 println("Passed.")

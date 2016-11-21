@@ -21,7 +21,21 @@ movimg = Float64[ 1  2  3  4  5;
 
 deformableWindow = [[i,j] for i in -2:2, j in -2:2]
 
-# algorithm
+# with topology preserving
+@time x, spectrum = dirhop(img, movimg, deformableWindow, datacost=SAD(), β=0.1, γ=0.05)
+
+deformgrid = Array{Vector}(size(img))
+
+for i in eachindex(img)
+    deformgrid[i] = deformableWindow[x[i]]
+end
+
+@test deformgrid[2,4] == [1, -2]
+@test deformgrid[3,2] == [-1, 2]
+@test deformgrid[3,4] == [1, -1]
+@test deformgrid[4,3] == [-1, 1]
+
+# without topology preserving
 @time x, spectrum = dirhop(img, movimg, deformableWindow, datacost=SAD(), β=0.1)
 
 yMat = reshape(y, length(img), length(deformableWindow))

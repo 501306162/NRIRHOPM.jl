@@ -51,7 +51,7 @@ function hopm{Tv,Ti}(
     𝐇¹::AbstractArray{Tv,1},
     𝐇²::PSSTensor{Tv,Ti,2},
     tol::Float64=1e-5,
-    maxIter::Int=50
+    maxIter::Int=100
     )
     size(𝐇¹, 1) != size(𝐇², 1) && throw(ArgumentError("Tensor Dimension Mismatch!"))
     𝐯 = rand(Tv, length(𝐇¹))
@@ -84,7 +84,7 @@ function hopm{Tv,Ti}(
     𝐇²::PSSTensor{Tv,Ti,2},
     𝐇³::PSSTensor{Tv,Ti,3},
     tol::Float64=1e-5,
-    maxIter::Int=50
+    maxIter::Int=100
     )
     size(𝐇¹, 1) != size(𝐇², 1) && throw(ArgumentError("Tensor Dimension Mismatch!"))
     size(𝐇¹, 1) != size(𝐇³, 1) && throw(ArgumentError("Tensor Dimension Mismatch!"))

@@ -52,16 +52,11 @@ function sum_absolute_diff{T,N}(
         ϕyᵢᵢ = ii[2] + deformers[a][2]
         if pixelFirst[1] <= ϕxᵢᵢ <= pixelEnd[1] && pixelFirst[2] <= ϕyᵢᵢ <= pixelEnd[2]
             ϕᵢ = sub2ind(imageDims, ϕxᵢᵢ, ϕyᵢᵢ)
-            𝐇¹[i,a] = -abs(fixedImg[i] - movingImg[ϕᵢ])
+            𝐇¹[i,a] = e^-abs(fixedImg[i] - movingImg[ϕᵢ])
         else
-            𝐇¹[i,a] = Inf
+            𝐇¹[i,a] = 0
         end
     end
-
-    # force tensor₁ non-negative
-    𝐇¹ -= 1.1minimum(𝐇¹)
-    𝐇¹[𝐇¹.==Inf] = 0
-
     return reshape(𝐇¹, imageLen * deformLen)
 end
 
@@ -114,5 +109,27 @@ end
 """
 Topology Preservation
 """
-type Topology <: TreyPotential
+type TP <: TreyPotential
+end
+
+"""
+    topology_preserving(s₁, s₂, s₃, a, b, c) -> Int
+
+Returns the cost value.
+
+Refer to the following paper for further details:
+
+Cordero-Grande, Lucilio, et al. "A Markov random field approach for
+topology-preserving registration: Application to object-based tomographic image
+interpolation." IEEE Transactions on Image Processing 21.4 (2012): 2047-2061.
+"""
+@inline function topology_preserving{T<:Integer}(s₁::Vector{T}, s₂::Vector{T}, s₃::Vector{T}, a::Vector{T}, b::Vector{T}, c::Vector{T})
+    @inbounds begin
+        𝐤s₁, 𝐤s₂, 𝐤s₃ = s₁ + a, s₂ + b, s₃ + c
+        ∂φ₁∂φ₂ = (𝐤s₂[2] - 𝐤s₁[2]) * (𝐤s₂[1] - 𝐤s₃[1])
+        ∂φ₂∂φ₁ = (𝐤s₂[1] - 𝐤s₁[1]) * (𝐤s₂[2] - 𝐤s₃[2])
+        ∂r₁∂r₂ = (s₂[2] - s₁[2])*(s₂[1] - s₃[1])
+    end
+    v = (∂φ₁∂φ₂ - ∂φ₂∂φ₁) / ∂r₁∂r₂
+    return v > 0 ? 0 : 1
 end

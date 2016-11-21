@@ -32,3 +32,19 @@ end
 @test_throws ArgumentError pairwiseclique(fixedImg, movingImg, deformableWindow, algorithm=Missing())
 
 println("Passed.")
+
+# test for treyclique
+info("Tesing treyclique:")
+imageDims = size(fixedImg)
+deformers = reshape(deformableWindow, length(deformableWindow))
+𝐇³ = treyclique(imageDims, deformers, TP(), 1.0);
+𝐇³′ = treyclique(fixedImg, movingImg, deformableWindow);
+@test  𝐇³′.data == 𝐇³.data
+@test  𝐇³′.index == 𝐇³.index
+@test  𝐇³′.dims == 𝐇³.dims
+
+type Fake <: TreyPotential
+end
+@test_throws ArgumentError treyclique(fixedImg, movingImg, deformableWindow, algorithm=Fake())
+
+println("Passed.")
