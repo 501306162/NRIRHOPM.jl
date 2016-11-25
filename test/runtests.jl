@@ -24,7 +24,7 @@ deformableWindow = [[i,j] for i in -2:2, j in -2:2]
 # with topology preserving
 @time x, spectrum = dirhop(fixed, moving, deformableWindow, datacost=SAD(), β=0.1, γ=0.05)
 
-registered, deformgrid = registring(moving, deformableWindow, x)
+registered, deformgrid = registering(moving, deformableWindow, x)
 
 @test deformgrid[2,4] == [1, -2]
 @test deformgrid[3,2] == [-1, 2]
@@ -36,7 +36,7 @@ registered, deformgrid = registring(moving, deformableWindow, x)
 # without topology preserving
 @time x, spectrum = dirhop(fixed, moving, deformableWindow, datacost=SAD(), β=0.1)
 
-registered, deformgrid = registring(moving, deformableWindow, x)
+registered, deformgrid = registering(moving, deformableWindow, x)
 
 @test deformed[2,4] == [1, -2]
 @test deformed[3,2] == [-1, 2]

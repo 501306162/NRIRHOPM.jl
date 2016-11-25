@@ -1,12 +1,16 @@
 module NRIRHOPM
-using StatsBase, Pyramids, Interpolations
+using Reexport
+using StatsBase, Pyramids
+using Interpolations
+@reexport using Plots
 
 export AbstractPotential, UnaryPotential, DataTerm, DataCost,
        PairwisePotential, SmoothTerm, RegularTerm, TreyPotential
 export SAD, Potts, TAD, Quadratic, TP
 export unaryclique, pairwiseclique, treyclique
 export PSSTensor, ⊙, hopm
-export dirhop, registring
+export meshgrid
+export dirhop, registering
 
 # pyramids
 export ImagePyramid, PyramidType, ComplexSteerablePyramid, LaplacianPyramid, GaussianPyramid
@@ -17,6 +21,7 @@ include("core.jl")
 include("unaryclique.jl")
 include("pairwiseclique.jl")
 include("treyclique.jl")
+include("utils.jl")
 
 function dirhop{T,N}(
     fixedImg::Array{T,N},
@@ -47,7 +52,7 @@ function dirhop{T,N}(
     return [findmax(𝐌[i,:])[2] for i in 1:imageLen], 𝐌
 end
 
-function registring{T,N}(movingImg::Array{T,N}, deformableWindow::Matrix{Vector{Int}}, indicator::Vector{Int})
+function registering{T,N}(movingImg::Array{T,N}, deformableWindow::Matrix{Vector{Int}}, indicator::Vector{Int})
     imageDims = size(movingImg)
     registeredImg = similar(movingImg)
     quiverMatrix = Matrix{Vector}(imageDims)

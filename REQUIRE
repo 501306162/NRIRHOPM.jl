@@ -1,2 +1,7 @@
 julia 0.5
+Interpolations
 StatsBase
+Pyramids
+Plots
+GR
+Reexport
