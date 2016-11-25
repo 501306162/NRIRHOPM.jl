@@ -1,12 +1,12 @@
 module NRIRHOPM
-using StatsBase
+using StatsBase, Pyramids, Interpolations
 
 export AbstractPotential, UnaryPotential, DataTerm, DataCost,
        PairwisePotential, SmoothTerm, RegularTerm, TreyPotential
 export SAD, Potts, TAD, Quadratic, TP
 export unaryclique, pairwiseclique, treyclique
 export PSSTensor, ⊙, hopm
-export dirhop
+export dirhop, registring
 
 # pyramids
 export ImagePyramid, PyramidType, ComplexSteerablePyramid, LaplacianPyramid, GaussianPyramid
@@ -45,6 +45,20 @@ function dirhop{T,N}(
     𝐌 = reshape(𝐯, imageLen, deformLen)
 
     return [findmax(𝐌[i,:])[2] for i in 1:imageLen], 𝐌
+end
+
+function registring{T,N}(movingImg::Array{T,N}, deformableWindow::Matrix{Vector{Int}}, indicator::Vector{Int})
+    imageDims = size(movingImg)
+    registeredImg = similar(movingImg)
+    quiverMatrix = Matrix{Vector}(imageDims)
+    for ii in CartesianRange(imageDims)
+        i = sub2ind(imageDims, ii.I...)
+        dᵢᵢ = deformableWindow[indicator[i]]
+        quiverMatrix[ii] = dᵢᵢ
+        ind = collect(ii.I) + dᵢᵢ
+        registeredImg[ii] = movingImg[ind...]
+    end
+    return registeredImg, quiverMatrix
 end
 
 end # module
