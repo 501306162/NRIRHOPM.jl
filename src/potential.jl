@@ -75,6 +75,29 @@ type Potts <: SmoothTerm
 end
 
 """
+    potts(fp, fq, d) -> Float64
+
+Returns the cost value based on Potts model.
+
+Refer to the following paper for further details:
+
+Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
+for early vision." International journal of computer vision 70.1 (2006): 41-54.
+
+# Arguments
+* `fp::NTuple{N}`: the transform vector(label) at pixel p.
+* `fq::NTuple{N}`: the transform vector(label) at pixel q.
+* `d::Real`: the constant in Potts model.
+"""
+@generated function potts_model{T<:Real,N}(fp::NTuple{N}, fq::NTuple{N}, d::T)
+    ex = :(true)
+    for i = 1:N
+        ex = :($ex && (fp[$i] == fq[$i]))
+    end
+    return :($ex ? T(0) : d)
+end
+
+"""
 Truncated Absolute Difference
 """
 type TAD <: SmoothTerm
@@ -92,17 +115,17 @@ Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagatio
 for early vision." International journal of computer vision 70.1 (2006): 41-54.
 
 # Arguments
-* `fp::NTuple{N,Ti}`: the transform vector(label) at pixel p.
-* `fq::NTuple{N,Ti}`: the transform vector(label) at pixel q.
-* `c::Float64`: the rate of increase in the cost.
-* `d::Float64`: controls when the cost stops increasing.
+* `fp::NTuple{N}`: the transform vector(label) at pixel p.
+* `fq::NTuple{N}`: the transform vector(label) at pixel q.
+* `c::Real`: the rate of increase in the cost.
+* `d::Real`: controls when the cost stops increasing.
 """
-@generated function truncated_absolute_diff{Ti,N}(fp::NTuple{N,Ti}, fq::NTuple{N,Ti}, c::Float64, d::Float64)
+@generated function truncated_absolute_diff{N}(fp::NTuple{N}, fq::NTuple{N}, c::Real, d::Real)
     ex = :(0)
     for i = 1:N
         ex = :(abs2(fp[$i]-fq[$i]) + $ex)
     end
-    return :(min(c * abs(√$ex), d))
+    return :(min(c * abs(√($ex)), d))
 end
 
 """
