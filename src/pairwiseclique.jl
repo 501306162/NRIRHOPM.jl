@@ -25,6 +25,7 @@ function pairwiseclique{T,N}(
     imageDims == size(movingImg) || throw(ArgumentError("Image Dimension Mismatch!"))
 
     deformers = reshape(deformableWindow, length(deformableWindow))
+    deformers = [tuple(v...) for v in deformers]
 
     info("Calling pairwiseclique:")
     if algorithm == TAD()
@@ -41,16 +42,16 @@ end
 The method for the Truncated Absolute Difference(TAD). Returns a `PSSTensor` 𝐇².
 
 # Arguments
-* `imageDims::NTuple{2,Ti<:Integer}`: the size of the 2D image.
-* `deformers::Vector{Vector{Ti<:Integer}}`: transform vectors.
+* `imageDims::NTuple{2,Ti}`: the size of the 2D image.
+* `deformers::Vector{NTuple{N,Td}}`: transform vectors.
 * `algorithm::TAD`: the method for calculating smooth cost.
 * `ω::Float64`: the weighted parameter.
 * `χ::Float64`: the rate of increase in the cost.
 * `δ::Float64`: controls when the cost stops increasing.
 """
-function pairwiseclique{Ti<:Integer}(
-    imageDims::NTuple{2,Ti},
-    deformers::Vector{Vector{Ti}},
+function pairwiseclique{Ti<:Integer,Td,N}(
+    imageDims::NTuple{N,Ti},
+    deformers::Vector{NTuple{N,Td}},
     algorithm::TAD,
     ω::Float64=1.0,
     χ::Float64=1.0,
@@ -75,18 +76,16 @@ function pairwiseclique{Ti<:Integer}(
     # neighborhood filter
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
-    for ii in pixelRange
-        i = sub2ind(imageDims, ii.I...)
-        neighbors = CartesianRange(max(pixelFirst, ii-pixelFirst), min(pixelEnd, ii+pixelFirst))
-        for jj in neighbors
-            if jj != ii
-                j = sub2ind(imageDims, jj.I...)
+    @inbounds for ii in pixelRange
+        i = sub2ind(imageDims, ii[1], ii[2])
+        neighborRange = CartesianRange(max(pixelFirst, ii-pixelFirst), min(pixelEnd, ii+pixelFirst))
+        for jj in neighborRange
+            if jj < ii
+                j = sub2ind(imageDims, jj[1], jj[2])
                 for a in eachindex(deformers), b in eachindex(deformers)
                     indexNum += 1
-                    cost = truncated_absolute_diff(deformers[a], deformers[b], χ, δ)
-                    data[indexNum] = e^-cost
-                    indTemp = sub2ind(𝐇⁴Dims, i, a, j, b)
-                    index[indexNum] = ind2sub(𝐇²Dims, indTemp)
+                    data[indexNum] = e^-truncated_absolute_diff(deformers[a], deformers[b], χ, δ)
+                    index[indexNum] = ind2sub(𝐇²Dims, sub2ind(𝐇⁴Dims, i, a, j, b))
                 end
             end
         end

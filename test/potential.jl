@@ -35,18 +35,18 @@ println("Passed.")
 
 # test for truncated_absolute_diff
 info("Testing truncated_absolute_diff:")
-fp = rand(collect(1:1000), 2)
-fq = rand(collect(1:1000), 2)
+fp = rand(2)
+fq = rand(2)
 
-cost = truncated_absolute_diff(fp, fq, 1.0, Inf)
-delta = abs(sqrt(fp[1]^2 + fp[2]^2) - sqrt(fq[1]^2 + fq[2]^2))
+cost = truncated_absolute_diff(tuple(fp...), tuple(fq...), 1.0, Inf)
+delta = abs(vecnorm([fp...] - [fq...]))
 @test cost == delta
 
 rate = rand(1)[]
-@test truncated_absolute_diff(fp, fq, rate, Inf) == rate * delta
+@test truncated_absolute_diff(tuple(fp...), tuple(fq...), rate, Inf) == rate * delta
 
 # d = 0
-@test truncated_absolute_diff(fp, fq, 2.0, 0.0) == 0
+@test truncated_absolute_diff(tuple(fp...), tuple(fq...), 2.0, 0.0) == 0
 println("Passed.")
 
 # test for topology_preserving

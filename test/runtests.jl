@@ -22,7 +22,7 @@ moving = Float64[ 1  2  3  4  5;
 deformableWindow = [[i,j] for i in -2:2, j in -2:2]
 
 # with topology preserving
-@time x, spectrum = dirhop(fixed, moving, deformableWindow, datacost=SAD(), β=0.1, γ=0.05)
+@time x, spectrum = dirhop(fixed, moving, deformableWindow, datacost=SAD(), β=0.01, γ=0.01)
 
 registered, deformgrid = registering(moving, deformableWindow, x)
 

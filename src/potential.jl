@@ -92,12 +92,18 @@ Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagatio
 for early vision." International journal of computer vision 70.1 (2006): 41-54.
 
 # Arguments
-* `fp::Vector{T<:Integer}`: the transform vector at pixel p.
-* `fq::Vector{T<:Integer}`: the transform vector at pixel q.
+* `fp::NTuple{N,Ti}`: the transform vector(label) at pixel p.
+* `fq::NTuple{N,Ti}`: the transform vector(label) at pixel q.
 * `c::Float64`: the rate of increase in the cost.
 * `d::Float64`: controls when the cost stops increasing.
 """
-truncated_absolute_diff{T<:Integer}(fp::Vector{T}, fq::Vector{T}, c::Float64, d::Float64) = min(c * abs(vecnorm(fp) - vecnorm(fq)), d)
+@generated function truncated_absolute_diff{Ti,N}(fp::NTuple{N,Ti}, fq::NTuple{N,Ti}, c::Float64, d::Float64)
+    ex = :(0)
+    for i = 1:N
+        ex = :(abs2(fp[$i]-fq[$i]) + $ex)
+    end
+    return :(min(c * abs(√$ex), d))
+end
 
 """
 Quadratic Model

@@ -21,6 +21,7 @@ println("Passed.")
 info("Tesing pairwiseclique:")
 imageDims = size(fixedImg)
 deformers = reshape(deformableWindow, length(deformableWindow))
+deformers = [tuple(v...) for v in deformers]
 𝐇² = pairwiseclique(imageDims, deformers, TAD(), 1.0, 1.0, Inf);
 𝐇²′ = pairwiseclique(fixedImg, movingImg, deformableWindow);
 @test  𝐇²′.data == 𝐇².data
