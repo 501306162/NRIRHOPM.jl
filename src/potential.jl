@@ -75,7 +75,7 @@ type Potts <: SmoothTerm
 end
 
 """
-    potts(fp, fq, d) -> Float64
+    potts(fp, fq, d)
 
 Returns the cost value based on Potts model.
 
@@ -104,7 +104,7 @@ type TAD <: SmoothTerm
 end
 
 """
-    truncated_absolute_diff(fp, fq, c, d) -> Float64
+    truncated_absolute_diff(fp, fq, c, d)
 
 Calculates the truncated absolute difference between two transform vectors.
 Returns the cost value.
@@ -125,13 +125,38 @@ for early vision." International journal of computer vision 70.1 (2006): 41-54.
     for i = 1:N
         ex = :(abs2(fp[$i]-fq[$i]) + $ex)
     end
-    return :(min(c * abs(√($ex)), d))
+    return :(min(c * sqrt($ex), d))
 end
 
 """
 Quadratic Model
 """
-type Quadratic <: SmoothTerm
+type TQD <: SmoothTerm
+end
+
+"""
+    truncated_quadratic_diff(fp, fq, c, d)
+
+Calculates the truncated quadratic difference between two transform vectors.
+Returns the cost value.
+
+Refer to the following paper for further details:
+
+Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
+for early vision." International journal of computer vision 70.1 (2006): 41-54.
+
+# Arguments
+* `fp::NTuple{N}`: the transform vector(label) at pixel p.
+* `fq::NTuple{N}`: the transform vector(label) at pixel q.
+* `c::Real`: the rate of increase in the cost.
+* `d::Real`: controls when the cost stops increasing.
+"""
+@generated function truncated_quadratic_diff{N}(fp::NTuple{N}, fq::NTuple{N}, c::Real, d::Real)
+    ex = :(0)
+    for i = 1:N
+        ex = :(abs2(fp[$i]-fq[$i]) + $ex)
+    end
+    return :(min(c * $ex, d))
 end
 
 # high-order potentials

@@ -1,7 +1,9 @@
 using NRIRHOPM
 using Base.Test
 
-import NRIRHOPM: sum_absolute_diff, truncated_absolute_diff, topology_preserving
+import NRIRHOPM: sum_absolute_diff,
+                 potts_model, truncated_absolute_diff, truncated_quadratic_diff,
+                 topology_preserving
 
 # construct simple 0-1 images
 targetImage = Float64[1 0 1;
@@ -32,21 +34,86 @@ for ii in CartesianRange(dims)
 end
 println("Passed.")
 
+# test for potts_model
+info("Testing potts_model")
+# 2D
+fp = (1,2)
+fq = fp
+d = rand()
+@test potts_model(fp, fq, d) == 0
+fq = (3,4)
+@test potts_model(fp, fq, d) == d
+
+# 3D
+fp = (1,2,3)
+fq = fp
+d = rand()
+@test potts_model(fp, fq, d) == 0
+fq = (2,3,4)
+@test potts_model(fp, fq, d) == d
+println("Passed.")
+
 
 # test for truncated_absolute_diff
 info("Testing truncated_absolute_diff:")
-fp = rand(2)
-fq = rand(2)
+# 2D
+fp = tuple(rand(2)...)
+fq = tuple(rand(2)...)
 
-cost = truncated_absolute_diff(tuple(fp...), tuple(fq...), 1.0, Inf)
+cost = truncated_absolute_diff(fp, fq, 1, Inf)
 delta = abs(vecnorm([fp...] - [fq...]))
 @test cost == delta
 
-rate = rand(1)[]
-@test truncated_absolute_diff(tuple(fp...), tuple(fq...), rate, Inf) == rate * delta
+rate = rand()
+@test truncated_absolute_diff(fp, fq, rate, Inf) == rate * delta
 
 # d = 0
-@test truncated_absolute_diff(tuple(fp...), tuple(fq...), 2.0, 0.0) == 0
+@test truncated_absolute_diff(fp, fq, 2, 0.0) == 0
+
+# 3D
+fp = tuple(rand(3)...)
+fq = tuple(rand(3)...)
+
+cost = truncated_absolute_diff(fp, fq, 1, Inf)
+delta = abs(vecnorm([fp...] - [fq...]))
+@test cost == delta
+
+rate = rand()
+@test truncated_absolute_diff(fp, fq, rate, Inf) == rate * delta
+
+# d = 0
+@test truncated_absolute_diff(fp, fq, 2, 0) == 0
+println("Passed.")
+
+# test for truncated_quadratic_diff
+info("Testing truncated_quadratic_diff:")
+# 2D
+fp = tuple(rand(2)...)
+fq = tuple(rand(2)...)
+
+cost = truncated_quadratic_diff(fp, fq, 1, Inf)
+delta = vecnorm([fp...] - [fq...])^2
+@test cost - delta < 1e-10
+
+rate = rand()
+@test truncated_quadratic_diff(fp, fq, rate, Inf) - rate * delta < 1e-10
+
+# d = 0
+@test truncated_quadratic_diff(fp, fq, 2, 0) == 0
+
+# 3D
+fp = tuple(rand(3)...)
+fq = tuple(rand(3)...)
+
+cost = truncated_quadratic_diff(fp, fq, 1, Inf)
+delta = vecnorm([fp...] - [fq...])^2
+@test cost - delta < 1e-10
+
+rate = rand()
+@test truncated_quadratic_diff(fp, fq, rate, Inf) - rate * delta < 1e-10
+
+# d = 0
+@test truncated_quadratic_diff(fp, fq, 2, 0) == 0
 println("Passed.")
 
 # test for topology_preserving

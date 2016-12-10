@@ -6,7 +6,7 @@ using Interpolations
 
 export AbstractPotential, UnaryPotential, DataTerm, DataCost,
        PairwisePotential, SmoothTerm, RegularTerm, TreyPotential
-export SAD, Potts, TAD, Quadratic, TP
+export SAD, Potts, TAD, TQD, TP
 export unaryclique, pairwiseclique, treyclique
 export PSSTensor, ⊙, hopm
 export meshgrid
