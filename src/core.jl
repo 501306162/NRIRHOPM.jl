@@ -1,4 +1,35 @@
 """
+Blocked Sparse "Symmetric" Cartesian Tensor
+"""
+immutable BSSCTensor{T<:Real,N,Order} <: AbstractArray{T,N}
+    block::Array{T,N}
+    index::Vector{NTuple{Order,Int}}
+    dims::NTuple{Order,Int}
+end
+
+Base.nnz(A::BSSCTensor) = length(A.index)
+Base.size(A::BSSCTensor) = A.dims
+Base.size(A::BSSCTensor, i::Integer) = A.dims[i]
+Base.length(A::BSSCTensor) = prod(A.dims)
+Base.getindex{T<:Real}(A::BSSCTensor{T,2,4}, i::Int, a::Int, j::Int, b::Int) = A.block[a,b]
+Base.getindex{T<:Real}(A::BSSCTensor{T,3,6}, i::Int, a::Int, j::Int, b::Int, k::Int, c::Int) = A.block[a,b,c]
+
+function bcontract{T<:Real}(𝐇::BSSCTensor{T,2,4}, 𝐱::Matrix{T})
+    𝐌 = zeros(T, size(𝐇,1), size(𝐇,2))
+    for n in 1:nnz(𝐇)
+        i, j = 𝐇.index[n]
+        for a = 1:size(𝐇,2), b = 1:size(𝐇,2)
+            value = 𝐇[i,a,j,b]
+            𝐌[i,a] += value * 𝐱[j,b]
+            𝐌[j,b] += value * 𝐱[i,a]
+        end
+    end
+    return 𝐌
+end
+
+
+
+"""
 "Pure" Sparse Symmetric Tensor
 """
 immutable PSSTensor{Tv<:Real,Ti<:Integer,Order} <: AbstractArray{Tv, Order}
