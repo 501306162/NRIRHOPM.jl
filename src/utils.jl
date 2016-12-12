@@ -7,7 +7,7 @@ function meshgrid(quiverMatrix)
     return 𝐗+Δ𝐗, 𝐘+Δ𝐘
 end
 
-# recipe
+# Plots.jl recipe
 @userplot DisplacementField
 
 @recipe function f(disField::DisplacementField; rowlevel=5, columnlevel=5, xyInv=false)
@@ -20,7 +20,7 @@ end
 
     r, c = size(𝐗)
     𝓻, 𝓬 = rowlevel*r, columnlevel*c
-
+    
     𝓧 = zeros(𝓻, 𝓬)
     𝓨 = zeros(𝓻, 𝓬)
 

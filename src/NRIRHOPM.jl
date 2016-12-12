@@ -1,69 +1,58 @@
 module NRIRHOPM
 using Reexport
-using StatsBase, Pyramids
 using Interpolations
 @reexport using Plots
 
-export AbstractPotential, UnaryPotential, DataTerm, DataCost,
-       PairwisePotential, SmoothTerm, RegularTerm, TreyPotential
-export SAD, Potts, TAD, TQD, TP
+export AbstractPotential,
+       UnaryPotential, DataTerm, DataCost,
+       PairwisePotential, SmoothTerm, SmoothCost, RegularTerm,
+       TreyPotential, TopologyCost
+export SAD, SSD
+       Potts, TAD, TQD,
+       TP
 export unaryclique, pairwiseclique, treyclique
-export PSSTensor, ⊙, hopm
+export BSSTensor, SSTensor, ⊙, hopm
 export meshgrid
 export dirhop, registering
 
-# pyramids
-export ImagePyramid, PyramidType, ComplexSteerablePyramid, LaplacianPyramid, GaussianPyramid
-export subband, toimage, update_subband, update_subband!
-
-include("potential.jl")
-include("core.jl")
-include("unaryclique.jl")
-include("pairwiseclique.jl")
-include("treyclique.jl")
+include("tensors.jl")
+include("hopm.jl")
+include("neighbors.jl")
+include("types.jl")
+include("potentials.jl")
+include("cliques.jl")
 include("utils.jl")
 
-function dirhop{T,N}(
-    fixedImg::Array{T,N},
-    movingImg::Array{T,N},
-    deformableWindow::Matrix{Vector{Int}};
-    datacost::DataCost=SAD(),
-    smooth::SmoothTerm=TAD(),
-    trey::TreyPotential=TP(),
-    β::Real=1,
-    γ::Real=0,
-    χ::Real=1,
-    δ::Real=Inf
-    )
-    imageLen = length(fixedImg)
-    deformLen = length(deformableWindow)
+function dirhop(fixedImg, movingImg, labels; datacost::DataCost=SAD(),
+                smooth::SmoothCost=TAD(), trey::TopologyCost=TP(),
+                α::Real=1,                β::Real=1)
 
-    @time 𝐇¹ = unaryclique(fixedImg, movingImg, deformableWindow; algorithm=datacost)
-	@time 𝐇² = pairwiseclique(fixedImg, movingImg, deformableWindow; algorithm=smooth, ω=β, χ=χ, δ=δ)
-    if γ == 0
+    pixelNum = length(fixedImg)
+    labelNum = length(labels)
+
+    @time 𝐇¹ = unaryclique(fixedImg, movingImg, labels; algorithm=datacost)
+	@time 𝐇² = pairwiseclique(fixedImg, movingImg, deformableWindow)
+    if β == 0
         @time score, 𝐯 = hopm(𝐇¹, 𝐇²)
     else
         @time 𝐇³ = treyclique(fixedImg, movingImg, deformableWindow; algorithm=trey, ω=γ)
         @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇³)
     end
-
-    𝐌 = reshape(𝐯, imageLen, deformLen)
-
-    return [findmax(𝐌[i,:])[2] for i in 1:imageLen], 𝐌
+    𝐌 = reshape(𝐯, pixelNum, labelNum)
+    return score, [findmax(𝐌[i,:])[2] for i in 1:pixelNum], 𝐌
 end
 
-function registering{T,N}(movingImg::Array{T,N}, deformableWindow::Matrix{Vector{Int}}, indicator::Vector{Int})
+function registering(movingImg, labels, indicator::Vector{Int})
     imageDims = size(movingImg)
     registeredImg = similar(movingImg)
-    quiverMatrix = Matrix{Vector}(imageDims)
-    for ii in CartesianRange(imageDims)
-        i = sub2ind(imageDims, ii.I...)
-        dᵢᵢ = deformableWindow[indicator[i]]
-        quiverMatrix[ii] = dᵢᵢ
-        ind = collect(ii.I) + dᵢᵢ
-        registeredImg[ii] = movingImg[ind...]
+    quivers = Matrix(imageDims)
+    for 𝒊 in CartesianRange(imageDims)
+        i = sub2ind(imageDims, 𝒊.I...)
+        𝐭 = labels[indicator[i]]
+        quivers[𝒊] = 𝐭
+        registeredImg[𝒊] = movingImg[𝒊+CartesianIndex(𝐭)]
     end
-    return registeredImg, quiverMatrix
+    return registeredImg, quivers
 end
 
 end # module
