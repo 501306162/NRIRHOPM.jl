@@ -5,22 +5,21 @@
 abstract AbstractTensor{T,N} <: AbstractArray{T,N}
 
 """
-Blocked Sparse Symmetric pure n-th Order Tensor
+Tensor Block
 """
-immutable BSSTensor{T<:Real,N,Order} <: AbstractTensor{T,N}
+immutable TensorBlock{T<:Real,N,Order} <: AbstractArray{T,N}
     block::Array{T,N}
     index::Vector{NTuple{N,Int}}
     dims::NTuple{Order,Int}
 end
+Base.nnz(A::TensorBlock) = length(A.index)
+Base.size(A::TensorBlock) = A.dims
+Base.size(A::TensorBlock, i::Integer) = A.dims[i]
+Base.length(A::TensorBlock) = prod(A.dims)
+Base.getindex{T<:Real}(A::TensorBlock{T,2,4}, i::Int, a::Int, j::Int, b::Int) = A.block[a,b]
+Base.getindex{T<:Real}(A::TensorBlock{T,3,6}, i::Int, a::Int, j::Int, b::Int, k::Int, c::Int) = A.block[a,b,c]
 
-Base.nnz(A::BSSTensor) = length(A.index)
-Base.size(A::BSSTensor) = A.dims
-Base.size(A::BSSTensor, i::Integer) = A.dims[i]
-Base.length(A::BSSTensor) = prod(A.dims)
-Base.getindex{T<:Real}(A::BSSTensor{T,2,4}, i::Int, a::Int, j::Int, b::Int) = A.block[a,b]
-Base.getindex{T<:Real}(A::BSSTensor{T,3,6}, i::Int, a::Int, j::Int, b::Int, k::Int, c::Int) = A.block[a,b,c]
-
-function contract{T<:Real}(𝐇::BSSTensor{T,2,4}, 𝐱::Matrix{T})
+function contract{T<:Real}(𝐇::TensorBlock{T,2,4}, 𝐱::Matrix{T})
     pixelNum, labelNum = size(𝐇,1), size(𝐇,2)
     𝐌 = zeros(T, pixelNum, labelNum)
     @inbounds for n in 1:nnz(𝐇)
@@ -34,7 +33,7 @@ function contract{T<:Real}(𝐇::BSSTensor{T,2,4}, 𝐱::Matrix{T})
     return reshape(𝐌, pixelNum*labelNum)
 end
 
-function contract{T<:Real}(𝐇::BSSTensor{T,3,6}, 𝐱::Matrix{T})
+function contract{T<:Real}(𝐇::TensorBlock{T,3,6}, 𝐱::Matrix{T})
     pixelNum, labelNum = size(𝐇,1), size(𝐇,2)
     𝐌 = zeros(T, pixelNum, labelNum)
     @inbounds for n in 1:nnz(𝐇)
@@ -47,6 +46,27 @@ function contract{T<:Real}(𝐇::BSSTensor{T,3,6}, 𝐱::Matrix{T})
         end
     end
     return reshape(𝐌, pixelNum*labelNum)
+end
+
+"""
+Blocked Sparse Symmetric pure n-th Order Tensor
+"""
+immutable BSSTensor{T<:Real,N,Order} <: AbstractTensor{T,N}
+    blocks::Vector{TensorBlock{T,N,Order}}
+    dims::NTuple{Order,Int}
+end
+Base.nnz(A::BSSTensor) = length(A.blocks) * length(A.blocks[])
+Base.size(A::BSSTensor) = A.dims
+Base.size(A::BSSTensor, i::Integer) = A.dims[i]
+Base.length(A::BSSTensor) = prod(A.dims)
+
+function contract{T<:Real}(𝐇::BSSTensor{T}, 𝐱::Vector{T})
+    pixelNum, labelNum = size(𝐇,1), size(𝐇,2)
+    𝐯 = zeros(T, pixelNum*labelNum)
+    for 𝐛 in 𝐇.blocks
+        𝐯 += contract(𝐛, reshape(𝐱, pixelNum, labelNum))
+    end
+    return 𝐯
 end
 
 """
