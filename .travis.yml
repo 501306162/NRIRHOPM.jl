@@ -12,7 +12,6 @@ notifications:
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
  - julia -e 'Pkg.clone("https://github.com/Gnimuc/NRIRHOPM.jl");'
-# - julia -e 'Pkg.build("NRIRHOPM");'
- - julia -e 'Pkg.test("NRIRHOPM"; coverage=true)'
+ - julia --precompiled=no --compilecache=no --check-bounds=yes -e 'Pkg.test("NRIRHOPM"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("NRIRHOPM")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

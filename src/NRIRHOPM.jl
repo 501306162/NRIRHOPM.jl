@@ -3,15 +3,18 @@ using Reexport
 using Interpolations
 @reexport using Plots
 
+import Base: ==
+
+export TensorBlock, BSSTensor, SSTensor, ⊙, hopm
+export Connected4, Connected8, Connected6, Connected26, neighbors
 export AbstractPotential,
        UnaryPotential, DataTerm, DataCost,
        PairwisePotential, SmoothTerm, SmoothCost, RegularTerm,
        TreyPotential, TopologyCost
-export SAD, SSD
+export SAD, SSD,
        Potts, TAD, TQD,
        TP
 export unaryclique, pairwiseclique, treyclique
-export BSSTensor, SSTensor, ⊙, hopm
 export meshgrid
 export dirhop, registering
 
@@ -48,9 +51,9 @@ function registering(movingImg, labels, indicator::Vector{Int})
     quivers = Matrix(imageDims)
     for 𝒊 in CartesianRange(imageDims)
         i = sub2ind(imageDims, 𝒊.I...)
-        𝐭 = labels[indicator[i]]
-        quivers[𝒊] = 𝐭
-        registeredImg[𝒊] = movingImg[𝒊+CartesianIndex(𝐭)]
+        quivers[𝒊] = labels[indicator[i]]
+        𝐭 = CartesianIndex(quivers[𝒊])
+        registeredImg[𝒊] = movingImg[𝒊+𝐭]
     end
     return registeredImg, quivers
 end

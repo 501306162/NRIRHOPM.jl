@@ -26,7 +26,7 @@ function hopm{T<:Real}(𝐇¹::AbstractArray{T,1}, 𝐇²::AbstractTensor{T}, to
 end
 
 function hopm{T<:Real}(𝐇¹::AbstractArray{T,1}, 𝐇²::AbstractTensor{T}, 𝐇³::AbstractTensor{T}, tol::Float64=1e-5, maxIter::Int=100)
-    𝐯 = rand(Tv, length(𝐇¹))
+    𝐯 = rand(T, length(𝐇¹))
     𝐯₀ = 𝐯/vecnorm(𝐯)
     𝐯ᵢ = 𝐯₀
     i = 0

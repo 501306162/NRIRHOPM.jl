@@ -16,9 +16,9 @@ end
 function neighbors(::Type{Connected8{2}}, imageDims::NTuple{2,Int})
     # 8-Connected neighborhood for 2-element cliques
     # since the tensor is symmetric, we only consider the following cliques:
-    #   ▦ ▦ □      ▦                ▦
-    #   ▦ ⬔ □  =>    ⬔   ▦ ⬔    ⬔   ⬔
-    #   ▦ □ □                 ▦
+    #   ▦ ▦ □      ▦                ▦   y,x -->
+    #   ▦ ⬔ □  =>    ⬔   ▦ ⬔    ⬔   ⬔   |
+    #   ▦ □ □                 ▦         ↓
     idx = NTuple{2,Int}[]
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
@@ -38,28 +38,54 @@ end
 function neighbors(::Type{Connected8{3}}, imageDims::NTuple{2,Int})
     # 8-Connected neighborhood for 3-element cliques
     # since the tensor is symmetric, we only consider the following cliques:
-    #   □ ⬓ □        ⬓                ⬓
-    #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦
-    #   □ ⬓ □              ⬓    ⬓
-    idx = NTuple{3,Int}[]
+    #   □ ⬓ □        ⬓                ⬓      y,x-->    ⬔ => ii => p1
+    #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ▦ => jj => p2
+    #   □ ⬓ □              ⬓    ⬓            ↓         ⬓ => kk => p3
+    #              Jᵇᵇ   Jᵇᶠ    Jᶠᶠ   Jᶠᵇ
+    idxJᶠᶠ = NTuple{3,Int}[]
+    idxJᵇᶠ = NTuple{3,Int}[]
+    idxJᶠᵇ = NTuple{3,Int}[]
+    idxJᵇᵇ = NTuple{3,Int}[]
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
     for ii in pixelRange
         i = sub2ind(imageDims, ii.I...)
         neighborRange = CartesianRange(max(pixelFirst, ii-pixelFirst), min(pixelEnd, ii+pixelFirst))
-        for jj in neighborRange
-            if jj != ii && jj[2] == ii[2]
-                j = sub2ind(imageDims, jj.I...)
-                for kk in neighborRange
-                    if kk != ii && kk[1] == ii[1]
-                        k = sub2ind(imageDims, kk.I...)
-                        push!(idx, (i,j,k))
-                    end
-                end
-            end
+
+        jj = ii - CartesianIndex(0,1)
+        kk = ii - CartesianIndex(1,0)
+        if jj in neighborRange && kk in neighborRange
+            j = sub2ind(imageDims, jj.I...)
+            k = sub2ind(imageDims, kk.I...)
+            push!(idxJᵇᵇ, (i,j,k))
         end
+
+        jj = ii - CartesianIndex(0,1)
+        kk = ii + CartesianIndex(1,0)
+        if jj in neighborRange && kk in neighborRange
+            j = sub2ind(imageDims, jj.I...)
+            k = sub2ind(imageDims, kk.I...)
+            push!(idxJᵇᶠ, (i,j,k))
+        end
+
+        jj = ii + CartesianIndex(0,1)
+        kk = ii + CartesianIndex(1,0)
+        if jj in neighborRange && kk in neighborRange
+            j = sub2ind(imageDims, jj.I...)
+            k = sub2ind(imageDims, kk.I...)
+            push!(idxJᶠᶠ, (i,j,k))
+        end
+
+        jj = ii + CartesianIndex(0,1)
+        kk = ii - CartesianIndex(1,0)
+        if jj in neighborRange && kk in neighborRange
+            j = sub2ind(imageDims, jj.I...)
+            k = sub2ind(imageDims, kk.I...)
+            push!(idxJᶠᵇ, (i,j,k))
+        end
+
     end
-    return idx
+    return idxJᶠᶠ, idxJᵇᶠ, idxJᶠᵇ, idxJᵇᵇ
 end
 
 function neighbors(::Type{Connected26{2}}, imageDims::NTuple{3,Int})

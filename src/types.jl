@@ -100,6 +100,9 @@ TQD(;c=1.0, d=Inf) = TQD(truncated_quadratic_diff, c, d)
 The topology preservation cost.
 """
 type TP <: TopologyCost
-    𝓕::Function    # 𝓕 (\mbfscrF)
+    Jᶠᶠ::Function
+    Jᵇᶠ::Function
+    Jᶠᵇ::Function
+    Jᵇᵇ::Function
 end
-TP() = TP(topology_preserving)
+TP() = TP(jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ)

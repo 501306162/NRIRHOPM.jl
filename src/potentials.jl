@@ -113,21 +113,53 @@ end
 """
     topology_preserving(s₁, s₂, s₃, a, b, c)
 
-Returns the cost value.
+Returns the cost value. Note that the coordinate system is:
+
+```
+       y
+       ↑
+       |
+(x,y): +---> x
+```
 
 Refer to the following paper for further details:
 
 Cordero-Grande, Lucilio, et al. "A Markov random field approach for
 topology-preserving registration: Application to object-based tomographic image
-interpolation." IEEE Transactions on Image Processing 21.4 (2012): 2047-2061.
+interpolation." IEEE Transactions on Image Processing 21.4 (2012): 2051.
 """
 @inline function topology_preserving{T<:Integer}(s₁::Vector{T}, s₂::Vector{T}, s₃::Vector{T}, a::Vector{T}, b::Vector{T}, c::Vector{T})
     @inbounds begin
         𝐤s₁, 𝐤s₂, 𝐤s₃ = s₁ + a, s₂ + b, s₃ + c
-        ∂φ₁∂φ₂ = (𝐤s₂[2] - 𝐤s₁[2]) * (𝐤s₂[1] - 𝐤s₃[1])
-        ∂φ₂∂φ₁ = (𝐤s₂[1] - 𝐤s₁[1]) * (𝐤s₂[2] - 𝐤s₃[2])
-        ∂r₁∂r₂ = (s₂[2] - s₁[2])*(s₂[1] - s₃[1])
+        ∂φ₁∂φ₂ = (𝐤s₂[1] - 𝐤s₁[1]) * (𝐤s₂[2] - 𝐤s₃[2])
+        ∂φ₂∂φ₁ = (𝐤s₂[2] - 𝐤s₁[2]) * (𝐤s₂[1] - 𝐤s₃[1])
+        ∂r₁∂r₂ = (s₂[1] - s₁[1])*(s₂[2] - s₃[2])
     end
     v = (∂φ₁∂φ₂ - ∂φ₂∂φ₁) / ∂r₁∂r₂
     return v > 0 ? 0 : 1
 end
+
+"""
+    jᶠᶠ(a,b,c)
+    jᵇᶠ(a,b,c)
+    jᶠᵇ(a,b,c)
+    jᵇᵇ(a,b,c)
+
+Returns the corresponding cost value. Note that the coordinate system is:
+
+```
+(y,x): +---> x
+       |
+       ↓
+       y
+```
+
+Refer to the following paper for further details:
+
+Karacali, Bilge, and Christos Davatzikos. "Estimating topology preserving and
+smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 870.
+"""
+jᶠᶠ{N}(a::NTuple{N}, b::NTuple{N}, c::NTuple{N}) = (1+b[2]-a[2])*(1+c[1]-a[1]) - (c[2]-a[2])*(b[1]-a[1]) > 0 ? 0.0 : 1.0
+jᵇᶠ{N}(a::NTuple{N}, b::NTuple{N}, c::NTuple{N}) = (1+a[2]-b[2])*(1+c[1]-a[1]) - (c[2]-a[2])*(a[1]-b[1]) > 0 ? 0.0 : 1.0
+jᶠᵇ{N}(a::NTuple{N}, b::NTuple{N}, c::NTuple{N}) = (1+b[2]-a[2])*(1+a[1]-c[1]) - (a[2]-c[2])*(b[1]-a[1]) > 0 ? 0.0 : 1.0
+jᵇᵇ{N}(a::NTuple{N}, b::NTuple{N}, c::NTuple{N}) = (1+a[2]-b[2])*(1+a[1]-c[1]) - (a[2]-c[2])*(a[1]-b[1]) > 0 ? 0.0 : 1.0
