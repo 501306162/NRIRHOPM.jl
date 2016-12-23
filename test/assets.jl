@@ -80,7 +80,7 @@ function treyclique4validation(imageDims, deformers)
             for b in eachindex(deformers), a in eachindex(deformers), c in eachindex(deformers)
                 indexNum += 1
                 cost = NRIRHOPM.topology_preserving([jj.I...], [ii.I...], [kk.I...], deformers[b], deformers[a], deformers[c])
-                data[indexNum] = cost
+                data[indexNum] = e^-cost
                 indTemp = sub2ind(𝐇⁶Dims, i, a, j, b, k, c)
                 index[indexNum] = ind2sub(𝐇³Dims, indTemp)
             end

@@ -68,8 +68,8 @@ function treyclique(imageDims::NTuple{2}, labels::Vector{NTuple{2}}, potential::
     blockJᶠᵇ = [potential.Jᶠᵇ(α, β, χ) for α in labels, β in labels, χ in labels]
     blockJᵇᵇ = [potential.Jᵇᵇ(α, β, χ) for α in labels, β in labels, χ in labels]
 
-    return BSSTensor([TensorBlock(weight*blockJᶠᶠ, indexJᶠᶠ, tensorDims),
-                      TensorBlock(weight*blockJᵇᶠ, indexJᵇᶠ, tensorDims),
-                      TensorBlock(weight*blockJᶠᵇ, indexJᶠᵇ, tensorDims),
-                      TensorBlock(weight*blockJᵇᵇ, indexJᵇᵇ, tensorDims)], tensorDims)
+    return BSSTensor([TensorBlock(weight*e.^-blockJᶠᶠ, indexJᶠᶠ, tensorDims),
+                      TensorBlock(weight*e.^-blockJᵇᶠ, indexJᵇᶠ, tensorDims),
+                      TensorBlock(weight*e.^-blockJᶠᵇ, indexJᶠᵇ, tensorDims),
+                      TensorBlock(weight*e.^-blockJᵇᵇ, indexJᵇᵇ, tensorDims)], tensorDims)
 end
