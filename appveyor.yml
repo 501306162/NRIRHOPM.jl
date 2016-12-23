@@ -10,12 +10,10 @@ branches:
     - master
     - /release-.*/
 
-# matrix:
-#   allow_failures:
-#     - platform: x86
-#       configuration: Debug
-#     - platform: x64
-#       configuration: Release
+matrix:
+  allow_failures:
+    - JULIAVERSION: "julialang/bin/winnt/x86/0.5/julia-0.5-latest-win32.exe"
+    - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
 
 notifications:
   - provider: Email
