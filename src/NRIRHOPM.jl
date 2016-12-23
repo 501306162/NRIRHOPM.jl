@@ -33,12 +33,12 @@ function dirhop(fixedImg, movingImg, labels; datacost::DataCost=SAD(),
     pixelNum = length(fixedImg)
     labelNum = length(labels)
 
-    @time 𝐇¹ = unaryclique(fixedImg, movingImg, labels; algorithm=datacost)
-	@time 𝐇² = pairwiseclique(fixedImg, movingImg, deformableWindow)
+    @time 𝐇¹ = unaryclique(fixedImg, movingImg, labels, datacost)
+	@time 𝐇² = pairwiseclique(fixedImg, movingImg, labels, α, smooth)
     if β == 0
         @time score, 𝐯 = hopm(𝐇¹, 𝐇²)
     else
-        @time 𝐇³ = treyclique(fixedImg, movingImg, deformableWindow; algorithm=trey, ω=γ)
+        @time 𝐇³ = treyclique(fixedImg, movingImg, labels, β, trey)
         @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇³)
     end
     𝐌 = reshape(𝐯, pixelNum, labelNum)
@@ -48,7 +48,7 @@ end
 function registering(movingImg, labels, indicator::Vector{Int})
     imageDims = size(movingImg)
     registeredImg = similar(movingImg)
-    quivers = Matrix(imageDims)
+    quivers = Matrix(imageDims...)
     for 𝒊 in CartesianRange(imageDims)
         i = sub2ind(imageDims, 𝒊.I...)
         quivers[𝒊] = labels[indicator[i]]

@@ -30,7 +30,7 @@ function pairwiseclique{N,P<:SmoothCost}(imageDims::NTuple{N}, labels::Vector{NT
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum)
-    info("Calling pairwiseclique($P): ")
+    info("Calling pairwiseclique($P) with weight=$weight: ")
     args = map(x->getfield(potential,x), fieldnames(potential)[2:end])
     block = [potential.𝓕(α, β, args...) for α in labels, β in labels]
     block = e.^-block
@@ -56,7 +56,7 @@ function treyclique(imageDims::NTuple{2}, labels::Vector{NTuple{2}}, potential::
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
-    info("Calling treyclique(Topology Preserving): ")
+    info("Calling treyclique(Topology Preserving) with weight=$weight: ")
     #   □ ⬓ □        ⬓                ⬓      y,x-->    ⬔ => ii => p1
     #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ▦ => jj => p2
     #   □ ⬓ □              ⬓    ⬓            ↓         ⬓ => kk => p3
