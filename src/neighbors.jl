@@ -23,11 +23,11 @@ function neighbors(::Type{Connected8{2}}, imageDims::NTuple{2,Int})
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
     for ii in pixelRange
-        i = sub2ind(imageDims, ii[1], ii[2])
+        i = sub2ind(imageDims, ii.I...)
         neighborRange = CartesianRange(max(pixelFirst, ii-pixelFirst), min(pixelEnd, ii+pixelFirst))
         for jj in neighborRange
             if jj < ii
-                j = sub2ind(imageDims, jj[1], jj[2])
+                j = sub2ind(imageDims, jj.I...)
                 push!(idx, (i,j))
             end
         end
@@ -83,24 +83,37 @@ function neighbors(::Type{Connected8{3}}, imageDims::NTuple{2,Int})
             k = sub2ind(imageDims, kk.I...)
             push!(idxJᶠᵇ, (i,j,k))
         end
-
     end
     return idxJᶠᶠ, idxJᵇᶠ, idxJᶠᵇ, idxJᵇᵇ
 end
 
 function neighbors(::Type{Connected26{2}}, imageDims::NTuple{3,Int})
+    # 26-Connected neighborhood for 2-element cliques
+    idx = NTuple{2,Int}[]
+    pixelRange = CartesianRange(imageDims)
+    pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
+    for iii in pixelRange
+        i = sub2ind(imageDims, iii.I...)
+        neighborRange = CartesianRange(max(pixelFirst, iii-pixelFirst), min(pixelEnd, iii+pixelFirst))
+        for jjj in neighborRange
+            if jjj < iii
+                j = sub2ind(imageDims, jjj.I...)
+                push!(idx, (i,j))
+            end
+        end
+    end
+    return idx
+end
+
+function neighbors(::Type{Connected26{3}}, imageDims::NTuple{3,Int})
+    # 26-Connected neighborhood for 3-element cliques
     idx = NTuple{3,Int}[]
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
     for iii in pixelRange
-        i = sub2ind(imageDims, iii[1], iii[2], iii[3])
+        i = sub2ind(imageDims, iii.I...)
         neighborRange = CartesianRange(max(pixelFirst, iii-pixelFirst), min(pixelEnd, iii+pixelFirst))
-        for jjj in neighborRange
-            if jjj < iii
-                j = sub2ind(imageDims, jjj[1], jjj[2], jjj[3])
-                push!(idx, (i,j))
-            end
-        end
+
     end
     return idx
 end
