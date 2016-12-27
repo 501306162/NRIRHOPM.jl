@@ -148,10 +148,10 @@ end
 Returns the corresponding cost value. Note that the coordinate system is:
 
 ```
-(y,x): +---> x
+(r,c): +---> c
        |
        ↓
-       y
+       r
 ```
 
 Refer to the following paper for further details:
@@ -159,7 +159,7 @@ Refer to the following paper for further details:
 Karacali, Bilge, and Christos Davatzikos. "Estimating topology preserving and
 smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 870.
 """
-jᶠᶠ{N}(a::NTuple{N}, b::NTuple{N}, c::NTuple{N}) = (1+b[2]-a[2])*(1+c[1]-a[1]) - (c[2]-a[2])*(b[1]-a[1]) > 0 ? 0.0 : 1.0
-jᵇᶠ{N}(a::NTuple{N}, b::NTuple{N}, c::NTuple{N}) = (1+a[2]-b[2])*(1+c[1]-a[1]) - (c[2]-a[2])*(a[1]-b[1]) > 0 ? 0.0 : 1.0
-jᶠᵇ{N}(a::NTuple{N}, b::NTuple{N}, c::NTuple{N}) = (1+b[2]-a[2])*(1+a[1]-c[1]) - (a[2]-c[2])*(b[1]-a[1]) > 0 ? 0.0 : 1.0
-jᵇᵇ{N}(a::NTuple{N}, b::NTuple{N}, c::NTuple{N}) = (1+a[2]-b[2])*(1+a[1]-c[1]) - (a[2]-c[2])*(a[1]-b[1]) > 0 ? 0.0 : 1.0
+jᶠᶠ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+β[1]-α[1])*(1+χ[2]-α[2]) - (χ[1]-α[1])*(β[2]-α[2]) > 0 ? 0.0 : 1.0
+jᵇᶠ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+α[1]-β[1])*(1+χ[2]-α[2]) - (χ[1]-α[1])*(α[2]-β[2]) > 0 ? 0.0 : 1.0
+jᶠᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+β[1]-α[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(β[2]-α[2]) > 0 ? 0.0 : 1.0
+jᵇᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+α[1]-β[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(α[2]-β[2]) > 0 ? 0.0 : 1.0

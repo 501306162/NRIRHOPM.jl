@@ -131,16 +131,16 @@ println("Passed.")
 # test for topology_preserving
 info("Testing topology_preserving:")
 # topology_preserving                        y
-#   □ ⬓ □        ⬓                ⬓          ↑        ⬔ => p1 => a
-#   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦        |        ▦ => p2 => b
-#   □ ⬓ □              ⬓    ⬓          (x,y):+--> x   ⬓ => p3 => c
+#   □ ▦ □        ▦                ▦          ↑        ⬔ => p1 => a
+#   ⬓ ⬔ ⬓  =>  ⬓ ⬔   ⬓ ⬔    ⬔ ⬓   ⬔ ⬓        |        ⬓ => p2 => b
+#   □ ▦ □              ▦    ▦          (x,y):+--> x   ▦ => p3 => c
 #              Jᵇᶠ   Jᵇᵇ    Jᶠᵇ   Jᶠᶠ
 
 # jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ
-#   □ ⬓ □        ⬓                ⬓    (y,x):+--> x   ⬔ => p1 => a
-#   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦        |        ▦ => p2 => b
-#   □ ⬓ □              ⬓    ⬓                ↓        ⬓ => p3 => c
-#              Jᵇᵇ   Jᵇᶠ    Jᶠᶠ   Jᶠᵇ        y
+#   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => p1 => a
+#   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ⬓ => p2 => b
+#   □ ⬓ □              ⬓    ⬓            ↓         ▦ => p3 => c
+#              Jᵇᵇ   Jᶠᵇ    Jᶠᶠ   Jᵇᶠ
 
 # test for Jᵇᶠ
 p1 = rand(0:256, 2)
@@ -149,15 +149,15 @@ p3 = p1 + [0,1]
 
 a, b, c = [1,1], [0,-1], [-1,1]
 @test topology_preserving(p2, p1, p3, b, a, c) == 0
-@test jᵇᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 0
+@test jᵇᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
 a, b, c = [-1,-1], [0,-1], [-1,1]
 @test topology_preserving(p2, p1, p3, b, a, c) == 1
-@test jᵇᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 1
+@test jᵇᶠ(tuple(a...), tuple(b...), tuple(c...)) == 1
 
 for i = 1:1000
     a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
-    @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1]))
+    @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᶠ(tuple(a...), tuple(b...), tuple(c...))
 end
 
 # test for Jᵇᵇ
@@ -167,15 +167,15 @@ p3 = p1 - [0,1]
 
 a, b, c = [1,-1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 0
-@test jᵇᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 0
+@test jᵇᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
 a, b, c = [-1,-1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 1
-@test jᵇᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 1
+@test jᵇᵇ(tuple(a...), tuple(b...), tuple(c...)) == 1
 
 for i = 1:1000
     a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
-    @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1]))
+    @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᵇ(tuple(a...), tuple(b...), tuple(c...))
 end
 
 # test for Jᶠᵇ
@@ -185,15 +185,15 @@ p3 = p1 - [0,1]
 
 a, b, c = [-1,1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 0
-@test jᶠᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 0
+@test jᶠᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
 a, b, c = [1,-1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 1
-@test jᶠᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 1
+@test jᶠᵇ(tuple(a...), tuple(b...), tuple(c...)) == 1
 
 for i = 1:1000
     a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
-    @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1]))
+    @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᵇ(tuple(a...), tuple(b...), tuple(c...))
 end
 
 # test for Jᶠᶠ
@@ -203,15 +203,15 @@ p3 = p1 + [0,1]
 
 a, b, c = [-1,-1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 0
-@test jᶠᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 0
+@test jᶠᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
 a, b, c = [1,1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 1
-@test jᶠᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 1
+@test jᶠᶠ(tuple(a...), tuple(b...), tuple(c...)) == 1
 
 for i = 1:1000
     a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
-    @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1]))
+    @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᶠ(tuple(a...), tuple(b...), tuple(c...))
 end
 
 println("Passed.")
