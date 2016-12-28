@@ -1,6 +1,7 @@
 import NRIRHOPM: sum_absolute_diff, sum_squared_diff,
                  potts_model, truncated_absolute_diff, truncated_quadratic_diff,
-                 topology_preserving, jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ
+                 topology_preserving, jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ, jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ,
+                 jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
 
 # construct simple 0-1 images
 targetImage = Float64[1 0 1;
@@ -131,16 +132,16 @@ println("Passed.")
 # test for topology_preserving
 info("Testing topology_preserving:")
 # topology_preserving                        y
-#   □ ⬓ □        ⬓                ⬓          ↑        ⬔ => p1 => a
-#   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦        |        ▦ => p2 => b
-#   □ ⬓ □              ⬓    ⬓          (x,y):+--> x   ⬓ => p3 => c
+#   □ ▦ □        ▦                ▦          ↑        ⬔ => p1 => a
+#   ⬓ ⬔ ⬓  =>  ⬓ ⬔   ⬓ ⬔    ⬔ ⬓   ⬔ ⬓        |        ⬓ => p2 => b
+#   □ ▦ □              ▦    ▦          (x,y):+--> x   ▦ => p3 => c
 #              Jᵇᶠ   Jᵇᵇ    Jᶠᵇ   Jᶠᶠ
 
 # jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ
-#   □ ⬓ □        ⬓                ⬓    (y,x):+--> x   ⬔ => p1 => a
-#   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦        |        ▦ => p2 => b
-#   □ ⬓ □              ⬓    ⬓                ↓        ⬓ => p3 => c
-#              Jᵇᵇ   Jᵇᶠ    Jᶠᶠ   Jᶠᵇ        y
+#   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => p1 => a
+#   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ⬓ => p2 => b
+#   □ ⬓ □              ⬓    ⬓            ↓         ▦ => p3 => c
+#              Jᵇᵇ   Jᶠᵇ    Jᶠᶠ   Jᵇᶠ
 
 # test for Jᵇᶠ
 p1 = rand(0:256, 2)
@@ -149,15 +150,15 @@ p3 = p1 + [0,1]
 
 a, b, c = [1,1], [0,-1], [-1,1]
 @test topology_preserving(p2, p1, p3, b, a, c) == 0
-@test jᵇᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 0
+@test jᵇᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
 a, b, c = [-1,-1], [0,-1], [-1,1]
 @test topology_preserving(p2, p1, p3, b, a, c) == 1
-@test jᵇᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 1
+@test jᵇᶠ(tuple(a...), tuple(b...), tuple(c...)) == 1
 
 for i = 1:1000
     a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
-    @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1]))
+    @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᶠ(tuple(a...), tuple(b...), tuple(c...))
 end
 
 # test for Jᵇᵇ
@@ -167,15 +168,15 @@ p3 = p1 - [0,1]
 
 a, b, c = [1,-1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 0
-@test jᵇᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 0
+@test jᵇᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
 a, b, c = [-1,-1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 1
-@test jᵇᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 1
+@test jᵇᵇ(tuple(a...), tuple(b...), tuple(c...)) == 1
 
 for i = 1:1000
     a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
-    @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1]))
+    @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᵇ(tuple(a...), tuple(b...), tuple(c...))
 end
 
 # test for Jᶠᵇ
@@ -185,15 +186,15 @@ p3 = p1 - [0,1]
 
 a, b, c = [-1,1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 0
-@test jᶠᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 0
+@test jᶠᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
 a, b, c = [1,-1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 1
-@test jᶠᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 1
+@test jᶠᵇ(tuple(a...), tuple(b...), tuple(c...)) == 1
 
 for i = 1:1000
     a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
-    @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᵇ((a[2],a[1]), (b[2],b[1]), (c[2],c[1]))
+    @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᵇ(tuple(a...), tuple(b...), tuple(c...))
 end
 
 # test for Jᶠᶠ
@@ -203,15 +204,79 @@ p3 = p1 + [0,1]
 
 a, b, c = [-1,-1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 0
-@test jᶠᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 0
+@test jᶠᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
 a, b, c = [1,1], [0,0], [0,0]
 @test topology_preserving(p2, p1, p3, b, a, c) == 1
-@test jᶠᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1])) == 1
+@test jᶠᶠ(tuple(a...), tuple(b...), tuple(c...)) == 1
 
 for i = 1:1000
     a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
-    @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᶠ((a[2],a[1]), (b[2],b[1]), (c[2],c[1]))
+    @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᶠ(tuple(a...), tuple(b...), tuple(c...))
 end
+
+# topology preserving in 3D(just some trivial tests)
+# coordinate system(r,c,z):
+#  up  r     c --->        z × × (front to back)
+#  to  |   left to right     × ×
+# down ↓
+# coordinate => point => label:
+# iii => p1 => α   jjj => p2 => β   kkk => p3 => χ   mmm => p5 => δ
+
+# test for Jᶠᶠᶠ
+a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+@test jᶠᶠᶠ(a,b,c,d) == 0
+
+a, b, c, d = (1,1,1), (0,0,0), (0,0,0), (0,0,0)
+@test jᶠᶠᶠ(a,b,c,d) == 1
+
+# test for Jᵇᶠᶠ
+a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+@test jᵇᶠᶠ(a,b,c,d) == 0
+
+a, b, c, d = (-1,1,1), (0,0,0), (0,0,0), (0,0,0)
+@test jᵇᶠᶠ(a,b,c,d) == 1
+
+# test for Jᶠᵇᶠ
+a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+@test jᶠᵇᶠ(a,b,c,d) == 0
+
+a, b, c, d = (1,-1,1), (0,0,0), (0,0,0), (0,0,0)
+@test jᶠᵇᶠ(a,b,c,d) == 1
+
+# test for Jᵇᵇᶠ
+a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+@test jᵇᵇᶠ(a,b,c,d) == 0
+
+a, b, c, d = (-1,-1,1), (0,0,0), (0,0,0), (0,0,0)
+@test jᵇᵇᶠ(a,b,c,d) == 1
+
+# test for Jᶠᶠᵇ
+a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+@test jᶠᶠᵇ(a,b,c,d) == 0
+
+a, b, c, d = (1,1,-1), (0,0,0), (0,0,0), (0,0,0)
+@test jᶠᶠᵇ(a,b,c,d) == 1
+
+# test for Jᵇᶠᵇ
+a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+@test jᵇᶠᵇ(a,b,c,d) == 0
+
+a, b, c, d = (-1,1,-1), (0,0,0), (0,0,0), (0,0,0)
+@test jᵇᶠᵇ(a,b,c,d) == 1
+
+# test for Jᶠᵇᵇ
+a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+@test jᶠᵇᵇ(a,b,c,d) == 0
+
+a, b, c, d = (1,-1,-1), (0,0,0), (0,0,0), (0,0,0)
+@test jᶠᵇᵇ(a,b,c,d) == 1
+
+# test for Jᵇᵇᵇ
+a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
+@test jᵇᵇᵇ(a,b,c,d) == 0
+
+a, b, c, d = (-1,-1,-1), (0,0,0), (0,0,0), (0,0,0)
+@test jᵇᵇᵇ(a,b,c,d) == 1
 
 println("Passed.")

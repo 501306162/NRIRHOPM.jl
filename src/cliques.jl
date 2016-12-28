@@ -57,10 +57,10 @@ function treyclique(imageDims::NTuple{2}, labels::Vector{NTuple{2}}, potential::
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
     info("Calling treyclique(Topology Preserving) with weight=$weight: ")
-    #   □ ⬓ □        ⬓                ⬓      y,x-->    ⬔ => ii => p1
-    #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ▦ => jj => p2
-    #   □ ⬓ □              ⬓    ⬓            ↓         ⬓ => kk => p3
-    #              Jᵇᵇ   Jᵇᶠ    Jᶠᶠ   Jᶠᵇ
+    #   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => ii => p1
+    #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ⬓ => jj => p2
+    #   □ ⬓ □              ⬓    ⬓            ↓         ▦ => kk => p3
+    #              Jᵇᵇ   Jᶠᵇ    Jᶠᶠ   Jᵇᶠ
     indexJᶠᶠ, indexJᵇᶠ, indexJᶠᵇ, indexJᵇᵇ = neighbors(Connected8{3},imageDims)
 
     blockJᶠᶠ = [potential.Jᶠᶠ(α, β, χ) for α in labels, β in labels, χ in labels]
