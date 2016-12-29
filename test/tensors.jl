@@ -1,8 +1,6 @@
 using TensorOperations
 import NRIRHOPM: contract
 
-const TolTensor = 1e-10
-
 info("Testing 2nd order SSTensor:")
 n = 100
 A = Symmetric(rand(n,n))
@@ -16,8 +14,8 @@ for i = 1:n, j = i+1:n
     push!(index, (i,j))
 end
 
-@test vecnorm(contract(SSTensor(data, index, size(A)), x) - tensorcontract(A, [1,2], x, [2])) < TolTensor
-@test vecnorm(SSTensor(data, index, size(A)) ⊙ x - tensorcontract(A, [1,2], x, [2])) < TolTensor
+@test contract(SSTensor(data, index, size(A)), x) ≈ tensorcontract(A, [1,2], x, [2])
+@test SSTensor(data, index, size(A)) ⊙ x ≈ tensorcontract(A, [1,2], x, [2])
 println("Passed.")
 
 info("Testing 3rd order SSTensor:")
@@ -40,8 +38,8 @@ end
 
 x = rand(n)
 v = tensorcontract(A, [1,2,3], x, [3])
-@test vecnorm(contract(SSTensor(data, index, size(A)), x) - tensorcontract(v, [1,2], x, [2])) < TolTensor
-@test vecnorm(SSTensor(data, index, size(A)) ⊙ x - tensorcontract(v, [1,2], x, [2])) < TolTensor
+@test contract(SSTensor(data, index, size(A)), x) ≈ tensorcontract(v, [1,2], x, [2])
+@test SSTensor(data, index, size(A)) ⊙ x ≈ tensorcontract(v, [1,2], x, [2])
 println("Passed.")
 
 info("Testing 4th order BSSTensor:")
@@ -50,7 +48,7 @@ labels = [[(i,j) for i in -2:2, j in -2:2]...]
 ss = pairwiseclique4validation(imageDims, labels);
 bss = pairwiseclique(imageDims, labels, TAD());
 x = rand(prod(imageDims)*length(labels))
-@test ss ⊙ x == bss ⊙ x
+@test ss ⊙ x ≈ bss ⊙ x
 println("Passed.")
 
 info("Testing 6th order BSSTensor:")
@@ -59,7 +57,7 @@ labels = [[(i,j) for i in -1:1, j in -1:1]...]
 ss = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
 bss = treyclique(imageDims, labels, TP());
 x = rand(prod(imageDims)*length(labels))
-@test vecnorm(ss ⊙ x - bss ⊙ x) < TolTensor
+@test ss ⊙ x ≈ bss ⊙ x
 println("Passed.")
 
 info("Testing trivial interfaces:")
