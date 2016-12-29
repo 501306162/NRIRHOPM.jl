@@ -91,7 +91,7 @@ end
 function quadraclique(imageDims::NTuple{3}, labels::Vector{NTuple{3}}, potential::TP, weight=1)
     pixelNum = prod(imageDims)
     labelNum = length(labels)
-    tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
+    tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
     info("Calling treyclique(Topology Preserving) with weight=$weight: ")
     indexJᶠᶠᶠ, indexJᵇᶠᶠ, indexJᶠᵇᶠ, indexJᵇᵇᶠ, indexJᶠᶠᵇ, indexJᵇᶠᵇ, indexJᶠᵇᵇ, indexJᵇᵇᵇ = neighbors(Connected26{4}, imageDims)
 

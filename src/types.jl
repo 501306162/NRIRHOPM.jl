@@ -104,5 +104,13 @@ type TP <: TopologyCost
     Jᵇᶠ::Function
     Jᶠᵇ::Function
     Jᵇᵇ::Function
+    Jᶠᶠᶠ::Function
+    Jᵇᶠᶠ::Function
+    Jᶠᵇᶠ::Function
+    Jᵇᵇᶠ::Function
+    Jᶠᶠᵇ::Function
+    Jᵇᶠᵇ::Function
+    Jᶠᵇᵇ::Function
+    Jᵇᵇᵇ::Function
 end
-TP() = TP(jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ)
+TP() = TP(jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ, jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ)
