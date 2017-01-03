@@ -16,6 +16,7 @@ Base.size(𝐇::TensorBlock, i::Integer) = 𝐇.dims[i]
 Base.length(𝐇::TensorBlock) = prod(𝐇.dims)
 Base.getindex{T<:Real}(𝐇::TensorBlock{T,2,4}, i::Integer, a::Integer, j::Integer, b::Integer) = 𝐇.block[a,b]
 Base.getindex{T<:Real}(𝐇::TensorBlock{T,3,6}, i::Integer, a::Integer, j::Integer, b::Integer, k::Integer, c::Integer) = 𝐇.block[a,b,c]
+Base.getindex{T<:Real}(𝐇::TensorBlock{T,4,8}, i::Integer, a::Integer, j::Integer, b::Integer, k::Integer, c::Integer, m::Integer, d::Integer) = 𝐇.block[a,b,c,d]
 ==(x::TensorBlock, y::TensorBlock) = x.block == y.block && x.index == y.index && x.dims == y.dims
 
 function contract{T<:Real}(𝐇::TensorBlock{T,2,4}, 𝐱::Matrix{T})
@@ -42,6 +43,22 @@ function contract{T<:Real}(𝐇::TensorBlock{T,3,6}, 𝐱::Matrix{T})
             𝐌[i,a] += 2.0 * 𝐇[i,a,j,b,k,c] * 𝐱[j,b] * 𝐱[k,c]
             𝐌[j,b] += 2.0 * 𝐇[i,a,j,b,k,c] * 𝐱[i,a] * 𝐱[k,c]
             𝐌[k,c] += 2.0 * 𝐇[i,a,j,b,k,c] * 𝐱[i,a] * 𝐱[j,b]
+        end
+    end
+    return reshape(𝐌, pixelNum*labelNum)
+end
+
+function contract{T<:Real}(𝐇::TensorBlock{T,4,8}, 𝐱::Matrix{T})
+    pixelNum, labelNum = size(𝐇,1), size(𝐇,2)
+    𝐌 = zeros(T, pixelNum, labelNum)
+    for n in 1:nnz(𝐇)
+        i, j, k, m = 𝐇.index[n]
+        for llll in CartesianRange(size(𝐇.block))
+            a, b, c, d = llll.I
+            𝐌[i,a] += 6.0 * 𝐇[i,a,j,b,k,c,m,d] * 𝐱[j,b] * 𝐱[k,c] * 𝐱[m,d]
+            𝐌[j,b] += 6.0 * 𝐇[i,a,j,b,k,c,m,d] * 𝐱[i,a] * 𝐱[k,c] * 𝐱[m,d]
+            𝐌[k,c] += 6.0 * 𝐇[i,a,j,b,k,c,m,d] * 𝐱[i,a] * 𝐱[j,b] * 𝐱[m,d]
+            𝐌[m,d] += 6.0 * 𝐇[i,a,j,b,k,c,m,d] * 𝐱[i,a] * 𝐱[j,b] * 𝐱[k,c]
         end
     end
     return reshape(𝐌, pixelNum*labelNum)
@@ -101,6 +118,18 @@ function contract{T<:Real}(𝐇::SSTensor{T,3}, 𝐱::Vector{T})
         𝐯[x] += 2.0 * 𝐇.data[i] * 𝐱[y] * 𝐱[z]
         𝐯[y] += 2.0 * 𝐇.data[i] * 𝐱[x] * 𝐱[z]
         𝐯[z] += 2.0 * 𝐇.data[i] * 𝐱[x] * 𝐱[y]
+    end
+    return 𝐯
+end
+
+function contract{T<:Real}(𝐇::SSTensor{T,4}, 𝐱::Vector{T})
+    𝐯 = zeros(T, size(𝐇,1))
+    for i in 1:nnz(𝐇)
+        x, y, z, w = 𝐇.index[i]
+        𝐯[x] += 6.0 * 𝐇.data[i] * 𝐱[y] * 𝐱[z] * 𝐱[w]
+        𝐯[y] += 6.0 * 𝐇.data[i] * 𝐱[x] * 𝐱[z] * 𝐱[w]
+        𝐯[z] += 6.0 * 𝐇.data[i] * 𝐱[x] * 𝐱[y] * 𝐱[w]
+        𝐯[w] += 6.0 * 𝐇.data[i] * 𝐱[x] * 𝐱[y] * 𝐱[z]
     end
     return 𝐯
 end
