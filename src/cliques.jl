@@ -7,7 +7,6 @@ Construct the **data cost**.
 function unaryclique{T,N,P<:DataCost}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels::Array{NTuple{N}}, potential::P=SAD())
     imageDims = size(fixedImg)
     imageDims == size(movingImg) || throw(ArgumentError("Fixed image and moving image are not in the same size!"))
-    info("Calling unaryclique($P): ")
     return potential.𝓕(fixedImg, movingImg, labels)
 end
 
@@ -30,7 +29,6 @@ function pairwiseclique{N,P<:SmoothCost}(imageDims::NTuple{N}, labels::Vector{NT
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum)
-    info("Calling pairwiseclique($P) with weight=$weight: ")
     args = map(x->getfield(potential,x), fieldnames(potential)[2:end])
     block = [potential.𝓕(α, β, args...) for α in labels, β in labels]
     block = e.^-block
@@ -56,7 +54,6 @@ function treyclique(imageDims::NTuple{2}, labels::Vector{NTuple{2}}, potential::
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
-    info("Calling treyclique(Topology Preserving) with weight=$weight: ")
     #   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => ii => p1 => α
     #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ⬓ => jj => p2 => β
     #   □ ⬓ □              ⬓    ⬓            ↓         ▦ => kk => p3 => χ
@@ -92,7 +89,6 @@ function quadraclique(imageDims::NTuple{3}, labels::Vector{NTuple{3}}, potential
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
-    info("Calling treyclique(Topology Preserving) with weight=$weight: ")
     indexJᶠᶠᶠ, indexJᵇᶠᶠ, indexJᶠᵇᶠ, indexJᵇᵇᶠ, indexJᶠᶠᵇ, indexJᵇᶠᵇ, indexJᶠᵇᵇ, indexJᵇᵇᵇ = neighbors(Connected26{4}, imageDims)
 
     blockJᶠᶠᶠ = [potential.Jᶠᶠᶠ(α, β, χ, δ) for α in labels, β in labels, χ in labels, δ in labels]
