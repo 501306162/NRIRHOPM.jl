@@ -28,20 +28,27 @@ include("utils.jl")
 
 function dirhop(fixedImg, movingImg, labels; datacost::DataCost=SAD(),
                 smooth::SmoothCost=TAD(), topology::TopologyCost=TP(),
-                α::Real=1,                β::Real=1)
+                α::Real=1,                β::Real=1,
+                verbose::Bool=true)
     imageDims = size(fixedImg)
     imageDims == size(movingImg) || throw(ArgumentError("Fixed image and moving image are not in the same size!"))
     pixelNum = length(fixedImg)
     labelNum = length(labels)
 
+    verbose && info("Calling unaryclique($datacost): ")
     @time 𝐇¹ = unaryclique(fixedImg, movingImg, labels, datacost)
+
+    verbose && info("Calling pairwiseclique($smooth) with weight=$α: ")
 	@time 𝐇² = pairwiseclique(fixedImg, movingImg, labels, α, smooth)
+
     if β == 0
         @time score, 𝐯 = hopm(𝐇¹, 𝐇²)
     elseif length(imageDims) == 2
+        verbose && info("Calling treyclique(Topology-Preserving-2D) with weight=$β: ")
         @time 𝐇³ = treyclique(fixedImg, movingImg, labels, β, topology)
         @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇³)
     elseif length(imageDims) == 3
+        info("Calling quadraclique(Topology-Preserving-3D) with weight=$β: ")
         @time 𝐇⁴ = quadraclique(fixedImg, movingImg, labels, β, topology)
         @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇⁴)
     end

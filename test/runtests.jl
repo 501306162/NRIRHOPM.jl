@@ -1,13 +1,12 @@
 using NRIRHOPM
 using Base.Test
 
-fileDir = dirname(@__FILE__)
-include(joinpath(fileDir, "potentials.jl"))
-include(joinpath(fileDir, "neighbors.jl"))
-include(joinpath(fileDir, "assets.jl"))
-include(joinpath(fileDir, "tensors.jl"))
-include(joinpath(fileDir, "cliques.jl"))
-include(joinpath(fileDir, "hopm.jl"))
+include("potentials.jl")
+include("neighbors.jl")
+include("funcs.jl")
+include("tensors.jl")
+include("cliques.jl")
+include("hopm.jl")
 
 # test a simple 5x5 example
 fixed = [ 1  2  3  4  5;
@@ -68,7 +67,7 @@ registered, deformgrid = registering(moving, labels, v)
 # moving = copy(fixed)
 # moving[1,3,1] = 14
 # moving[2,2,2] = 7
-# 
+#
 # labels = [(i,j,k) for i in -1:1, j in -1:1, k in -1:1]
 #
 # # with topology preserving
