@@ -3,7 +3,7 @@ using Base.Test
 
 include("potentials.jl")
 include("neighbors.jl")
-include("assets.jl")
+include("funcs.jl")
 include("tensors.jl")
 include("cliques.jl")
 include("hopm.jl")
