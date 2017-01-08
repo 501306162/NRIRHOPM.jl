@@ -141,12 +141,12 @@ labels = [(i,j) for i in -1:1, j in -1:1]
         p3 = p1 + [0,1]
 
         a, b, c = [1,1], [0,-1], [-1,1]
-        @test topology_preserving(p2, p1, p3, b, a, c) == 0
-        @test jᵇᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
-
-        a, b, c = [-1,-1], [0,-1], [-1,1]
         @test topology_preserving(p2, p1, p3, b, a, c) == 1
         @test jᵇᶠ(tuple(a...), tuple(b...), tuple(c...)) == 1
+
+        a, b, c = [-1,-1], [0,-1], [-1,1]
+        @test topology_preserving(p2, p1, p3, b, a, c) == 0
+        @test jᵇᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
         for i = 1:1000
             a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
@@ -159,12 +159,12 @@ labels = [(i,j) for i in -1:1, j in -1:1]
         p3 = p1 - [0,1]
 
         a, b, c = [1,-1], [0,0], [0,0]
-        @test topology_preserving(p2, p1, p3, b, a, c) == 0
-        @test jᵇᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
-
-        a, b, c = [-1,-1], [0,0], [0,0]
         @test topology_preserving(p2, p1, p3, b, a, c) == 1
         @test jᵇᵇ(tuple(a...), tuple(b...), tuple(c...)) == 1
+
+        a, b, c = [-1,-1], [0,0], [0,0]
+        @test topology_preserving(p2, p1, p3, b, a, c) == 0
+        @test jᵇᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
         for i = 1:1000
             a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
@@ -177,12 +177,12 @@ labels = [(i,j) for i in -1:1, j in -1:1]
         p3 = p1 - [0,1]
 
         a, b, c = [-1,1], [0,0], [0,0]
-        @test topology_preserving(p2, p1, p3, b, a, c) == 0
-        @test jᶠᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
-
-        a, b, c = [1,-1], [0,0], [0,0]
         @test topology_preserving(p2, p1, p3, b, a, c) == 1
         @test jᶠᵇ(tuple(a...), tuple(b...), tuple(c...)) == 1
+
+        a, b, c = [1,-1], [0,0], [0,0]
+        @test topology_preserving(p2, p1, p3, b, a, c) == 0
+        @test jᶠᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
         for i = 1:1000
             a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
@@ -195,12 +195,12 @@ labels = [(i,j) for i in -1:1, j in -1:1]
         p3 = p1 + [0,1]
 
         a, b, c = [-1,-1], [0,0], [0,0]
-        @test topology_preserving(p2, p1, p3, b, a, c) == 0
-        @test jᶠᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
-
-        a, b, c = [1,1], [0,0], [0,0]
         @test topology_preserving(p2, p1, p3, b, a, c) == 1
         @test jᶠᶠ(tuple(a...), tuple(b...), tuple(c...)) == 1
+
+        a, b, c = [1,1], [0,0], [0,0]
+        @test topology_preserving(p2, p1, p3, b, a, c) == 0
+        @test jᶠᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
         for i = 1:1000
             a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
@@ -217,58 +217,58 @@ labels = [(i,j) for i in -1:1, j in -1:1]
 
         # test for Jᶠᶠᶠ
         a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
-        @test jᶠᶠᶠ(a,b,c,d) == 0
+        @test jᶠᶠᶠ(a,b,c,d) == 1
 
         a, b, c, d = (1,1,1), (0,0,0), (0,0,0), (0,0,0)
-        @test jᶠᶠᶠ(a,b,c,d) == 1
+        @test jᶠᶠᶠ(a,b,c,d) == 0
 
         # test for Jᵇᶠᶠ
         a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
-        @test jᵇᶠᶠ(a,b,c,d) == 0
+        @test jᵇᶠᶠ(a,b,c,d) == 1
 
         a, b, c, d = (-1,1,1), (0,0,0), (0,0,0), (0,0,0)
-        @test jᵇᶠᶠ(a,b,c,d) == 1
+        @test jᵇᶠᶠ(a,b,c,d) == 0
 
         # test for Jᶠᵇᶠ
         a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
-        @test jᶠᵇᶠ(a,b,c,d) == 0
+        @test jᶠᵇᶠ(a,b,c,d) == 1
 
         a, b, c, d = (1,-1,1), (0,0,0), (0,0,0), (0,0,0)
-        @test jᶠᵇᶠ(a,b,c,d) == 1
+        @test jᶠᵇᶠ(a,b,c,d) == 0
 
         # test for Jᵇᵇᶠ
         a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
-        @test jᵇᵇᶠ(a,b,c,d) == 0
+        @test jᵇᵇᶠ(a,b,c,d) == 1
 
         a, b, c, d = (-1,-1,1), (0,0,0), (0,0,0), (0,0,0)
-        @test jᵇᵇᶠ(a,b,c,d) == 1
+        @test jᵇᵇᶠ(a,b,c,d) == 0
 
         # test for Jᶠᶠᵇ
         a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
-        @test jᶠᶠᵇ(a,b,c,d) == 0
+        @test jᶠᶠᵇ(a,b,c,d) == 1
 
         a, b, c, d = (1,1,-1), (0,0,0), (0,0,0), (0,0,0)
-        @test jᶠᶠᵇ(a,b,c,d) == 1
+        @test jᶠᶠᵇ(a,b,c,d) == 0
 
         # test for Jᵇᶠᵇ
         a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
-        @test jᵇᶠᵇ(a,b,c,d) == 0
+        @test jᵇᶠᵇ(a,b,c,d) == 1
 
         a, b, c, d = (-1,1,-1), (0,0,0), (0,0,0), (0,0,0)
-        @test jᵇᶠᵇ(a,b,c,d) == 1
+        @test jᵇᶠᵇ(a,b,c,d) == 0
 
         # test for Jᶠᵇᵇ
         a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
-        @test jᶠᵇᵇ(a,b,c,d) == 0
+        @test jᶠᵇᵇ(a,b,c,d) == 1
 
         a, b, c, d = (1,-1,-1), (0,0,0), (0,0,0), (0,0,0)
-        @test jᶠᵇᵇ(a,b,c,d) == 1
+        @test jᶠᵇᵇ(a,b,c,d) == 0
 
         # test for Jᵇᵇᵇ
         a, b, c, d = (0,0,0), (0,0,0), (0,0,0), (0,0,0)
-        @test jᵇᵇᵇ(a,b,c,d) == 0
+        @test jᵇᵇᵇ(a,b,c,d) == 1
 
         a, b, c, d = (-1,-1,-1), (0,0,0), (0,0,0), (0,0,0)
-        @test jᵇᵇᵇ(a,b,c,d) == 1
+        @test jᵇᵇᵇ(a,b,c,d) == 0
     end
 end

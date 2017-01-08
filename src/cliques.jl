@@ -4,7 +4,7 @@
 
 Construct the **data cost**.
 """
-function unaryclique{T,N,P<:DataCost}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels::Array{NTuple{N}}, potential::P=SAD())
+function unaryclique{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels::Array{NTuple{N}}, potential::DataCost=SAD())
     imageDims = size(fixedImg)
     imageDims == size(movingImg) || throw(ArgumentError("Fixed image and moving image are not in the same size!"))
     return potential.𝓕(fixedImg, movingImg, labels)
@@ -25,7 +25,7 @@ function pairwiseclique{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels
     pairwiseclique(imageDims, reshape(labels, length(labels)), potential, weight)
 end
 
-function pairwiseclique{N,P<:SmoothCost}(imageDims::NTuple{N}, labels::Vector{NTuple{N}}, potential::P, weight=1)
+function pairwiseclique{N}(imageDims::NTuple{N}, labels::Vector{NTuple{N}}, potential::SmoothCost, weight=1)
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum)
@@ -65,11 +65,12 @@ function treyclique(imageDims::NTuple{2}, labels::Vector{NTuple{2}}, potential::
     blockJᶠᵇ = [potential.Jᶠᵇ(α, β, χ) for α in labels, β in labels, χ in labels]
     blockJᵇᵇ = [potential.Jᵇᵇ(α, β, χ) for α in labels, β in labels, χ in labels]
 
-    return BSSTensor([TensorBlock(weight*e.^-blockJᶠᶠ, indexJᶠᶠ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᵇᶠ, indexJᵇᶠ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᶠᵇ, indexJᶠᵇ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᵇᵇ, indexJᵇᵇ, tensorDims)], tensorDims)
+    return BSSTensor([TensorBlock(weight*blockJᶠᶠ, indexJᶠᶠ, tensorDims),
+                      TensorBlock(weight*blockJᵇᶠ, indexJᵇᶠ, tensorDims),
+                      TensorBlock(weight*blockJᶠᵇ, indexJᶠᵇ, tensorDims),
+                      TensorBlock(weight*blockJᵇᵇ, indexJᵇᵇ, tensorDims)], tensorDims)
 end
+
 
 """
     quadraclique(fixedImg, movingImg, labels, weight)
@@ -100,14 +101,14 @@ function quadraclique(imageDims::NTuple{3}, labels::Vector{NTuple{3}}, potential
     blockJᶠᵇᵇ = [potential.Jᶠᵇᵇ(α, β, χ, δ) for α in labels, β in labels, χ in labels, δ in labels]
     blockJᵇᵇᵇ = [potential.Jᵇᵇᵇ(α, β, χ, δ) for α in labels, β in labels, χ in labels, δ in labels]
 
-    return BSSTensor([TensorBlock(weight*e.^-blockJᶠᶠᶠ, indexJᶠᶠᶠ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᵇᶠᶠ, indexJᵇᶠᶠ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᶠᵇᶠ, indexJᶠᵇᶠ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᵇᵇᶠ, indexJᵇᵇᶠ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᶠᶠᵇ, indexJᶠᶠᵇ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᵇᶠᵇ, indexJᵇᶠᵇ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᶠᵇᵇ, indexJᶠᵇᵇ, tensorDims),
-                      TensorBlock(weight*e.^-blockJᵇᵇᵇ, indexJᵇᵇᵇ, tensorDims)], tensorDims)
+    return BSSTensor([TensorBlock(weight*blockJᶠᶠᶠ, indexJᶠᶠᶠ, tensorDims),
+                      TensorBlock(weight*blockJᵇᶠᶠ, indexJᵇᶠᶠ, tensorDims),
+                      TensorBlock(weight*blockJᶠᵇᶠ, indexJᶠᵇᶠ, tensorDims),
+                      TensorBlock(weight*blockJᵇᵇᶠ, indexJᵇᵇᶠ, tensorDims),
+                      TensorBlock(weight*blockJᶠᶠᵇ, indexJᶠᶠᵇ, tensorDims),
+                      TensorBlock(weight*blockJᵇᶠᵇ, indexJᵇᶠᵇ, tensorDims),
+                      TensorBlock(weight*blockJᶠᵇᵇ, indexJᶠᵇᵇ, tensorDims),
+                      TensorBlock(weight*blockJᵇᵇᵇ, indexJᵇᵇᵇ, tensorDims)], tensorDims)
 end
 
 # function quadraclique(imageDims::NTuple{2}, labels::Vector{NTuple{2}}, potential::STP, weight=1)
