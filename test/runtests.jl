@@ -16,39 +16,35 @@ include("hopm.jl")
              21 22 23 24 25]
 
     moving = [ 1  2  3  4  5;
-              10  9  8 12  6;
-              11  7 13 18 15;
-              16 17 14 19 20;
+              10  9  8  7  6;
+              11 12 19 14 15;
+              16 13 18 17 20;
               21 22 23 24 25]
 
     labels = [(i,j) for i in -2:2, j in -2:2]
 
     @testset "without topology preservation" begin
-        @time score, v, spectrum = dirhop(fixed, moving, labels, α=0.01, β=0)
+        @time score, v, spectrum = dirhop(fixed, moving, labels, α=0.07, β=0, hopmMaxIter=500)
         @show score
 
         registered, deformgrid = registering(moving, labels, v)
 
-        @test deformgrid[2,4] == (1, -2)
-        @test deformgrid[3,2] == (-1, 2)
-        @test deformgrid[3,4] == (1, -1)
-        @test deformgrid[4,3] == (-1, 1)
-
         @test registered == fixed
+
+        display(deformgrid)
+        println("----------")
     end
 
     @testset "with topology preservation" begin
-        @time score, v, spectrum = dirhop(fixed, moving, labels, α=0, β=0.00000000001)
+        @time score, v, spectrum = dirhop(fixed, moving, labels, α=0.0, β=1e-100)
         @show score
 
         registered, deformgrid = registering(moving, labels, v)
 
-        @test deformgrid[2,4] == (1, -2)
-        @test deformgrid[3,2] == (-1, 2)
-        @test deformgrid[3,4] == (1, -1)
-        @test deformgrid[4,3] == (-1, 1)
-
         @test registered == fixed
+
+        display(deformgrid)
+        println("----------")
     end
 end
 

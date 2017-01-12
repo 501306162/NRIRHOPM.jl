@@ -29,7 +29,7 @@ include("utils.jl")
 function dirhop(fixedImg, movingImg, labels; datacost::DataCost=SAD(),
                 smooth::SmoothCost=TAD(), topology::TopologyCost=TP(),
                 α::Real=1,                β::Real=1,
-                verbose::Bool=true)
+                hopmtol=1e-5, hopmMaxIter=300, verbose::Bool=true)
     imageDims = size(fixedImg)
     imageDims == size(movingImg) || throw(ArgumentError("Fixed image and moving image are not in the same size!"))
     pixelNum = length(fixedImg)
@@ -44,15 +44,15 @@ function dirhop(fixedImg, movingImg, labels; datacost::DataCost=SAD(),
     𝐯₀ = rand(length(𝐇¹))
 
     if β == 0
-        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐯₀)
+        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐯₀, hopmtol, hopmMaxIter, verbose)
     elseif length(imageDims) == 2
         verbose && info("Calling treyclique(Topology-Preserving-2D) with weight=$β: ")
         @time 𝐇³ = treyclique(fixedImg, movingImg, labels, β, topology)
-        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇³, 𝐯₀)
+        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇³, 𝐯₀, hopmtol, hopmMaxIter, verbose)
     elseif length(imageDims) == 3
         info("Calling quadraclique(Topology-Preserving-3D) with weight=$β: ")
         @time 𝐇⁴ = quadraclique(fixedImg, movingImg, labels, β, topology)
-        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇⁴, 𝐯₀)
+        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇⁴, 𝐯₀, hopmtol, hopmMaxIter, verbose)
     end
     𝐌 = reshape(𝐯, pixelNum, labelNum)
     return score, [findmax(𝐌[i,:])[2] for i in 1:pixelNum], 𝐌

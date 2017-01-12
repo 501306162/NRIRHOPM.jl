@@ -9,7 +9,8 @@ Refer to the following paper(Algorithm 4) for further details:
 Duchenne, Olivier, et al. "A tensor-based algorithm for high-order graph matching."
 IEEE transactions on pattern analysis and machine intelligence 33.12 (2011): 2383-2395.
 """
-function hopm{T<:Real}(𝐇¹::AbstractArray{T,1}, 𝐇²::AbstractTensor{T}, 𝐯::AbstractVector{T}, tol::Float64=1e-5, maxIter::Int=100)
+function hopm{T<:Real}(𝐇¹::AbstractArray{T,1}, 𝐇²::AbstractTensor{T}, 𝐯::AbstractVector{T},
+                       tol::Float64=1e-5, maxIter::Int=300, verbose::Bool=false)
     𝐯₀ = 𝐯/vecnorm(𝐯)
     𝐯ᵢ = 𝐯₀
     i = 0
@@ -20,11 +21,16 @@ function hopm{T<:Real}(𝐇¹::AbstractArray{T,1}, 𝐇²::AbstractTensor{T}, �
         i += 1
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
-    info("HOPM converges in $i steps.")
+    if i == maxIter
+        warn("Maximum iterator number is reached, HOPM could not be convergent.")
+    else
+        verbose && info("HOPM converges in $i steps.")
+    end
     return 𝐯ᵢ ⋅ (𝐯ᵢ .* 𝐇¹ + 𝐇² ⊙ 𝐯ᵢ), 𝐯ᵢ
 end
 
-function hopm{T<:Real}(𝐇¹::AbstractArray{T,1}, 𝐇²::AbstractTensor{T}, 𝐇³⁺::AbstractTensor{T}, 𝐯::AbstractVector{T}, tol::Float64=1e-5, maxIter::Int=100)
+function hopm{T<:Real}(𝐇¹::AbstractArray{T,1}, 𝐇²::AbstractTensor{T}, 𝐇³⁺::AbstractTensor{T}, 𝐯::AbstractVector{T},
+                       tol::Float64=1e-5, maxIter::Int=300, verbose::Bool=false)
     𝐯₀ = 𝐯/vecnorm(𝐯)
     𝐯ᵢ = 𝐯₀
     i = 0
@@ -35,6 +41,10 @@ function hopm{T<:Real}(𝐇¹::AbstractArray{T,1}, 𝐇²::AbstractTensor{T}, �
         i += 1
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
-    info("HOPM converges in $i steps.")
+    if i == maxIter
+        warn("Maximum iterator number is reached, HOPM could not be convergent.")
+    else
+        verbose && info("HOPM converges in $i steps.")
+    end
     return 𝐯ᵢ ⋅ (𝐯ᵢ .* 𝐯ᵢ .* 𝐇¹ + 𝐯ᵢ .* (𝐇² ⊙ 𝐯ᵢ) + 𝐇³⁺ ⊙ 𝐯ᵢ), 𝐯ᵢ
 end
