@@ -6,7 +6,6 @@ import NRIRHOPM: contract
         n = 100
         A = Symmetric(rand(n,n))
         A -= diagm(diag(A))
-        x = rand(n)
 
         data = Float64[]
         index = NTuple{2,Int}[]
@@ -15,6 +14,7 @@ import NRIRHOPM: contract
             push!(index, (i,j))
         end
 
+        x = rand(n)
         @test contract(SSTensor(data, index, size(A)), x) ≈ tensorcontract(A, [1,2], x, [2])
         @test SSTensor(data, index, size(A)) ⊙ x ≈ tensorcontract(A, [1,2], x, [2])
     end

@@ -35,17 +35,17 @@ include("hopm.jl")
         println("----------")
     end
 
-    @testset "with topology preservation" begin
-        @time score, v, spectrum = dirhop(fixed, moving, labels, α=0.0, β=1e-100)
-        @show score
-
-        registered, deformgrid = registering(moving, labels, v)
-
-        @test registered == fixed
-
-        display(deformgrid)
-        println("----------")
-    end
+    # @testset "with topology preservation" begin
+    #     @time score, v, spectrum = dirhop(fixed, moving, labels, α=0.0, β=1e-100)
+    #     @show score
+    #
+    #     registered, deformgrid = registering(moving, labels, v)
+    #
+    #     @test registered == fixed
+    #
+    #     display(deformgrid)
+    #     println("----------")
+    # end
 end
 
 

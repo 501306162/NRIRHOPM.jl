@@ -148,7 +148,7 @@ labels = [(i,j) for i in -1:1, j in -1:1]
         @test topology_preserving(p2, p1, p3, b, a, c) == 0
         @test jᵇᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
-        for i = 1:1000
+        for i = 1:100
             a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
             @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᶠ(tuple(a...), tuple(b...), tuple(c...))
         end
@@ -166,7 +166,7 @@ labels = [(i,j) for i in -1:1, j in -1:1]
         @test topology_preserving(p2, p1, p3, b, a, c) == 0
         @test jᵇᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
-        for i = 1:1000
+        for i = 1:100
             a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
             @test topology_preserving(p2, p1, p3, b, a, c) == jᵇᵇ(tuple(a...), tuple(b...), tuple(c...))
         end
@@ -184,7 +184,7 @@ labels = [(i,j) for i in -1:1, j in -1:1]
         @test topology_preserving(p2, p1, p3, b, a, c) == 0
         @test jᶠᵇ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
-        for i = 1:1000
+        for i = 1:100
             a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
             @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᵇ(tuple(a...), tuple(b...), tuple(c...))
         end
@@ -202,7 +202,7 @@ labels = [(i,j) for i in -1:1, j in -1:1]
         @test topology_preserving(p2, p1, p3, b, a, c) == 0
         @test jᶠᶠ(tuple(a...), tuple(b...), tuple(c...)) == 0
 
-        for i = 1:1000
+        for i = 1:100
             a, b, c = rand(-15:15, 2), rand(-15:15, 2), rand(-15:15, 2)
             @test topology_preserving(p2, p1, p3, b, a, c) == jᶠᶠ(tuple(a...), tuple(b...), tuple(c...))
         end
