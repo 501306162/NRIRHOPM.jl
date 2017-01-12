@@ -41,16 +41,18 @@ function dirhop(fixedImg, movingImg, labels; datacost::DataCost=SAD(),
     verbose && info("Calling pairwiseclique($smooth) with weight=$α: ")
 	@time 𝐇² = pairwiseclique(fixedImg, movingImg, labels, α, smooth)
 
+    𝐯₀ = rand(length(𝐇¹))
+
     if β == 0
-        @time score, 𝐯 = hopm(𝐇¹, 𝐇²)
+        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐯₀)
     elseif length(imageDims) == 2
         verbose && info("Calling treyclique(Topology-Preserving-2D) with weight=$β: ")
         @time 𝐇³ = treyclique(fixedImg, movingImg, labels, β, topology)
-        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇³)
+        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇³, 𝐯₀)
     elseif length(imageDims) == 3
         info("Calling quadraclique(Topology-Preserving-3D) with weight=$β: ")
         @time 𝐇⁴ = quadraclique(fixedImg, movingImg, labels, β, topology)
-        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇⁴)
+        @time score, 𝐯 = hopm(𝐇¹, 𝐇², 𝐇⁴, 𝐯₀)
     end
     𝐌 = reshape(𝐯, pixelNum, labelNum)
     return score, [findmax(𝐌[i,:])[2] for i in 1:pixelNum], 𝐌
