@@ -32,7 +32,7 @@ include("hopm.jl")
         @test registered == fixed
 
         display(deformgrid)
-        println("----------")
+        println("\n----------")
     end
 
     # @testset "with topology preservation" begin

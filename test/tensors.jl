@@ -48,7 +48,11 @@ import NRIRHOPM: contract
         labels = [[(i,j) for i in -2:2, j in -2:2]...]
         ss = pairwiseclique4validation(imageDims, labels);
         bss = pairwiseclique(imageDims, labels, TAD());
-        x = rand(prod(imageDims)*length(labels))
+        pixelNum = prod(imageDims)
+        labelNum = length(labels)
+        x = rand(pixelNum*labelNum)
+        X = reshape(x, pixelNum, labelNum)
+        @test bss ⊙ x == reshape(bss ⊙ X, pixelNum*labelNum)
         @test ss ⊙ x ≈ bss ⊙ x
     end
 
@@ -57,7 +61,11 @@ import NRIRHOPM: contract
         labels = [[(i,j) for i in -1:1, j in -1:1]...]
         ss = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
         bss = treyclique(imageDims, labels, TP());
-        x = rand(prod(imageDims)*length(labels))
+        pixelNum = prod(imageDims)
+        labelNum = length(labels)
+        x = rand(pixelNum*labelNum)
+        X = reshape(x, pixelNum, labelNum)
+        @test bss ⊙ x == reshape(bss ⊙ X, pixelNum*labelNum)
         @test ss ⊙ x ≈ bss ⊙ x
     end
 

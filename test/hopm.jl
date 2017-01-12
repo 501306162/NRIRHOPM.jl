@@ -70,4 +70,25 @@ using TensorDecompositions
         @test vecnorm(z - x) < TOL
         @test vecnorm(z - y) < TOL
     end
+
+    # @testset "constrain row" begin
+    #     imageDims = (16,16)
+    #     labels = [[(i,j) for i in -2:2, j in -2:2]...]
+    #     pixelNum = prod(imageDims)
+    #     labelNum = length(labels)
+    #     x = rand(pixelNum*labelNum)
+    #     X = reshape(x, pixelNum, labelNum)
+    #
+    #     ss2 = pairwiseclique4validation(imageDims, labels);
+    #     bss2 = pairwiseclique(imageDims, labels, TAD());
+    #
+    #     ss3 = treyclique4validation(imageDims, [[[i,j] for i in -2:2, j in -2:2]...]);
+    #     bss3 = treyclique(imageDims, labels, TP());
+    #
+    #     ssScore, v = hopm(zeros(pixelNum*labelNum), bss2, bss3, x, TOL)
+    #     bssScore, V = hopm(zeros(pixelNum*labelNum), bss2, bss3, X, TOL)
+    #
+    #     @test ssScore ≈ bssScore
+    #     @test vecnorm(v - reshape(V, pixelNum*labelNum)) < TOL
+    # end
 end
