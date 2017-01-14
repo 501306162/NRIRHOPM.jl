@@ -6,7 +6,7 @@ include("neighbors.jl")
 include("funcs.jl")
 include("tensors.jl")
 include("cliques.jl")
-include("hopm.jl")
+include("hopms.jl")
 
 @testset "5x5 number graph" begin
     fixed = [ 1  2  3  4  5;

@@ -1,9 +1,10 @@
 using TensorDecompositions
+import NRIRHOPM: hopm_mixed, hopm_canonical
 
-@testset "hopm" begin
+@testset "hopms" begin
     TOL = rand([1e-5,1e-6,1e-7])
     n = 100
-    @testset "symmetric matrix" begin
+    @testset "2nd order canonical" begin
         A = Symmetric(rand(n,n))
         A = convert(Array, A)
 
@@ -27,7 +28,7 @@ using TensorDecompositions
             push!(data, A[i,j])
             push!(index, (i,j))
         end
-        score, z = hopm(diag(A), SSTensor(data,index,(n,n)), rand(n), TOL)
+        score, z = hopm_canonical(diag(A), SSTensor(data,index,(n,n)), rand(n), TOL, 300, false)
 
         @test d[] ≈ lbd ≈ lbdsparse ≈ score
         @test vecnorm(z - x) < TOL
@@ -35,7 +36,7 @@ using TensorDecompositions
         @test vecnorm(z - v) < TOL
     end
 
-    @testset "symmetric tensor" begin
+    @testset "3rd order canonical" begin
         a = rand(n)
         A = kron(a, a', a)
         A = reshape(A, n, n, n)
@@ -64,7 +65,7 @@ using TensorDecompositions
         y = abs.(y)
 
         # SSTensor
-        score, z = hopm(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), rand(n), TOL)
+        score, z = hopm_canonical(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), rand(n), TOL, 300, false)
 
         @test lbd ≈ lbdsparse ≈ score
         @test vecnorm(z - x) < TOL
