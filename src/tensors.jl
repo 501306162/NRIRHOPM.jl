@@ -1,4 +1,3 @@
-# abstract type for multi-dispatching
 abstract AbstractTensor{T,N} <: AbstractArray{T,N}
 
 """
@@ -81,7 +80,7 @@ function contract{T<:Real}(𝑯::BSSTensor{T}, 𝐱::Vector{T})
     for 𝐛 in 𝑯.blocks
         𝐌 += contract(𝐛, reshape(𝐱, pixelNum, labelNum))
     end
-    return reshape(𝐌, pixelNum*labelNum)
+    𝐯 = reshape(𝐌, pixelNum*labelNum)
 end
 
 function contract{T<:Real}(𝑯::BSSTensor{T}, 𝐗::Matrix{T})
