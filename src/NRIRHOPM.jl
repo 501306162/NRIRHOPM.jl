@@ -3,8 +3,6 @@ using Reexport
 using Interpolations
 @reexport using Plots
 
-import Base: ==
-
 export TensorBlock, BSSTensor, SSTensor, ⊙, hopm
 export Connected4, Connected8, Connected6, Connected26, neighbors
 export AbstractPotential,
