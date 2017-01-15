@@ -25,7 +25,7 @@ function pairwiseclique{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels
     pairwiseclique(imageDims, reshape(labels, length(labels)), potential, weight)
 end
 
-function pairwiseclique{N}(imageDims::NTuple{N}, labels::Vector{NTuple{N}}, potential::SmoothCost, weight=1)
+function pairwiseclique{N}(imageDims::NTuple{N}, labels::Vector{NTuple{N}}, potential::SmoothCost, weight::Real=1)
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum)
@@ -50,7 +50,7 @@ function treyclique{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels::Ar
     treyclique(imageDims, reshape(labels, length(labels)), potential, weight)
 end
 
-function treyclique(imageDims::NTuple{2}, labels::Vector{NTuple{2}}, potential::TP, weight=1)
+function treyclique(imageDims::NTuple{2}, labels::Vector{NTuple{2}}, potential::TP, weight::Real=1)
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
@@ -86,7 +86,7 @@ function quadraclique{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels::
     quadraclique(imageDims, reshape(labels, length(labels)), potential, weight)
 end
 
-function quadraclique(imageDims::NTuple{3}, labels::Vector{NTuple{3}}, potential::TP, weight=1)
+function quadraclique(imageDims::NTuple{3}, labels::Vector{NTuple{3}}, potential::TP, weight::Real=1)
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)

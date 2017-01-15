@@ -1,4 +1,4 @@
-@testset "neighborhood" begin
+@testset "neighbors" begin
     @testset "8-connected neighborhood" begin
         # test for simplest 8-connected neighborhood
         # coordinate system(r,c):

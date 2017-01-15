@@ -15,7 +15,7 @@ function sum_absolute_diff{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, lab
         for a in eachindex(labels)
             𝐝 = 𝒊 + CartesianIndex(labels[a])
             if checkbounds(Bool, movingImg, 𝐝)
-                cost[i,a] = e.^-abs(fixedImg[𝒊] - movingImg[𝐝])
+                cost[i,a] = e^-abs(fixedImg[𝒊] - movingImg[𝐝])
             else
                 cost[i,a] = 0
             end
@@ -40,7 +40,7 @@ function sum_squared_diff{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labe
         for a in eachindex(labels)
             𝐝 = 𝒊 + CartesianIndex(labels[a])
             if checkbounds(Bool, movingImg, 𝐝)
-                cost[i,a] = e.^-abs2(fixedImg[𝒊] - movingImg[𝐝])
+                cost[i,a] = e^-abs2(fixedImg[𝒊] - movingImg[𝐝])
             else
                 cost[i,a] = 0
             end
