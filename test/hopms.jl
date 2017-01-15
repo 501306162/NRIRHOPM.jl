@@ -153,8 +153,8 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
     end
 
     @testset "3rd order constrain vecnorm" begin
-        imageDims = (5,5)
-        labels = [[(i,j) for i in -1:1, j in -1:1]...]
+        imageDims = (3,3)
+        labels = [[(i,j) for i in -0:1, j in -1:0]...]
         pixelNum = prod(imageDims)
         labelNum = length(labels)
         x = rand(pixelNum*labelNum)
@@ -163,7 +163,7 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         ss2 = pairwiseclique4validation(imageDims, labels);
         bss2 = pairwiseclique(imageDims, labels, TAD());
 
-        ss3 = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
+        ss3 = treyclique4validation(imageDims, [[[i,j] for i in -0:1, j in -1:0]...]);
         bss3 = treyclique(imageDims, labels, TP());
 
         h = 10*rand(pixelNum*labelNum)
@@ -175,8 +175,8 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
     end
 
     @testset "3rd order constrain row" begin
-        imageDims = (5,5)
-        labels = [[(i,j) for i in -1:1, j in -1:1]...]
+        imageDims = (3,3)
+        labels = [[(i,j) for i in -0:1, j in -1:0]...]
         pixelNum = prod(imageDims)
         labelNum = length(labels)
         x = rand(pixelNum*labelNum)
@@ -185,7 +185,7 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         ss2 = pairwiseclique4validation(imageDims, labels);
         bss2 = pairwiseclique(imageDims, labels, TAD());
 
-        ss3 = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
+        ss3 = treyclique4validation(imageDims, [[[i,j] for i in -0:1, j in -1:0]...]);
         bss3 = treyclique(imageDims, labels, TP());
 
         h = 10*rand(pixelNum*labelNum)
