@@ -16,8 +16,8 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::BSSTensor{T},
     pixelNum, labelNum = size(𝐒₀)
 
     if constrainRow
-        for i = 1:pixelNum
-            normalize!(@view 𝐒₀[i,:])
+        for r = 1:pixelNum
+            normalize!(@view 𝐒₀[r,:])
         end
     else
         𝐒₀ *= 1/vecnorm(𝐒₀)
@@ -29,14 +29,17 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::BSSTensor{T},
     while i < maxIter
         𝐒ᵢ₊₁ = 𝐌 + 𝐇 ⊙ 𝐒ᵢ
         if constrainRow
-            for i = 1:pixelNum
-                normalize!(@view 𝐒₀[i,:])
+            for r = 1:pixelNum
+                normalize!(@view 𝐒ᵢ₊₁[r,:])
             end
         else
-            𝐒₀ *= 1/vecnorm(𝐒₀)
+            𝐒ᵢ₊₁ *= 1/vecnorm(𝐒ᵢ₊₁)
         end
-        vecnorm(𝐒ᵢ₊₁ - 𝐒ᵢ) < tol && break
         i += 1
+        if vecnorm(𝐒ᵢ₊₁ - 𝐒ᵢ) < tol
+            𝐒ᵢ = 𝐒ᵢ₊₁
+            break
+        end
         𝐒ᵢ = 𝐒ᵢ₊₁
     end
     if i == maxIter
@@ -54,8 +57,8 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::BSSTensor{T}, 𝑯::
     pixelNum, labelNum = size(𝐒₀)
 
     if constrainRow
-        for i = 1:pixelNum
-            normalize!(@view 𝐒₀[i,:])
+        for r = 1:pixelNum
+            normalize!(@view 𝐒₀[r,:])
         end
     else
         𝐒₀ *= 1/vecnorm(𝐒₀)
@@ -67,14 +70,17 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::BSSTensor{T}, 𝑯::
     while i < maxIter
         𝐒ᵢ₊₁ = 𝐌 + 𝐇 ⊙ 𝐒ᵢ + 𝑯 ⊙ 𝐒ᵢ
         if constrainRow
-            for i = 1:pixelNum
-                normalize!(@view 𝐒₀[i,:])
+            for r = 1:pixelNum
+                normalize!(@view 𝐒ᵢ₊₁[r,:])
             end
         else
-            𝐒₀ *= 1/vecnorm(𝐒₀)
+            𝐒ᵢ₊₁ *= 1/vecnorm(𝐒ᵢ₊₁)
         end
-        vecnorm(𝐒ᵢ₊₁ - 𝐒ᵢ) < tol && break
         i += 1
+        if vecnorm(𝐒ᵢ₊₁ - 𝐒ᵢ) < tol
+            𝐒ᵢ = 𝐒ᵢ₊₁
+            break
+        end
         𝐒ᵢ = 𝐒ᵢ₊₁
     end
     if i == maxIter
@@ -95,8 +101,11 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T},
     while i < maxIter
         𝐯ᵢ₊₁ = 𝐡 + 𝐇 ⊙ 𝐯ᵢ
         normalize!(𝐯ᵢ₊₁)
-        vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol && break
         i += 1
+        if vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol
+            𝐯ᵢ = 𝐯ᵢ₊₁
+            break
+        end
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
     if i == maxIter
@@ -112,12 +121,16 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T}, �
                              verbose::Bool)
     𝐯₀ = copy(𝐯)
     normalize!(𝐯₀)
+    𝐯ᵢ = 𝐯₀
     i = 0
     while i < maxIter
         𝐯ᵢ₊₁ = 𝐡 + 𝐇 ⊙ 𝐯ᵢ + 𝑯 ⊙ 𝐯ᵢ
         normalize!(𝐯ᵢ₊₁)
-        vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol && break
         i += 1
+        if vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol
+            𝐯ᵢ = 𝐯ᵢ₊₁
+            break
+        end
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
     if i == maxIter
@@ -144,8 +157,11 @@ function hopm_canonical{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T
     while i < maxIter
         𝐯ᵢ₊₁ = 𝐯ᵢ .* 𝐡 + 𝐇 ⊙ 𝐯ᵢ
         normalize!(𝐯ᵢ₊₁)
-        vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol && break
         i += 1
+        if vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol
+            𝐯ᵢ = 𝐯ᵢ₊₁
+            break
+        end
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
     if i == maxIter
@@ -166,8 +182,11 @@ function hopm_canonical{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T
     while i < maxIter
         𝐯ᵢ₊₁ = 𝐯ᵢ .* 𝐯ᵢ .* 𝐡 + 𝐯ᵢ .* (𝐇 ⊙ 𝐯ᵢ) + 𝑯 ⊙ 𝐯ᵢ
         normalize!(𝐯ᵢ₊₁)
-        vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol && break
         i += 1
+        if vecnorm(𝐯ᵢ₊₁ - 𝐯ᵢ) < tol
+            𝐯ᵢ = 𝐯ᵢ₊₁
+            break
+        end
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
     if i == maxIter
