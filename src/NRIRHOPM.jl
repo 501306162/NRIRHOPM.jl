@@ -13,8 +13,8 @@ export SAD, SSD,
        Potts, TAD, TQD,
        TP
 export unaryclique, pairwiseclique, treyclique, quadraclique
+export optimize
 export meshgrid
-export dirhop, registering
 
 include("tensors.jl")
 include("hopms.jl")
@@ -22,7 +22,7 @@ include("neighbors.jl")
 include("types.jl")
 include("potentials.jl")
 include("cliques.jl")
-include("muti-level.jl")
+include("multilevel.jl")
 include("utils.jl")
 
 end # module
