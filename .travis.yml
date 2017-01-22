@@ -4,14 +4,15 @@ os:
   - linux
   - osx
 julia:
-  - release
-  # - nightly
+  - 0.5
+  - nightly
+matrix:
+  allow_failures:
+    - julia: nightly
 notifications:
   email: false
-# uncomment the following lines to override the default test script
 script:
- - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'Pkg.clone("https://github.com/Gnimuc/NRIRHOPM.jl");'
- - julia --precompiled=no --compilecache=no --check-bounds=yes -e 'Pkg.test("NRIRHOPM"; coverage=true)'
+- if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+- julia --compilecache=no --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("NRIRHOPM"); Pkg.test("NRIRHOPM"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("NRIRHOPM")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
