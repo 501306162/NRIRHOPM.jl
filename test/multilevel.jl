@@ -57,9 +57,11 @@ end
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         @show indicator
     end
-    # @testset "with topology preservation" begin
-    #     energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP(), 0.07, 0.01)
-    #     indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
-    #     @show indicator
-    # end
+    if !haskey(ENV, "TRAVIS")    # skip this test on Travis CI because it's very time-consuming
+        @testset "with topology preservation" begin
+            energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP(), 0.07, 0.01)
+            indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
+            @show indicator
+        end
+    end
 end
