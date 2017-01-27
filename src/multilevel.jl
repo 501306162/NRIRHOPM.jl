@@ -1,11 +1,14 @@
 function multilevel(fixedImg, movingImg, labels, datacost::DataCost=SAD(),
                     smooth::SmoothCost=TAD(), topology::TopologyCost=TP(),
                     α::Real=1,                β::Real=1; hopmkwargs...)
+    # init
+
+
+    # loop
     for level in levels
         energy, spectrum = optimize(fixedGrid, movingGrid, labels, datacost, smooth, α, hopmkwargs...)
-
-        # registered, quivers = register(indicator)
-        # spectrum_new = interpolation(spectrum)
+        spectrumNew = upsample(spectrum)
+        movingGridNew = register(movingGrid, labels, quivers)
     end
 end
 
@@ -75,23 +78,21 @@ function optimize{T}(fixedImg::AbstractArray{T,3}, movingImg::AbstractArray{T,3}
     return energy, spectrum
 end
 
-# function register(imageDims, gridDims, level, indicator)
-#
-# end
+function upsample{N}(moving, imageDims::NTuple{N}, displacementField)
+    registeredImg = zeros(imageDims)
+    knots = ntuple(x->1:imageDims[x], Val{N})
+    itp = interpolate(knots, displacementField, Gridded(Linear()))
+end
 
-# function upsample(imageDims, gridDims, level, indicator)
-#
-# end
-
-# function registering(movingImg, labels, indicator::Vector{Int})
-#     imageDims = size(movingImg)
-#     registeredImg = similar(movingImg)
-#     quivers = Array{Any,length(imageDims)}(imageDims...)
-#     for 𝒊 in CartesianRange(imageDims)
-#         i = sub2ind(imageDims, 𝒊.I...)
-#         quivers[𝒊] = labels[indicator[i]]
-#         𝐭 = CartesianIndex(quivers[𝒊])
-#         registeredImg[𝒊] = movingImg[𝒊+𝐭]
-#     end
-#     return registeredImg, quivers
-# end
+function register(movingImg, labels, displacement)
+    registeredImg = similar(movingImg)
+    for 𝒊 in CartesianRange(size(movingImg))
+        𝐝 = 𝒊 + CartesianIndex(displacement[𝒊])
+        if checkbounds(Bool, movingImg, 𝐝)
+            warn("𝐝($𝐝) is outbounds, skipped.")
+        else
+            registeredImg[𝒊] = movingImg[𝐝]
+        end
+    end
+    return registeredImg
+end
