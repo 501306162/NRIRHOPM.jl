@@ -13,9 +13,9 @@ Base.nnz(𝑯::TensorBlock) = length(𝑯.index)
 Base.size(𝑯::TensorBlock) = 𝑯.dims
 Base.size(𝑯::TensorBlock, i::Integer) = 𝑯.dims[i]
 Base.length(𝑯::TensorBlock) = prod(𝑯.dims)
-Base.getindex{T<:Real}(𝑯::TensorBlock{T,2,4}, i::Integer, a::Integer, j::Integer, b::Integer) = 𝑯.block[a,b]
-Base.getindex{T<:Real}(𝑯::TensorBlock{T,3,6}, i::Integer, a::Integer, j::Integer, b::Integer, k::Integer, c::Integer) = 𝑯.block[a,b,c]
-Base.getindex{T<:Real}(𝑯::TensorBlock{T,4,8}, i::Integer, a::Integer, j::Integer, b::Integer, k::Integer, c::Integer, m::Integer, d::Integer) = 𝑯.block[a,b,c,d]
+@inline Base.getindex{T<:Real}(𝑯::TensorBlock{T,2,4}, i::Integer, a::Integer, j::Integer, b::Integer) = 𝑯.block[a,b]
+@inline Base.getindex{T<:Real}(𝑯::TensorBlock{T,3,6}, i::Integer, a::Integer, j::Integer, b::Integer, k::Integer, c::Integer) = 𝑯.block[a,b,c]
+@inline Base.getindex{T<:Real}(𝑯::TensorBlock{T,4,8}, i::Integer, a::Integer, j::Integer, b::Integer, k::Integer, c::Integer, m::Integer, d::Integer) = 𝑯.block[a,b,c,d]
 Base.:(==)(x::TensorBlock, y::TensorBlock) = x.block == y.block && x.index == y.index && x.dims == y.dims
 
 function contract{T<:Real}(𝑯::TensorBlock{T,2,4}, 𝐗::Matrix{T})
