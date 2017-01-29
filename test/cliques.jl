@@ -1,9 +1,8 @@
-# construct a random example
-fixedImg = rand(5,5)
-movingImg = rand(size(fixedImg))
-labels = [(i,j) for i in -1:1, j in -1:1]
-
 @testset "cliques" begin
+    fixedImg = rand(5,5)
+    movingImg = rand(size(fixedImg))
+    labels = [(i,j) for i in -1:1, j in -1:1]
+    
     @testset "unaryclique" begin
         @test unaryclique(fixedImg, movingImg, labels) == unaryclique(fixedImg, movingImg, labels, SAD())
     end

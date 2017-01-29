@@ -8,10 +8,7 @@ function multilevel(fixedImg, movingImg, labels, datacost::DataCost=SAD(),
     for level in levels
         energy, spectrum = optimize(fixedGrid, movingGrid, labels, datacost, smooth, α; hopmkwargs..., spectrumNew)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
-        displacement = similar(fixedGrid, Vec)
-        for i in eachindex(indicator)
-            displacement[i] = Vec(labels[indicator[i]])
-        end
+        displacement = reshape([Vec(labels[i]) for i in indicator], size(fixedGrid))
         movingGridNew = register(movingGrid, displacement)
         spectrumNew = upsample(spectrum)
     end
@@ -84,16 +81,16 @@ function optimize{T}(fixedImg::AbstractArray{T,3}, movingImg::AbstractArray{T,3}
 end
 
 
-function register{F<:FixedVector}(movingImg, displacement::Array{F})
+function register{N,T<:Real,Dim}(movingImg, displacement::Array{Vec{N,T},Dim})
     imageDims = size(movingImg)
     gridDims = size(displacement)
     registeredImg = zeros(imageDims)
     if imageDims != gridDims
         knots = ntuple(x->linspace(1, imageDims[x], gridDims[x]), Val{N})
         displacementITP = interpolate(knots, displacement, Gridded(Linear()))
-        movingImgITP = interpolate()
-        for 𝒊 in CartesianRange(size(movingImg))
-            𝐭 = Vec(𝒊) + displacementITP[𝒊...]
+        movingImgITP = interpolate(movingImg, BSpline(Linear()), OnGrid())
+        for 𝒊 in CartesianRange(imageDims)
+            𝐭 = Vec(𝒊.I...) + displacementITP[𝒊]
             registeredImg[𝒊] = movingImgITP[𝐭...]
         end
     else
