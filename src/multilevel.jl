@@ -6,9 +6,14 @@ function multilevel(fixedImg, movingImg, labels, datacost::DataCost=SAD(),
 
     # loop
     for level in levels
-        energy, spectrum = optimize(fixedGrid, movingGrid, labels, datacost, smooth, α, hopmkwargs...)
+        energy, spectrum = optimize(fixedGrid, movingGrid, labels, datacost, smooth, α; hopmkwargs..., spectrumNew)
+        indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
+        displacement = similar(fixedGrid, Vec)
+        for i in eachindex(indicator)
+            displacement[i] = Vec(labels[indicator[i]])
+        end
+        movingGridNew = register(movingGrid, displacement)
         spectrumNew = upsample(spectrum)
-        movingGridNew = register(movingGrid, labels, quivers)
     end
 end
 
@@ -78,20 +83,27 @@ function optimize{T}(fixedImg::AbstractArray{T,3}, movingImg::AbstractArray{T,3}
     return energy, spectrum
 end
 
-function upsample{N}(moving, imageDims::NTuple{N}, displacementField)
-    registeredImg = zeros(imageDims)
-    knots = ntuple(x->1:imageDims[x], Val{N})
-    itp = interpolate(knots, displacementField, Gridded(Linear()))
-end
 
-function register(movingImg, labels, displacement)
-    registeredImg = similar(movingImg)
-    for 𝒊 in CartesianRange(size(movingImg))
-        𝐝 = 𝒊 + CartesianIndex(displacement[𝒊])
-        if checkbounds(Bool, movingImg, 𝐝)
-            warn("𝐝($𝐝) is outbounds, skipped.")
-        else
-            registeredImg[𝒊] = movingImg[𝐝]
+function register{F<:FixedVector}(movingImg, displacement::Array{F})
+    imageDims = size(movingImg)
+    gridDims = size(displacement)
+    registeredImg = zeros(imageDims)
+    if imageDims != gridDims
+        knots = ntuple(x->linspace(1, imageDims[x], gridDims[x]), Val{N})
+        displacementITP = interpolate(knots, displacement, Gridded(Linear()))
+        movingImgITP = interpolate()
+        for 𝒊 in CartesianRange(size(movingImg))
+            𝐭 = Vec(𝒊) + displacementITP[𝒊...]
+            registeredImg[𝒊] = movingImgITP[𝐭...]
+        end
+    else
+        for 𝒊 in CartesianRange(imageDims)
+            𝐭 = 𝒊 + CartesianIndex(displacement[𝒊]...)
+            if checkbounds(Bool, movingImg, 𝐭)
+                registeredImg[𝒊] = movingImg[𝐭]
+            else
+                warn("𝐭($𝐭) is outbound, skipped.")
+            end
         end
     end
     return registeredImg

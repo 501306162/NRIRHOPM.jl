@@ -1,6 +1,7 @@
 module NRIRHOPM
 using Reexport
 using Interpolations
+@reexport using FixedSizeArrays
 @reexport using Plots
 
 export TensorBlock, BSSTensor, SSTensor, ⊙
@@ -13,7 +14,7 @@ export SAD, SSD,
        Potts, TAD, TQD,
        TP
 export unaryclique, pairwiseclique, treyclique, quadraclique
-export optimize
+export optimize, register
 export meshgrid
 
 include("tensors.jl")

@@ -13,20 +13,25 @@
 
     labels = [(i,j) for i in -2:2, j in -2:2]
 
-    indicatorExpected = [13 13 13 13 13;
-                         13 13 13 13 13;
-                         13 13  9 13 13;
-                         13 23 13  7 13;
-                         13 13 13 13 13]'
     @testset "without topology preservation" begin
         energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), 0.07)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
-        @show indicator
+        displacement = similar(fixed, Vec)
+        for i in eachindex(indicator)
+            displacement[i] = Vec(labels[indicator[i]])
+        end
+        registeredImg = register(moving, displacement)
+        @test registeredImg == fixed
     end
     @testset "with topology preservation" begin
         energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP(), 0.07, 0.01)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
-        @show indicator
+        displacement = similar(fixed, Vec)
+        for i in eachindex(indicator)
+            displacement[i] = Vec(labels[indicator[i]])
+        end
+        registeredImg = register(moving, displacement)
+        @test registeredImg == fixed
     end
 end
 
@@ -55,13 +60,23 @@ end
     @testset "without topology preservation" begin
         energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), 0.07)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
-        @show indicator
+        displacement = similar(fixed, Vec)
+        for i in eachindex(indicator)
+            displacement[i] = Vec(labels[indicator[i]])
+        end
+        registeredImg = register(moving, displacement)
+        @test registeredImg == fixed
     end
     if !haskey(ENV, "TRAVIS")    # skip this test on Travis CI because it's very time-consuming
         @testset "with topology preservation" begin
             energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP(), 0.07, 0.01)
             indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
-            @show indicator
+            displacement = similar(fixed, Vec)
+            for i in eachindex(indicator)
+                displacement[i] = Vec(labels[indicator[i]])
+            end
+            registeredImg = register(moving, displacement)
+            @test registeredImg == fixed
         end
     end
 end
