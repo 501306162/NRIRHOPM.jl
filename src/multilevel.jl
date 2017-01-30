@@ -1,19 +1,3 @@
-function multilevel(fixedImg, movingImg, labels, datacost::DataCost=SAD(),
-                    smooth::SmoothCost=TAD(), topology::TopologyCost=TP(),
-                    α::Real=1,                β::Real=1; hopmkwargs...)
-    # init
-
-
-    # loop
-    for level in levels
-        energy, spectrum = optimize(fixedGrid, movingGrid, labels, datacost, smooth, α; hopmkwargs..., spectrumNew)
-        indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
-        displacement = reshape([Vec(labels[i]) for i in indicator], size(fixedGrid))
-        movingGridNew = register(movingGrid, displacement)
-        spectrumNew = upsample(spectrum)
-    end
-end
-
 function optimize{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, labels::Array{NTuple{N}},
                        datacost::DataCost, smooth::SmoothCost, α::Real;
                        𝐒₀::Matrix=rand(length(fixedImg),length(labels)), tolerance::Float64=1e-5,
@@ -104,4 +88,39 @@ function register{N,T<:Real,Dim}(movingImg, displacement::Array{Vec{N,T},Dim})
         end
     end
     return registeredImg
+end
+
+function upsample{N}(gridDimsUp::NTuple{N}, gridDims::NTuple{N}, spectrum::Matrix)
+    spectrumVec = reshape([Vec(spectrum[i,:]) for i = 1:prod(gridDims)], gridDims)
+    knots = ntuple(x->linspace(1, gridDimsUp[x], gridDims[x]), Val{N})
+    spectrumVecITP = interpolate(knots, spectrumVec, Gridded(Linear()))
+
+    spectrumITP = zeros(prod(gridDimsUp), size(spectrum,2))
+    for 𝒊 in CartesianRange(gridDimsUp)
+        r = sub2ind(gridDimsUp, 𝒊.I...)
+        spectrumITP[r,:] = collect(spectrumVecITP[𝒊])
+    end
+    
+    return spectrumITP
+end
+
+
+function multilevel(fixedImg, movingImg, labelRanges::Vector{Range}, gridRanges::Vector{NTuple},
+                    datacost::DataCost=SAD(), smooth::SmoothCost=TAD(), topology::TopologyCost=TP(),
+                                              α::Real=1,                β::Real=1; hopmkwargs...)
+    # init
+    fixedImg₁ = copy(fixedImg)
+    movingImg₁ = copy(movingImg)
+    gridDims₁ = gridRanges[1]
+    labels₁ = f(labelRanges[2])
+    energy₁, spectrum₁ = optimize(fixedImg₁, movingImg₁, gridDims₁, labels₁, datacost, smooth, topology, α, β, hopmkwargs...)
+    spectrumᵢ = upsample(spectrum₁)
+    # loop
+    for i = 2:length(labelRanges)
+        energyᵢ₊₁, spectrumᵢ₊₁ = optimize(fixedGrid, movingGrid, labels, datacost, smooth, α; hopmkwargs..., 𝐒₀=spectrumᵢ)
+        indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
+        displacement = reshape([Vec(labels[i]) for i in indicator], size(fixedGrid))
+        movingGridNew = register(movingGrid, displacement)
+        spectrumNew = upsample(spectrum)
+    end
 end

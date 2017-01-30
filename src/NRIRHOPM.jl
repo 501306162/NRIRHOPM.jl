@@ -14,7 +14,7 @@ export SAD, SSD,
        Potts, TAD, TQD,
        TP
 export unaryclique, pairwiseclique, treyclique, quadraclique
-export optimize, register
+export optimize, register, upsample
 export meshgrid
 
 include("tensors.jl")
