@@ -81,3 +81,14 @@ end
         end
     end
 end
+
+@testset "upsample" begin
+    # a trivial one
+    inputDims = (5,5)
+    outputDims = (10,10)
+    spectrum = repeat([1:8;]', outer=(prod(inputDims),1))
+    @test upsample(outputDims, inputDims, spectrum) ≈ repeat([1:8;]', outer=(prod(outputDims),1))
+    # downsampling also works
+    outputDims = (3,3)
+    @test upsample(outputDims, inputDims, spectrum) ≈ repeat([1:8;]', outer=(prod(outputDims),1))
+end

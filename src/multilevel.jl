@@ -95,13 +95,13 @@ function upsample{N}(gridDimsUp::NTuple{N}, gridDims::NTuple{N}, spectrum::Matri
     knots = ntuple(x->linspace(1, gridDimsUp[x], gridDims[x]), Val{N})
     spectrumVecITP = interpolate(knots, spectrumVec, Gridded(Linear()))
 
-    spectrumITP = zeros(prod(gridDimsUp), size(spectrum,2))
+    spectrumInterpolated = zeros(prod(gridDimsUp), size(spectrum,2))
     for 𝒊 in CartesianRange(gridDimsUp)
         r = sub2ind(gridDimsUp, 𝒊.I...)
-        spectrumITP[r,:] = collect(spectrumVecITP[𝒊])
+        spectrumInterpolated[r,:] = collect(spectrumVecITP[𝒊])
     end
-    
-    return spectrumITP
+
+    return spectrumInterpolated
 end
 
 
