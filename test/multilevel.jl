@@ -17,9 +17,9 @@
         energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), 0.07)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
-        registeredImg = register(moving, displacement)
-        @test registeredImg == fixed
-        @testset "register" begin
+        warppedImg = warp(moving, displacement)
+        @test warppedImg == fixed
+        @testset "warp" begin
             movingBig = [ 1  1  2  2  3  3  4  4  5  5;
                           1  1  2  2  3  3  4  4  5  5;
                           6  6  7  7  8  8  9  9 10 10;
@@ -30,15 +30,15 @@
                          16 16 13 13 18 18 17 17 20 20;
                          21 21 22 22 23 23 24 24 25 25;
                          21 21 22 22 23 23 24 24 25 25]
-            registeredBig = register(movingBig, displacement)
+            warppedBig = warp(movingBig, displacement)
         end
     end
     @testset "with topology preservation" begin
         energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP(), 0.07, 0.01)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
-        registeredImg = register(moving, displacement)
-        @test registeredImg == fixed
+        warppedImg = warp(moving, displacement)
+        @test warppedImg == fixed
     end
 end
 
@@ -68,16 +68,16 @@ end
         energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), 0.07)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
-        registeredImg = register(moving, displacement)
-        @test registeredImg == fixed
+        warppedImg = warp(moving, displacement)
+        @test warppedImg == fixed
     end
     if !haskey(ENV, "TRAVIS")    # skip this test on Travis CI because it's very time-consuming
         @testset "with topology preservation" begin
             energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP(), 0.07, 0.01)
             indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
             displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
-            registeredImg = register(moving, displacement)
-            @test registeredImg == fixed
+            warppedImg = warp(moving, displacement)
+            @test warppedImg == fixed
         end
     end
 end
