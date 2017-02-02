@@ -1,7 +1,10 @@
 module NRIRHOPM
 using Reexport
 using Interpolations
+using NIfTI
+using Unitful
 @reexport using FixedSizeArrays
+@reexport using Images
 @reexport using Plots
 
 export TensorBlock, BSSTensor, SSTensor, ⊙
@@ -17,6 +20,7 @@ export unaryclique, pairwiseclique, treyclique, quadraclique
 export optimize, warp, upsample, multilevel
 export meshgrid
 
+include("io.jl")
 include("tensors.jl")
 include("hopms.jl")
 include("neighbors.jl")
