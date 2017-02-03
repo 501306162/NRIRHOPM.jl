@@ -1,7 +1,6 @@
 comment:
   layout: "header, diff"
   behavior: default
-  
+
 ignore:
-- src/utils.jl
 - src/types.jl

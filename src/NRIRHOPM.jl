@@ -8,10 +8,6 @@ using Unitful
 using Ranges
 using Images
 
-using Reexport
-@reexport using Plots
-
-
 export Vec
 export TensorBlock, BSSTensor, SSTensor, ⊙
 export Connected4, Connected8, Connected6, Connected26, neighbors
@@ -24,7 +20,6 @@ export SAD, SSD,
        TP
 export unaryclique, pairwiseclique, treyclique, quadraclique
 export optimize, warp, upsample, multilevel
-export meshgrid
 
 include("io.jl")
 include("tensors.jl")
@@ -34,6 +29,5 @@ include("types.jl")
 include("potentials.jl")
 include("cliques.jl")
 include("multilevel.jl")
-include("utils.jl")
 
 end # module
