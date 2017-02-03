@@ -1,12 +1,18 @@
 module NRIRHOPM
-using Reexport
+
 using Interpolations
+import FixedSizeArrays: Vec
+
 using NIfTI
 using Unitful
-@reexport using FixedSizeArrays
-@reexport using Images
+using Ranges
+using Images
+
+using Reexport
 @reexport using Plots
 
+
+export Vec
 export TensorBlock, BSSTensor, SSTensor, ⊙
 export Connected4, Connected8, Connected6, Connected26, neighbors
 export AbstractPotential,

@@ -7,6 +7,7 @@ Interpolations
 Images 0.6
 NIfTI
 Unitful
+Ranges
 
 Plots
 GR
