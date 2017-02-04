@@ -2,11 +2,8 @@
 abstract Neighborhood{Dimension,CliqueSize}
 
 abstract Connected4{CliqueSize} <: Neighborhood{2,CliqueSize}
-
 abstract Connected8{CliqueSize} <: Neighborhood{2,CliqueSize}
-
 abstract Connected6{CliqueSize} <: Neighborhood{3,CliqueSize}
-
 abstract Connected26{CliqueSize} <: Neighborhood{3,CliqueSize}
 
 typealias SquareCubic Union{Connected8{2}, Connected26{2}}
@@ -31,9 +28,9 @@ end
 function neighbors(::Type{Connected8{3}}, imageDims::NTuple{2,Int})
     # 8-Connected neighborhood for 3-element cliques
     # since the tensor is symmetric, we only consider the following cliques:
-    #   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => ii => p1 => α
-    #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ⬓ => jj => p2 => β
-    #   □ ⬓ □              ⬓    ⬓            ↓         ▦ => kk => p3 => χ
+    #   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => 𝒊 => p1 => α
+    #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ⬓ => 𝐣 => p2 => β
+    #   □ ⬓ □              ⬓    ⬓            ↓         ▦ => 𝐤 => p3 => χ
     #              Jᵇᵇ   Jᶠᵇ    Jᶠᶠ   Jᵇᶠ
     idxJᶠᶠ = NTuple{3,Int}[]
     idxJᵇᶠ = NTuple{3,Int}[]
@@ -41,39 +38,39 @@ function neighbors(::Type{Connected8{3}}, imageDims::NTuple{2,Int})
     idxJᵇᵇ = NTuple{3,Int}[]
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
-    for ii in pixelRange
-        i = sub2ind(imageDims, ii.I...)
-        neighborRange = CartesianRange(max(pixelFirst, ii-pixelFirst), min(pixelEnd, ii+pixelFirst))
+    for 𝒊 in pixelRange
+        i = sub2ind(imageDims, 𝒊.I...)
+        neighborRange = CartesianRange(max(pixelFirst, 𝒊-pixelFirst), min(pixelEnd, 𝒊+pixelFirst))
 
-        jj = ii + CartesianIndex(1,0)
-        kk = ii + CartesianIndex(0,1)
-        if jj in neighborRange && kk in neighborRange
-            j = sub2ind(imageDims, jj.I...)
-            k = sub2ind(imageDims, kk.I...)
+        𝐣 = 𝒊 + CartesianIndex(1,0)
+        𝐤 = 𝒊 + CartesianIndex(0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
             push!(idxJᶠᶠ, (i,j,k))
         end
 
-        jj = ii - CartesianIndex(1,0)
-        kk = ii + CartesianIndex(0,1)
-        if jj in neighborRange && kk in neighborRange
-            j = sub2ind(imageDims, jj.I...)
-            k = sub2ind(imageDims, kk.I...)
+        𝐣 = 𝒊 - CartesianIndex(1,0)
+        𝐤 = 𝒊 + CartesianIndex(0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
             push!(idxJᵇᶠ, (i,j,k))
         end
 
-        jj = ii + CartesianIndex(1,0)
-        kk = ii - CartesianIndex(0,1)
-        if jj in neighborRange && kk in neighborRange
-            j = sub2ind(imageDims, jj.I...)
-            k = sub2ind(imageDims, kk.I...)
+        𝐣 = 𝒊 + CartesianIndex(1,0)
+        𝐤 = 𝒊 - CartesianIndex(0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
             push!(idxJᶠᵇ, (i,j,k))
         end
 
-        jj = ii - CartesianIndex(1,0)
-        kk = ii - CartesianIndex(0,1)
-        if jj in neighborRange && kk in neighborRange
-            j = sub2ind(imageDims, jj.I...)
-            k = sub2ind(imageDims, kk.I...)
+        𝐣 = 𝒊 - CartesianIndex(1,0)
+        𝐤 = 𝒊 - CartesianIndex(0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
             push!(idxJᵇᵇ, (i,j,k))
         end
     end
@@ -87,7 +84,7 @@ function neighbors(::Type{Connected26{4}}, imageDims::NTuple{3,Int})
     #  to  |   left to right     × ×
     # down ↓
     # coordinate => point => label:
-    # iii => p1 => α   jjj => p2 => β   kkk => p3 => χ   mmm => p5 => δ
+    # 𝒊 => p1 => α   𝐣 => p2 => β   𝐤 => p3 => χ   𝐦 => p5 => δ
     idxJᶠᶠᶠ = NTuple{4,Int}[]
     idxJᵇᶠᶠ = NTuple{4,Int}[]
     idxJᶠᵇᶠ = NTuple{4,Int}[]
@@ -98,87 +95,87 @@ function neighbors(::Type{Connected26{4}}, imageDims::NTuple{3,Int})
     idxJᵇᵇᵇ = NTuple{4,Int}[]
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
-    for iii in pixelRange
-        i = sub2ind(imageDims, iii.I...)
-        neighborRange = CartesianRange(max(pixelFirst, iii-pixelFirst), min(pixelEnd, iii+pixelFirst))
+    for 𝒊 in pixelRange
+        i = sub2ind(imageDims, 𝒊.I...)
+        neighborRange = CartesianRange(max(pixelFirst, 𝒊-pixelFirst), min(pixelEnd, 𝒊+pixelFirst))
 
-        jjj = iii + CartesianIndex(1,0,0)
-        kkk = iii + CartesianIndex(0,1,0)
-        mmm = iii + CartesianIndex(0,0,1)
-        if jjj in neighborRange && kkk in neighborRange && mmm in neighborRange
-            j = sub2ind(imageDims, jjj.I...)
-            k = sub2ind(imageDims, kkk.I...)
-            m = sub2ind(imageDims, mmm.I...)
+        𝐣 = 𝒊 + CartesianIndex(1,0,0)
+        𝐤 = 𝒊 + CartesianIndex(0,1,0)
+        𝐦 = 𝒊 + CartesianIndex(0,0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange && 𝐦 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
+            m = sub2ind(imageDims, 𝐦.I...)
             push!(idxJᶠᶠᶠ, (i,j,k,m))
         end
 
-        jjj = iii - CartesianIndex(1,0,0)
-        kkk = iii + CartesianIndex(0,1,0)
-        mmm = iii + CartesianIndex(0,0,1)
-        if jjj in neighborRange && kkk in neighborRange && mmm in neighborRange
-            j = sub2ind(imageDims, jjj.I...)
-            k = sub2ind(imageDims, kkk.I...)
-            m = sub2ind(imageDims, mmm.I...)
+        𝐣 = 𝒊 - CartesianIndex(1,0,0)
+        𝐤 = 𝒊 + CartesianIndex(0,1,0)
+        𝐦 = 𝒊 + CartesianIndex(0,0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange && 𝐦 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
+            m = sub2ind(imageDims, 𝐦.I...)
             push!(idxJᵇᶠᶠ, (i,j,k,m))
         end
 
-        jjj = iii + CartesianIndex(1,0,0)
-        kkk = iii - CartesianIndex(0,1,0)
-        mmm = iii + CartesianIndex(0,0,1)
-        if jjj in neighborRange && kkk in neighborRange && mmm in neighborRange
-            j = sub2ind(imageDims, jjj.I...)
-            k = sub2ind(imageDims, kkk.I...)
-            m = sub2ind(imageDims, mmm.I...)
+        𝐣 = 𝒊 + CartesianIndex(1,0,0)
+        𝐤 = 𝒊 - CartesianIndex(0,1,0)
+        𝐦 = 𝒊 + CartesianIndex(0,0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange && 𝐦 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
+            m = sub2ind(imageDims, 𝐦.I...)
             push!(idxJᶠᵇᶠ, (i,j,k,m))
         end
 
-        jjj = iii - CartesianIndex(1,0,0)
-        kkk = iii - CartesianIndex(0,1,0)
-        mmm = iii + CartesianIndex(0,0,1)
-        if jjj in neighborRange && kkk in neighborRange && mmm in neighborRange
-            j = sub2ind(imageDims, jjj.I...)
-            k = sub2ind(imageDims, kkk.I...)
-            m = sub2ind(imageDims, mmm.I...)
+        𝐣 = 𝒊 - CartesianIndex(1,0,0)
+        𝐤 = 𝒊 - CartesianIndex(0,1,0)
+        𝐦 = 𝒊 + CartesianIndex(0,0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange && 𝐦 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
+            m = sub2ind(imageDims, 𝐦.I...)
             push!(idxJᵇᵇᶠ, (i,j,k,m))
         end
 
-        jjj = iii + CartesianIndex(1,0,0)
-        kkk = iii + CartesianIndex(0,1,0)
-        mmm = iii - CartesianIndex(0,0,1)
-        if jjj in neighborRange && kkk in neighborRange && mmm in neighborRange
-            j = sub2ind(imageDims, jjj.I...)
-            k = sub2ind(imageDims, kkk.I...)
-            m = sub2ind(imageDims, mmm.I...)
+        𝐣 = 𝒊 + CartesianIndex(1,0,0)
+        𝐤 = 𝒊 + CartesianIndex(0,1,0)
+        𝐦 = 𝒊 - CartesianIndex(0,0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange && 𝐦 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
+            m = sub2ind(imageDims, 𝐦.I...)
             push!(idxJᶠᶠᵇ, (i,j,k,m))
         end
 
-        jjj = iii - CartesianIndex(1,0,0)
-        kkk = iii + CartesianIndex(0,1,0)
-        mmm = iii - CartesianIndex(0,0,1)
-        if jjj in neighborRange && kkk in neighborRange && mmm in neighborRange
-            j = sub2ind(imageDims, jjj.I...)
-            k = sub2ind(imageDims, kkk.I...)
-            m = sub2ind(imageDims, mmm.I...)
+        𝐣 = 𝒊 - CartesianIndex(1,0,0)
+        𝐤 = 𝒊 + CartesianIndex(0,1,0)
+        𝐦 = 𝒊 - CartesianIndex(0,0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange && 𝐦 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
+            m = sub2ind(imageDims, 𝐦.I...)
             push!(idxJᵇᶠᵇ, (i,j,k,m))
         end
 
-        jjj = iii + CartesianIndex(1,0,0)
-        kkk = iii - CartesianIndex(0,1,0)
-        mmm = iii - CartesianIndex(0,0,1)
-        if jjj in neighborRange && kkk in neighborRange && mmm in neighborRange
-            j = sub2ind(imageDims, jjj.I...)
-            k = sub2ind(imageDims, kkk.I...)
-            m = sub2ind(imageDims, mmm.I...)
+        𝐣 = 𝒊 + CartesianIndex(1,0,0)
+        𝐤 = 𝒊 - CartesianIndex(0,1,0)
+        𝐦 = 𝒊 - CartesianIndex(0,0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange && 𝐦 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
+            m = sub2ind(imageDims, 𝐦.I...)
             push!(idxJᶠᵇᵇ, (i,j,k,m))
         end
 
-        jjj = iii - CartesianIndex(1,0,0)
-        kkk = iii - CartesianIndex(0,1,0)
-        mmm = iii - CartesianIndex(0,0,1)
-        if jjj in neighborRange && kkk in neighborRange && mmm in neighborRange
-            j = sub2ind(imageDims, jjj.I...)
-            k = sub2ind(imageDims, kkk.I...)
-            m = sub2ind(imageDims, mmm.I...)
+        𝐣 = 𝒊 - CartesianIndex(1,0,0)
+        𝐤 = 𝒊 - CartesianIndex(0,1,0)
+        𝐦 = 𝒊 - CartesianIndex(0,0,1)
+        if 𝐣 in neighborRange && 𝐤 in neighborRange && 𝐦 in neighborRange
+            j = sub2ind(imageDims, 𝐣.I...)
+            k = sub2ind(imageDims, 𝐤.I...)
+            m = sub2ind(imageDims, 𝐦.I...)
             push!(idxJᵇᵇᵇ, (i,j,k,m))
         end
     end

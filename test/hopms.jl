@@ -164,7 +164,7 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         bss2 = pairwiseclique(imageDims, labels, TAD());
 
         ss3 = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
-        bss3 = treyclique(imageDims, labels, TP());
+        bss3 = treyclique(imageDims, labels, TP2D());
 
         h = 10*rand(pixelNum*labelNum)
         ssScore, v = hopm_mixed(h, ss2, ss3, x, tolerance, maxIteration, verbose)
@@ -186,7 +186,7 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         bss2 = pairwiseclique(imageDims, labels, TAD());
 
         ss3 = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
-        bss3 = treyclique(imageDims, labels, TP());
+        bss3 = treyclique(imageDims, labels, TP2D());
 
         h = 10*rand(pixelNum*labelNum)
         vecnormScore, v = hopm_mixed(h, ss2, ss3, x, tolerance, maxIteration, verbose)

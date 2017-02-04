@@ -18,7 +18,7 @@ function optimize{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,
 end
 
 function optimize{T}(fixedImg::Array{T,2}, movingImg::Array{T,2}, labels::Array{NTuple{2}},
-                     datacost::DataCost, smooth::SmoothCost, topology::TopologyCost,
+                     datacost::DataCost, smooth::SmoothCost, topology::TopologyCost2D,
                                          α::Real,            β::Real;
                      𝐒₀::Matrix=rand(length(fixedImg),length(labels)), tolerance::Float64=1e-5,
                      maxIteration::Integer=300, constrainRow::Bool=false, verbose::Bool=false)
@@ -42,7 +42,7 @@ end
 
 
 function optimize{T}(fixedImg::AbstractArray{T,3}, movingImg::AbstractArray{T,3}, labels::Array{NTuple{3}},
-                  datacost::DataCost, smooth::SmoothCost, topology::TopologyCost,
+                  datacost::DataCost, smooth::SmoothCost, topology::TopologyCost3D,
                                       α::Real,            β::Real;
                   𝐒₀::Matrix=rand(length(fixedImg),length(labels)), tolerance::Float64=1e-5,
                   maxIteration::Integer=300, constrainRow::Bool=false, verbose::Bool=false)
@@ -106,7 +106,7 @@ end
 
 
 function multilevel(fixedImg, movingImg, labelSets::Vector, grids::Vector{NTuple},
-                    datacost::DataCost=SAD(), smooth::SmoothCost=TAD(), topology::TopologyCost=TP(),
+                    datacost::DataCost=SAD(), smooth::SmoothCost=TAD(), topology=TP(),
                                               α::Real=1,                β::Real=1; hopmkwargs...)
     # init
     level = length(labelRanges)

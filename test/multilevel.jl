@@ -34,7 +34,7 @@
         end
     end
     @testset "with topology preservation" begin
-        energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP(), 0.07, 0.01)
+        energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP2D(), 0.07, 0.01)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
         warppedImg = warp(moving, displacement)
@@ -73,7 +73,7 @@ end
     end
     if !haskey(ENV, "TRAVIS")    # skip this test on Travis CI because it's very time-consuming
         @testset "with topology preservation" begin
-            energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP(), 0.07, 0.01)
+            energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP3D(), 0.07, 0.01)
             indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
             displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
             warppedImg = warp(moving, displacement)

@@ -9,15 +9,20 @@ using Ranges
 using Images
 
 export Vec
-export TensorBlock, BSSTensor, SSTensor, ⊙
-export Connected4, Connected8, Connected6, Connected26, neighbors
+
+# potentials
 export AbstractPotential,
        UnaryPotential, DataTerm, DataCost,
        PairwisePotential, SmoothTerm, SmoothCost, RegularTerm,
-       TreyPotential, TopologyCost
+       TreyPotential, TopologyCost2D,
+       QuadraPotential, TopologyCost3D,
+       TopologyCost
 export SAD, SSD,
        Potts, TAD, TQD,
-       TP
+       TP2D, TP3D
+
+export TensorBlock, BSSTensor, SSTensor, ⊙
+export Connected4, Connected8, Connected6, Connected26, neighbors
 export unaryclique, pairwiseclique, treyclique, quadraclique
 export optimize, warp, upsample, multilevel
 
