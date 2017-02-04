@@ -96,11 +96,11 @@
         @test upsample(outputDims, inputDims, spectrum) ≈ repeat([1:8;]', outer=(prod(outputDims),1))
     end
 
-    # if !haskey(ENV, "TRAVIS")    # skip this test on Travis CI because it's very time-consuming
+    if !haskey(ENV, "TRAVIS")    # skip this test on Travis CI because it's very time-consuming
         fixed = reshape(Float64[1:125;], 5, 5, 5)
         moving = copy(fixed)
         labels = [(i,j,k) for i in -1:1, j in -1:1, k in -1:1]
         movingImgs, displacements, spectrums = multilevel(fixed, moving, [labels, labels], [(3,3,3),(5,5,5)], α=0.01, β=0.0, verbose=true)
         @test movingImgs[end] == fixed
-    # end
+    end
 end
