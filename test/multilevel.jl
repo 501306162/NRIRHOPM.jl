@@ -4,17 +4,16 @@
              11 12 13 14 15;
              16 17 18 19 20;
              21 22 23 24 25]
-
     moving = [ 1  2  3  4  5;
                6  7  8  9 10;
               11 12 19 14 15;
               16 13 18 17 20;
               21 22 23 24 25]
-
     labels = [(i,j) for i in -2:2, j in -2:2]
+    dims = size(fixed)
 
     @testset "without topology preservation" begin
-        energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), 0.07)
+        energy, spectrum = optimize(fixed, moving, dims, labels, SAD(), TAD(), 0.07)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
         warppedImg = warp(moving, displacement)
@@ -34,7 +33,7 @@
         end
     end
     @testset "with topology preservation" begin
-        energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP2D(), 0.07, 0.01)
+        energy, spectrum = optimize(fixed, moving, dims, labels, SAD(), TAD(), TP2D(), 0.07, 0.01)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
         warppedImg = warp(moving, displacement)
@@ -64,16 +63,19 @@ end
     moving[1,3,3] = 16
 
     labels = [(i,j,k) for i in -1:1, j in -1:1, k in -1:1]
+    dims = size(fixed)
+
     @testset "without topology preservation" begin
-        energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), 0.07)
+        energy, spectrum = optimize(fixed, moving, dims, labels, SAD(), TAD(), 0.07)
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
         warppedImg = warp(moving, displacement)
         @test warppedImg == fixed
     end
+
     if !haskey(ENV, "TRAVIS")    # skip this test on Travis CI because it's very time-consuming
         @testset "with topology preservation" begin
-            energy, spectrum = optimize(fixed, moving, labels, SAD(), TAD(), TP3D(), 0.07, 0.01)
+            energy, spectrum = optimize(fixed, moving, dims, labels, SAD(), TAD(), TP3D(), 0.07, 0.01)
             indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
             displacement = reshape([Vec(labels[i]) for i in indicator], size(fixed))
             warppedImg = warp(moving, displacement)

@@ -1,12 +1,18 @@
-function optimize{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, labels::Array{NTuple{N}},
+function optimize{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N},
+                       imageDims::NTuple{N}, labels::Array{NTuple{N}},
                        datacost::DataCost, smooth::SmoothCost, α::Real;
                        𝐒₀::Matrix=rand(length(fixedImg),length(labels)), tolerance::Float64=1e-5,
                        maxIteration::Integer=300, constrainRow::Bool=false, verbose::Bool=false)
     verbose && info("Calling unaryclique($datacost): ")
-    @time 𝐡 = unaryclique(fixedImg, movingImg, labels, datacost)
+    @time dcost = unaryclique(fixedImg, movingImg, labels, datacost)
+    if size(fixedImg) == imageDims
+        𝐡 = reshape(dcost, length(dcost))
+    else
+        𝐡 = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+    end
 
     verbose && info("Calling pairwiseclique($smooth) with weight=$α: ")
-    @time 𝐇 = pairwiseclique(fixedImg, movingImg, labels, α, smooth)
+    @time 𝐇 = pairwiseclique(imageDims, labels, smooth, α)
 
     if eltype(𝐡) != eltype(𝐒₀)
         𝐒₀ = convert(Matrix{eltype(𝐡)}, 𝐒₀)
@@ -17,19 +23,25 @@ function optimize{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,
     return energy, spectrum
 end
 
-function optimize{T}(fixedImg::Array{T,2}, movingImg::Array{T,2}, labels::Array{NTuple{2}},
+function optimize{T}(fixedImg::AbstractArray{T,2}, movingImg::AbstractArray{T,2},
+                     imageDims::NTuple{2}, labels::Array{NTuple{2}},
                      datacost::DataCost, smooth::SmoothCost, topology::TopologyCost2D,
                                          α::Real,            β::Real;
                      𝐒₀::Matrix=rand(length(fixedImg),length(labels)), tolerance::Float64=1e-5,
                      maxIteration::Integer=300, constrainRow::Bool=false, verbose::Bool=false)
     verbose && info("Calling unaryclique($datacost): ")
-    @time 𝐡 = unaryclique(fixedImg, movingImg, labels, datacost)
+    @time dcost = unaryclique(fixedImg, movingImg, labels, datacost)
+    if size(fixedImg) == imageDims
+        𝐡 = reshape(dcost, length(dcost))
+    else
+        𝐡 = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+    end
 
     verbose && info("Calling pairwiseclique($smooth) with weight=$α: ")
-    @time 𝐇 = pairwiseclique(fixedImg, movingImg, labels, α, smooth)
+    @time 𝐇 = pairwiseclique(imageDims, labels, smooth, α)
 
     verbose && info("Calling treyclique(Topology-Preserving-2D) with weight=$β: ")
-    @time 𝑯 = treyclique(fixedImg, movingImg, labels, β, topology)
+    @time 𝑯 = treyclique(imageDims, labels, topology, β)
 
     if eltype(𝐡) != eltype(𝐒₀)
         𝐒₀ = convert(Matrix{eltype(𝐡)}, 𝐒₀)
@@ -41,19 +53,25 @@ function optimize{T}(fixedImg::Array{T,2}, movingImg::Array{T,2}, labels::Array{
 end
 
 
-function optimize{T}(fixedImg::AbstractArray{T,3}, movingImg::AbstractArray{T,3}, labels::Array{NTuple{3}},
-                  datacost::DataCost, smooth::SmoothCost, topology::TopologyCost3D,
-                                      α::Real,            β::Real;
-                  𝐒₀::Matrix=rand(length(fixedImg),length(labels)), tolerance::Float64=1e-5,
-                  maxIteration::Integer=300, constrainRow::Bool=false, verbose::Bool=false)
+function optimize{T}(fixedImg::AbstractArray{T,3}, movingImg::AbstractArray{T,3},
+                     imageDims::NTuple{3}, labels::Array{NTuple{3}},
+                     datacost::DataCost, smooth::SmoothCost, topology::TopologyCost3D,
+                                         α::Real,            β::Real;
+                     𝐒₀::Matrix=rand(length(fixedImg),length(labels)), tolerance::Float64=1e-5,
+                     maxIteration::Integer=300, constrainRow::Bool=false, verbose::Bool=false)
     verbose && info("Calling unaryclique($datacost): ")
-    @time 𝐡 = unaryclique(fixedImg, movingImg, labels, datacost)
+    @time dcost = unaryclique(fixedImg, movingImg, labels, datacost)
+    if size(fixedImg) == imageDims
+        𝐡 = reshape(dcost, length(dcost))
+    else
+        𝐡 = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+    end
 
     verbose && info("Calling pairwiseclique($smooth) with weight=$α: ")
-    @time 𝐇 = pairwiseclique(fixedImg, movingImg, labels, α, smooth)
+    @time 𝐇 = pairwiseclique(imageDims, labels, smooth, α)
 
     verbose && info("Calling quadraclique(Topology-Preserving-3D) with weight=$β: ")
-    @time 𝑯 = quadraclique(fixedImg, movingImg, labels, β, topology)
+    @time 𝑯 = quadraclique(imageDims, labels, topology, β)
 
     if eltype(𝐡) != eltype(𝐒₀)
         𝐒₀ = convert(Matrix{eltype(𝐡)}, 𝐒₀)
@@ -94,13 +112,11 @@ function upsample{N}(gridDimsUp::NTuple{N}, gridDims::NTuple{N}, spectrum::Matri
     spectrumVec = reshape([Vec(spectrum[i,:]) for i = 1:prod(gridDims)], gridDims)
     knots = ntuple(x->linspace(1, gridDimsUp[x], gridDims[x]), Val{N})
     spectrumVecITP = interpolate(knots, spectrumVec, Gridded(Linear()))
-
     spectrumInterpolated = zeros(prod(gridDimsUp), size(spectrum,2))
     for 𝒊 in CartesianRange(gridDimsUp)
         r = sub2ind(gridDimsUp, 𝒊.I...)
         spectrumInterpolated[r,:] = collect(spectrumVecITP[𝒊])
     end
-
     return spectrumInterpolated
 end
 
