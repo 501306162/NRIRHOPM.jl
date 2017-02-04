@@ -8,7 +8,8 @@ function optimize{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,
     if size(fixedImg) == imageDims
         𝐡 = reshape(dcost, length(dcost))
     else
-        𝐡 = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+        dcostDownsampled = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+        𝐡 = reshape(dcostDownsampled, length(dcostDownsampled))
     end
 
     verbose && info("Calling pairwiseclique($smooth) with weight=$α: ")
@@ -34,7 +35,8 @@ function optimize{T}(fixedImg::AbstractArray{T,2}, movingImg::AbstractArray{T,2}
     if size(fixedImg) == imageDims
         𝐡 = reshape(dcost, length(dcost))
     else
-        𝐡 = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+        dcostDownsampled = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+        𝐡 = reshape(dcostDownsampled, length(dcostDownsampled))
     end
 
     verbose && info("Calling pairwiseclique($smooth) with weight=$α: ")
@@ -64,7 +66,8 @@ function optimize{T}(fixedImg::AbstractArray{T,3}, movingImg::AbstractArray{T,3}
     if size(fixedImg) == imageDims
         𝐡 = reshape(dcost, length(dcost))
     else
-        𝐡 = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+        dcostDownsampled = upsample(imageDims, size(fixedImg), dcost)   # this is actually downsampling
+        𝐡 = reshape(dcostDownsampled, length(dcostDownsampled))
     end
 
     verbose && info("Calling pairwiseclique($smooth) with weight=$α: ")
@@ -120,35 +123,51 @@ function upsample{N}(gridDimsUp::NTuple{N}, gridDims::NTuple{N}, spectrum::Matri
     return spectrumInterpolated
 end
 
-
-function multilevel(fixedImg, movingImg, labelSets::Vector, grids::Vector{NTuple},
-                    datacost::DataCost=SAD(), smooth::SmoothCost=TAD(), topology=TP(),
-                                              α::Real=1,                β::Real=1; hopmkwargs...)
+function multilevel(fixedImg, movingImg, labelSets, grids;
+                    datacost::DataCost=SAD(),
+                    smooth::SmoothCost=TAD(),
+                    topology::TopologyCost3D=TP3D(),
+                    α::Real=1,
+                    β::Real=1,
+                    tolerance::Float64=1e-5,
+                    maxIteration::Integer=300,
+                    constrainRow::Bool=false,
+                    verbose::Bool=false
+                   )
     # init
-    level = length(labelRanges)
-    fixedImgs = Vector(level)
+    level = length(labelSets)
     movingImgs = Vector(level)
     displacements = Vector(level)
     spectrums = Vector(level)
+    energy = Vector(level)
 
     # topology preservation pre-processing
-    fixedImgs[1] = copy(fixedImg)
-    movingImgs[1] = copy(movingImg)
     gridDims = grids[1]
-    labels = labelSet[1]
-    energy[1], spectrums[1] = optimize(fixedImgs[1], movingImgs[1], gridDims, labels, datacost, smooth, topology, α, β, hopmkwargs...)
+    labels = labelSets[1]
+    𝐒₀ = rand(prod(gridDims), length(labels))
+    energy[1], spectrum = optimize(fixedImg, movingImg, gridDims, labels, datacost,
+                                   smooth, topology, α, β, 𝐒₀=𝐒₀,
+                                   tolerance=tolerance, maxIteration=maxIteration,
+                                   constrainRow=constrainRow, verbose=verbose)
+    spectrums[1] = spectrum
+    indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
+    displacements[1] = reshape([Vec(labels[i]) for i in indicator], grids[1])
+    movingImgs[1] = warp(movingImg, displacements[1])
+    @show typeof(movingImgs[1])
 
-    # loop
+    # multilevel processing
     for l = 2:level
         # upsample spectrum to latest level
         spectrumSampled = upsample(grids[l], gridDims, spectrums[l-1])
         labels = labelSets[l]
-        energy, spectrum = optimize(fixedImgs[l], movingImgs[l], grids[l], labels, datacost, smooth, α; hopmkwargs..., 𝐒₀=spectrumSampled)
+        energy, spectrum = optimize(fixedImg, movingImgs[l-1], grids[l], labels, datacost,
+                                    smooth, α, 𝐒₀=spectrumSampled, tolerance=tolerance,
+                                    maxIteration=maxIteration, constrainRow=constrainRow, verbose=verbose)
         spectrums[l] = spectrum
         indicator = [indmax(spectrum[i,:]) for i in indices(spectrum,1)]
         displacements[l] = reshape([Vec(labels[i]) for i in indicator], grids[l])
-        movingImgs[l+1] = warp(movingImgs[l], displacement[l])
+        movingImgs[l] = warp(movingImgs[l-1], displacements[l])
     end
 
-    return fixedImgs, movingImgs, displacements, spectrums
+    return movingImgs, displacements, spectrums
 end
