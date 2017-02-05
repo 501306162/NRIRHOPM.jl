@@ -1,5 +1,5 @@
 comment:
-  layout: "header, diff"
+  layout: "header, diff, files"
   behavior: default
 
 ignore:
