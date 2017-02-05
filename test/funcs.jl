@@ -30,7 +30,7 @@ function pairwiseclique4validation(imageDims, deformers)
                 j = sub2ind(imageDims, jj[1], jj[2])
                 for a in eachindex(deformers), b in eachindex(deformers)
                     idx += 1
-                    data[idx] = e^-NRIRHOPM.truncated_absolute_diff(deformers[a], deformers[b], 1.0, Inf)
+                    data[idx] = e^-NRIRHOPM.tad(deformers[a], deformers[b], 1.0, Inf)
                     index[idx] = ind2sub(𝐇²Dims, sub2ind(𝐇⁴Dims, i, a, j, b))
                 end
             end

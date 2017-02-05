@@ -1,135 +1,88 @@
-import NRIRHOPM: sum_absolute_diff, sum_squared_diff,
-                 potts_model, truncated_absolute_diff, truncated_quadratic_diff,
-                 topology_preserving, jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ, jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ,
-                 jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
-
-targetImage = Float64[1 0 1;
-                      0 1 0;
-                      0 1 1]
-
-sourceImage = Float64[1 0 1;
-                      0 1 0;
-                      1 1 0]
-
-labels = [(i,j) for i in -1:1, j in -1:1]
+import NRIRHOPM: sadexp, ssdexp,
+                 potts, tad, tqd,
+                 topology_preserving,
+                 jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ,
+                 jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
 
 @testset "potentials" begin
-    @testset "sum_absolute_diff" begin
-        cost = sum_absolute_diff(targetImage, sourceImage, labels)
-        @test all(cost .>= 0)
+    N = 3
+    targetImage = [1 0 1;
+                   0 1 0;
+                   0 1 1]
 
-        mat = reshape(cost, length(targetImage), length(labels))
-        dims = size(targetImage)
-        for 𝒊 in CartesianRange(dims)
-            i = sub2ind(dims, 𝒊.I...)
-            for a in find(mat[i,:] .== maximum(mat[i,:]))
+    sourceImage = [1 0 1;
+                   0 1 0;
+                   1 1 0]
+    labels = [(i,j) for i in -1:1, j in -1:1]
+    imageDims = size(targetImage)
+
+    @testset "sadexp" begin
+        cost = sadexp(targetImage, sourceImage, labels)
+        @test all(cost .>= 0)
+        for 𝒊 in CartesianRange(imageDims)
+            i = sub2ind(imageDims, 𝒊.I...)
+            for a in find(cost[i,:] .== maximum(cost[i,:]))
                 𝐭 = CartesianIndex(labels[a])
                 @test targetImage[𝒊] == sourceImage[𝒊+𝐭]
             end
         end
     end
 
-    @testset "sum_squared_diff" begin
-        cost = sum_squared_diff(targetImage, sourceImage, labels)
+    @testset "ssdexp" begin
+        cost = ssdexp(targetImage, sourceImage, labels)
         @test all(cost .>= 0)
-
-        mat = reshape(cost, length(targetImage), length(labels))
-        dims = size(targetImage)
-        for 𝒊 in CartesianRange(dims)
-            i = sub2ind(dims, 𝒊.I...)
-            for a in find(mat[i,:] .== maximum(mat[i,:]))
+        for 𝒊 in CartesianRange(imageDims)
+            i = sub2ind(imageDims, 𝒊.I...)
+            for a in find(cost[i,:] .== maximum(cost[i,:]))
                 𝐭 = CartesianIndex(labels[a])
                 @test targetImage[𝒊] == sourceImage[𝒊+𝐭]
             end
         end
     end
 
-    @testset "potts_model" begin
-        # 2D
-        fp = (1,2)
-        fq = fp
-        d = rand()
-        @test potts_model(fp, fq, d) == 0
-        fq = (3,4)
-        @test potts_model(fp, fq, d) == d
-
-        # 3D
-        fp = (1,2,3)
-        fq = fp
-        d = rand()
-        @test potts_model(fp, fq, d) == 0
-        fq = (2,3,4)
-        @test potts_model(fp, fq, d) == d
+    @testset "potts" begin
+        for dim = 1:N
+            fp = tuple(rand(dim)...)
+            fq = fp
+            d = rand()
+            @test potts(fp, fq, d) == 0
+            fq = tuple(rand(dim)...)
+            @test potts(fp, fq, d) == d
+        end
     end
 
-    @testset "truncated_absolute_diff" begin
-        # 2D
-        fp = tuple(rand(2)...)
-        fq = tuple(rand(2)...)
-
-        cost = truncated_absolute_diff(fp, fq, 1, Inf)
-        delta = abs(vecnorm([fp...] - [fq...]))
-        @test cost == delta
-
-        rate = rand()
-        @test truncated_absolute_diff(fp, fq, rate, Inf) == rate * delta
-
-        # d = 0
-        @test truncated_absolute_diff(fp, fq, 2, 0.0) == 0
-
-        # 3D
-        fp = tuple(rand(3)...)
-        fq = tuple(rand(3)...)
-
-        cost = truncated_absolute_diff(fp, fq, 1, Inf)
-        delta = abs(vecnorm([fp...] - [fq...]))
-        @test cost == delta
-
-        rate = rand()
-        @test truncated_absolute_diff(fp, fq, rate, Inf) == rate * delta
-
-        # d = 0
-        @test truncated_absolute_diff(fp, fq, 2, 0) == 0
+    @testset "tad" begin
+        for dim = 1:N
+            fpv = rand(dim)
+            fqv = rand(dim)
+            fp = tuple(fpv...)
+            fq = tuple(fqv...)
+            rate = rand()
+            @test tad(fp, fq, rate, Inf) ≈ rate * hypot(fpv-fqv...)
+            @test tad(fp, fq, rand(), 0) == 0
+        end
     end
 
-    @testset "truncated_quadratic_diff" begin
-        # 2D
-        fp = tuple(rand(2)...)
-        fq = tuple(rand(2)...)
-
-        cost = truncated_quadratic_diff(fp, fq, 1, Inf)
-        delta = vecnorm([fp...] - [fq...])^2
-        @test cost - delta < 1e-10
-
-        rate = rand()
-        @test truncated_quadratic_diff(fp, fq, rate, Inf) - rate * delta < 1e-10
-
-        # d = 0
-        @test truncated_quadratic_diff(fp, fq, 2, 0) == 0
-
-        # 3D
-        fp = tuple(rand(3)...)
-        fq = tuple(rand(3)...)
-
-        cost = truncated_quadratic_diff(fp, fq, 1, Inf)
-        delta = vecnorm([fp...] - [fq...])^2
-        @test cost - delta < 1e-10
-
-        rate = rand()
-        @test truncated_quadratic_diff(fp, fq, rate, Inf) - rate * delta < 1e-10
-
-        # d = 0
-        @test truncated_quadratic_diff(fp, fq, 2, 0) == 0
+    @testset "tqd" begin
+        for dim = 1:N
+            fpv = rand(dim)
+            fqv = rand(dim)
+            fp = tuple(fpv...)
+            fq = tuple(fqv...)
+            rate = rand()
+            @test tqd(fp, fq, rate, Inf) ≈ rate * hypot(fpv-fqv...)^2
+            @test tqd(fp, fq, rand(), 0) == 0
+        end
     end
 
     @testset "topology_preserving" begin
-        # topology_preserving                        y
+        # topology_preserving's coordinate system:   y
         #   □ ▦ □        ▦                ▦          ↑        ⬔ => p1 => a
         #   ⬓ ⬔ ⬓  =>  ⬓ ⬔   ⬓ ⬔    ⬔ ⬓   ⬔ ⬓        |        ⬓ => p2 => b
         #   □ ▦ □              ▦    ▦          (x,y):+--> x   ▦ => p3 => c
         #              Jᵇᶠ   Jᵇᵇ    Jᶠᵇ   Jᶠᶠ
 
-        # jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ
+        # jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ 's coordinate system:
         #   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => p1 => a
         #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ⬓ => p2 => b
         #   □ ⬓ □              ⬓    ⬓            ↓         ▦ => p3 => c

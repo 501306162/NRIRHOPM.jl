@@ -60,7 +60,7 @@ import NRIRHOPM: contract
         imageDims = (16,16)
         labels = [[(i,j) for i in -1:1, j in -1:1]...]
         ss = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
-        bss = treyclique(imageDims, labels, TP());
+        bss = treyclique(imageDims, labels, TP2D());
         pixelNum = prod(imageDims)
         labelNum = length(labels)
         x = rand(pixelNum*labelNum)

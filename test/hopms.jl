@@ -4,7 +4,6 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
 @testset "hopms" begin
     tolerance = 1e-6
     n = 100
-    verbose = false
     maxIteration = 300
     @testset "2nd order canonical" begin
         A = Symmetric(rand(n,n))
@@ -30,7 +29,7 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
             push!(data, A[i,j])
             push!(index, (i,j))
         end
-        score, z = hopm_canonical(diag(A), SSTensor(data,index,(n,n)), rand(n), tolerance, maxIteration, verbose)
+        score, z = hopm_canonical(diag(A), SSTensor(data,index,(n,n)), rand(n), tolerance, maxIteration)
 
         @test d[] ≈ lbd ≈ lbdsparse ≈ score
         @test vecnorm(z - x) < tolerance
@@ -67,7 +66,7 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         y = abs.(y)
 
         # SSTensor
-        score, z = hopm_canonical(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), rand(n), tolerance, maxIteration, verbose)
+        score, z = hopm_canonical(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), rand(n), tolerance, maxIteration)
 
         @test lbd ≈ lbdsparse ≈ score
         @test vecnorm(z - x) < tolerance
@@ -85,8 +84,8 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
             push!(index, (i,j))
         end
         v = rand(n)
-        score, x = hopm_canonical(diag(A), SSTensor(data,index,(n,n)), v, tolerance, maxIteration, verbose)
-        energy, y = hopm_mixed(diag(A), SSTensor(data,index,(n,n)), v, tolerance, maxIteration, verbose)
+        score, x = hopm_canonical(diag(A), SSTensor(data,index,(n,n)), v, tolerance, maxIteration)
+        energy, y = hopm_mixed(diag(A), SSTensor(data,index,(n,n)), v, tolerance, maxIteration)
         @test vecnorm(x - y) < 0.1    # this is expected with n=100 since these two algorithms are not exactly the same.
     end
 
@@ -109,8 +108,8 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
             end
         end
         v = rand(n)
-        score, x = hopm_canonical(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), v, tolerance, maxIteration, verbose)
-        energy, y = hopm_mixed(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), v, tolerance, maxIteration, verbose)
+        score, x = hopm_canonical(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), v, tolerance, maxIteration)
+        energy, y = hopm_mixed(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), v, tolerance, maxIteration)
         @test vecnorm(x - y) < 0.01    # this is expected with n=100 since these two algorithms are not exactly the same.
     end
 
@@ -126,8 +125,8 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         bss = pairwiseclique(imageDims, labels, TAD());
 
         h = 10*rand(pixelNum*labelNum)
-        ssScore, v = hopm_mixed(h, ss, x, tolerance, maxIteration, verbose)
-        bssScore, V = hopm_mixed(h, bss, X, tolerance, maxIteration, false, verbose)
+        ssScore, v = hopm_mixed(h, ss, x, tolerance, maxIteration)
+        bssScore, V = hopm_mixed(h, bss, X, tolerance, maxIteration, false)
 
         @test ssScore ≈ bssScore
         @test vecnorm(v - reshape(V, pixelNum*labelNum)) < tolerance
@@ -145,8 +144,8 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         bss = pairwiseclique(imageDims, labels, TAD());
 
         h = 10*rand(pixelNum*labelNum)
-        vecnormScore, v = hopm_mixed(h, ss, x, tolerance, maxIteration, verbose)
-        constrainRowScore, R = hopm_mixed(h, bss, X, tolerance, maxIteration, true, verbose)
+        vecnormScore, v = hopm_mixed(h, ss, x, tolerance, maxIteration)
+        constrainRowScore, R = hopm_mixed(h, bss, X, tolerance, maxIteration, true)
 
         @show vecnormScore, constrainRowScore
         @show vecnorm(v - reshape(R, pixelNum*labelNum))
@@ -164,11 +163,11 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         bss2 = pairwiseclique(imageDims, labels, TAD());
 
         ss3 = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
-        bss3 = treyclique(imageDims, labels, TP());
+        bss3 = treyclique(imageDims, labels, TP2D());
 
         h = 10*rand(pixelNum*labelNum)
-        ssScore, v = hopm_mixed(h, ss2, ss3, x, tolerance, maxIteration, verbose)
-        bssScore, V = hopm_mixed(h, bss2, bss3, X, tolerance, maxIteration, false, verbose)
+        ssScore, v = hopm_mixed(h, ss2, ss3, x, tolerance, maxIteration)
+        bssScore, V = hopm_mixed(h, bss2, bss3, X, tolerance, maxIteration, false)
 
         @test ssScore ≈ bssScore
         @test vecnorm(v - reshape(V, pixelNum*labelNum)) < tolerance
@@ -186,11 +185,11 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         bss2 = pairwiseclique(imageDims, labels, TAD());
 
         ss3 = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
-        bss3 = treyclique(imageDims, labels, TP());
+        bss3 = treyclique(imageDims, labels, TP2D());
 
         h = 10*rand(pixelNum*labelNum)
-        vecnormScore, v = hopm_mixed(h, ss2, ss3, x, tolerance, maxIteration, verbose)
-        constrainRowScore, R = hopm_mixed(h, bss2, bss3, X, tolerance, maxIteration, true, verbose)
+        vecnormScore, v = hopm_mixed(h, ss2, ss3, x, tolerance, maxIteration)
+        constrainRowScore, R = hopm_mixed(h, bss2, bss3, X, tolerance, maxIteration, true)
 
         @show vecnormScore, constrainRowScore
         @show vecnorm(v - reshape(R, pixelNum*labelNum))

@@ -1,23 +1,29 @@
 @testset "cliques" begin
-    fixedImg = rand(5,5)
-    movingImg = rand(size(fixedImg))
+    imageDims = (5,5)
+    fixedImg = rand(imageDims)
+    movingImg = rand(imageDims)
     labels = [(i,j) for i in -1:1, j in -1:1]
-    
+    weight = rand()
+
     @testset "unaryclique" begin
         @test unaryclique(fixedImg, movingImg, labels) == unaryclique(fixedImg, movingImg, labels, SAD())
+        @test unaryclique(fixedImg, movingImg, labels) == unaryclique(fixedImg, movingImg, labels, SAD(), 1)
     end
 
     @testset "pairwiseclique" begin
-        imageDims = size(fixedImg)
-        weight = rand()
-        @test pairwiseclique(fixedImg, movingImg, labels, weight) == pairwiseclique(fixedImg, movingImg, labels, weight, TAD())
-        @test pairwiseclique(imageDims, reshape(labels, length(labels)), TAD()) == pairwiseclique(imageDims, reshape(labels, length(labels)), TAD())
+        @test pairwiseclique(imageDims, labels) == pairwiseclique(imageDims, labels, TAD())
+        @test pairwiseclique(imageDims, labels) == pairwiseclique(imageDims, labels, TAD(), 1)
     end
 
     @testset "treyclique" begin
-        imageDims = size(fixedImg)
-        weight = rand()
-        @test treyclique(fixedImg, movingImg, labels, weight) == treyclique(fixedImg, movingImg, labels, weight, TP())
-        @test treyclique(imageDims, reshape(labels, length(labels)), TP()) == treyclique(imageDims, reshape(labels, length(labels)), TP())
+        @test treyclique(imageDims, labels) == treyclique(imageDims, labels, TP2D())
+        @test treyclique(imageDims, labels) == treyclique(imageDims, labels, TP2D(), 1)
+    end
+
+    @testset "quadraclique" begin
+        imageDims = (3,3,3)
+        labels = [(i,j,k) for i in 0:1, j in 0:1, k in 0:1]
+        @test quadraclique(imageDims, labels) == quadraclique(imageDims, labels, TP3D())
+        @test quadraclique(imageDims, labels) == quadraclique(imageDims, labels, TP3D(), 1)
     end
 end

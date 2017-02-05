@@ -1,6 +1,15 @@
 julia 0.5
+Reexport
+
 FixedSizeArrays
 Interpolations
+
+Images 0.6
+NIfTI
+Unitful
+Ranges
+
 Plots
 GR
-Reexport
+
+Memento
