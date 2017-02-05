@@ -1,5 +1,7 @@
-using NRIRHOPM
+using NRIRHOPM, Memento
 using Base.Test
+
+set_level(loggerHOPMReg, "warn")
 
 include("funcs.jl")
 include("potentials.jl")

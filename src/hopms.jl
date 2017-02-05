@@ -1,8 +1,8 @@
 """
-    hopm_mixed(𝐡, 𝐇, 𝐒, tol, maxIter, constrainRow, verbose) -> (energy, spectrum)
-    hopm_mixed(𝐡, 𝐇, 𝑯, 𝐒, tol, maxIter, constrainRow, verbose) -> (energy, spectrum)
-    hopm_mixed(𝐡, 𝐇, 𝐯, tol, maxIter, verbose) -> (energy, vector)
-    hopm_mixed(𝐡, 𝐇, 𝑯, 𝐯, tol, maxIter, verbose) -> (energy, vector)
+    hopm_mixed(𝐡, 𝐇, 𝐒, tol, maxIter, constrainRow) -> (energy, spectrum)
+    hopm_mixed(𝐡, 𝐇, 𝑯, 𝐒, tol, maxIter, constrainRow) -> (energy, spectrum)
+    hopm_mixed(𝐡, 𝐇, 𝐯, tol, maxIter) -> (energy, vector)
+    hopm_mixed(𝐡, 𝐇, 𝑯, 𝐯, tol, maxIter) -> (energy, vector)
 
 Refer to the following paper(Algorithm 4) for further details:
 
@@ -11,7 +11,7 @@ IEEE transactions on pattern analysis and machine intelligence 33.12 (2011): 238
 """
 function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::BSSTensor{T},
                              𝐒::AbstractMatrix{T}, tol::Float64, maxIter::Integer,
-                             constrainRow::Bool, verbose::Bool)
+                             constrainRow::Bool)
     𝐒₀ = copy(𝐒)
     pixelNum, labelNum = size(𝐒₀)
 
@@ -42,17 +42,15 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::BSSTensor{T},
         end
         𝐒ᵢ = 𝐒ᵢ₊₁
     end
-    if i == maxIter
-        warn("Maximum iterator number is reached, HOPM could not be convergent.")
-    else
-        verbose && info("HOPM converges in $i steps.")
-    end
+    logger = get_logger(current_module())
+    i == maxIter && warn(logger, "Maximum iterator number is reached, HOPM might not be convergent.")
+    i < maxIter && info(logger, "HOPM converges in $i steps.")
     return sum( 𝐒ᵢ .* (𝐌 + 𝐇 ⊙ 𝐒ᵢ) ), 𝐒ᵢ
 end
 
 function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::BSSTensor{T}, 𝑯::BSSTensor{T},
                              𝐒::AbstractMatrix{T}, tol::Float64, maxIter::Integer,
-                             constrainRow::Bool, verbose::Bool)
+                             constrainRow::Bool)
     𝐒₀ = copy(𝐒)
     pixelNum, labelNum = size(𝐒₀)
 
@@ -83,17 +81,14 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::BSSTensor{T}, 𝑯::
         end
         𝐒ᵢ = 𝐒ᵢ₊₁
     end
-    if i == maxIter
-        warn("Maximum iterator number is reached, HOPM could not be convergent.")
-    else
-        verbose && info("HOPM converges in $i steps.")
-    end
+    logger = get_logger(current_module())
+    i == maxIter && warn(logger, "Maximum iterator number is reached, HOPM might not be convergent.")
+    i < maxIter && info(logger, "HOPM converges in $i steps.")
     return sum( 𝐒ᵢ .* (𝐌 + 𝐇 ⊙ 𝐒ᵢ + 𝑯 ⊙ 𝐒ᵢ) ), 𝐒ᵢ
 end
 
 function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T},
-                             𝐯::AbstractVector{T}, tol::Float64, maxIter::Integer,
-                             verbose::Bool)
+                             𝐯::AbstractVector{T}, tol::Float64, maxIter::Integer)
     𝐯₀ = copy(𝐯)
     normalize!(𝐯₀)
     𝐯ᵢ = 𝐯₀
@@ -108,17 +103,14 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T},
         end
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
-    if i == maxIter
-        warn("Maximum iterator number is reached, HOPM could not be convergent.")
-    else
-        verbose && info("HOPM converges in $i steps.")
-    end
+    logger = get_logger(current_module())
+    i == maxIter && warn(logger, "Maximum iterator number is reached, HOPM might not be convergent.")
+    i < maxIter && info(logger, "HOPM converges in $i steps.")
     return 𝐯ᵢ ⋅ (𝐡 + 𝐇 ⊙ 𝐯ᵢ), 𝐯ᵢ
 end
 
 function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T}, 𝑯::AbstractTensor{T},
-                             𝐯::AbstractVector{T}, tol::Float64, maxIter::Integer,
-                             verbose::Bool)
+                             𝐯::AbstractVector{T}, tol::Float64, maxIter::Integer)
     𝐯₀ = copy(𝐯)
     normalize!(𝐯₀)
     𝐯ᵢ = 𝐯₀
@@ -133,23 +125,20 @@ function hopm_mixed{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T}, �
         end
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
-    if i == maxIter
-        warn("Maximum iterator number is reached, HOPM could not be convergent.")
-    else
-        verbose && info("HOPM converges in $i steps.")
-    end
+    logger = get_logger(current_module())
+    i == maxIter && warn(logger, "Maximum iterator number is reached, HOPM might not be convergent.")
+    i < maxIter && info(logger, "HOPM converges in $i steps.")
     return 𝐯ᵢ ⋅ (𝐡 + 𝐇 ⊙ 𝐯ᵢ + 𝑯 ⊙ 𝐯ᵢ), 𝐯ᵢ
 end
 
 """
-    hopm_canonical(𝐡, 𝐇, 𝐯, tol, maxIter, verbose) -> (energy, vector)
-    hopm_canonical(𝐡, 𝐇, 𝑯, 𝐯, tol, maxIter, verbose) -> (energy, vector)
+    hopm_canonical(𝐡, 𝐇, 𝐯, tol, maxIter) -> (energy, vector)
+    hopm_canonical(𝐡, 𝐇, 𝑯, 𝐯, tol, maxIter) -> (energy, vector)
 
 The canonical high order power method for calculating tensor eigenpairs.
 """
 function hopm_canonical{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T},
-                                 𝐯::AbstractVector{T}, tol::Float64, maxIter::Integer,
-                                 verbose::Bool)
+                                 𝐯::AbstractVector{T}, tol::Float64, maxIter::Integer)
     𝐯₀ = copy(𝐯)
     normalize!(𝐯₀)
     𝐯ᵢ = 𝐯₀
@@ -164,17 +153,14 @@ function hopm_canonical{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T
         end
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
-    if i == maxIter
-        warn("Maximum iterator number is reached, HOPM could not be convergent.")
-    else
-        verbose && info("HOPM converges in $i steps.")
-    end
+    logger = get_logger(current_module())
+    i == maxIter && warn(logger, "Maximum iterator number is reached, HOPM might not be convergent.")
+    i < maxIter && info(logger, "HOPM converges in $i steps.")
     return 𝐯ᵢ ⋅ (𝐯ᵢ .* 𝐡 + 𝐇 ⊙ 𝐯ᵢ), 𝐯ᵢ
 end
 
 function hopm_canonical{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T}, 𝑯::AbstractTensor{T},
-                                 𝐯::AbstractVector{T}, tol::Float64, maxIter::Integer,
-                                 verbose::Bool)
+                                 𝐯::AbstractVector{T}, tol::Float64, maxIter::Integer)
     𝐯₀ = copy(𝐯)
     normalize!(𝐯₀)
     𝐯ᵢ = 𝐯₀
@@ -189,10 +175,8 @@ function hopm_canonical{T<:Real}(𝐡::AbstractVector{T}, 𝐇::AbstractTensor{T
         end
         𝐯ᵢ = 𝐯ᵢ₊₁
     end
-    if i == maxIter
-        warn("Maximum iterator number is reached, HOPM could not be convergent.")
-    else
-        verbose && info("HOPM converges in $i steps.")
-    end
+    logger = get_logger(current_module())
+    i == maxIter && warn(logger, "Maximum iterator number is reached, HOPM might not be convergent.")
+    i < maxIter && info(logger, "HOPM converges in $i steps.")
     return 𝐯ᵢ ⋅ (𝐯ᵢ .* 𝐯ᵢ .* 𝐡 + 𝐯ᵢ .* (𝐇 ⊙ 𝐯ᵢ) + 𝑯 ⊙ 𝐯ᵢ), 𝐯ᵢ
 end

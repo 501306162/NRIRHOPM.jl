@@ -6,7 +6,9 @@
 Returns the **data cost** of unary-cliques.
 """
 function unaryclique{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels::Array{NTuple{N}}, potential::DataCost=SAD(), weight::Real=1)
-    return potential.𝓕(fixedImg, movingImg, labels)
+    logger = get_logger(current_module())
+    debug(logger, "Calling unaryclique with weight=$weight...")
+    return weight*potential.𝓕(fixedImg, movingImg, labels)
 end
 
 
@@ -18,6 +20,8 @@ end
 Returns the **smooth cost** of pairwise-cliques.
 """
 function pairwiseclique{N}(imageDims::NTuple{N}, labels::Array{NTuple{N}}, potential::SmoothCost=TAD(), weight::Real=1)
+    logger = get_logger(current_module())
+    debug(logger, "Calling pairwiseclique with weight=$weight...")
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum)
@@ -37,6 +41,8 @@ end
 Returns the **high order cost** of 3-element-cliques.
 """
 function treyclique(imageDims::NTuple{2}, labels::Array{NTuple{2}}, potential::TopologyCost2D=TP2D(), weight::Real=1)
+    logger = get_logger(current_module())
+    debug(logger, "Calling treyclique with weight=$weight...")
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
@@ -67,6 +73,8 @@ end
 Returns the **high order cost** for 4-element-cliques.
 """
 function quadraclique(imageDims::NTuple{3}, labels::Array{NTuple{3}}, potential::TopologyCost3D=TP3D(), weight::Real=1)
+    logger = get_logger(current_module())
+    debug(logger, "Calling quadraclique with weight=$weight...")
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
