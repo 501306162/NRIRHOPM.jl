@@ -81,8 +81,8 @@ function treyclique4validation(imageDims, deformers)
                 indexNum += 1
                 cost = NRIRHOPM.topology_preserving([jj.I...], [ii.I...], [kk.I...], deformers[b], deformers[a], deformers[c])
                 data[indexNum] = cost
-                indTemp = sub2ind(𝐇⁶Dims, i, a, j, b, k, c)
-                index[indexNum] = ind2sub(𝐇³Dims, indTemp)
+                indTemp = sub2ind(𝐇⁶Dims, i, a, j, b, k, c)    # these two lines are actually insane,
+                index[indexNum] = ind2sub(𝐇³Dims, indTemp)    # indTemp is very likely overflow. TODO: remove SSTensor stuff
             end
         end
     end
