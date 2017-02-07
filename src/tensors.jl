@@ -1,60 +1,50 @@
 abstract AbstractTensor{T,N} <: AbstractArray{T,N}
 
-"""
-Tensor Block
-"""
-immutable TensorBlock{T<:Real,N,Order} <: AbstractArray{T,N}
+immutable TensorBlock{T<:Real,N,Order} <: AbstractTensor{T,N}
     block::Array{T,N}
     index::Vector{NTuple{N,Int}}
     dims::NTuple{Order,Int}
 end
 
-Base.nnz(𝑯::TensorBlock) = length(𝑯.index)
-Base.size(𝑯::TensorBlock) = 𝑯.dims
-Base.size(𝑯::TensorBlock, i::Integer) = 𝑯.dims[i]
-Base.length(𝑯::TensorBlock) = prod(𝑯.dims)
-@inline Base.getindex{T<:Real}(𝑯::TensorBlock{T,2,4}, i::Integer, a::Integer, j::Integer, b::Integer) = 𝑯.block[a,b]
-@inline Base.getindex{T<:Real}(𝑯::TensorBlock{T,3,6}, i::Integer, a::Integer, j::Integer, b::Integer, k::Integer, c::Integer) = 𝑯.block[a,b,c]
-@inline Base.getindex{T<:Real}(𝑯::TensorBlock{T,4,8}, i::Integer, a::Integer, j::Integer, b::Integer, k::Integer, c::Integer, m::Integer, d::Integer) = 𝑯.block[a,b,c,d]
-Base.:(==)(x::TensorBlock, y::TensorBlock) = x.block == y.block && x.index == y.index && x.dims == y.dims
+Base.size(A::TensorBlock) = size(A.block)
+Base.getindex(A::TensorBlock, i::Integer) = A.block[i]
+Base.getindex(A::TensorBlock, I...) = A.block[I...]
+Base.:(==)(A::TensorBlock, B::TensorBlock) = A.block == B.block && A.index == B.index && A.dims == B.dims
 
-function contract{T<:Real}(𝑯::TensorBlock{T,2,4}, 𝐗::Matrix{T})
-    𝐌 = zeros(T, size(𝐗)...)
-    for n in 1:nnz(𝑯)
-        i, j = 𝑯.index[n]
-        for ll in CartesianRange(size(𝑯.block))
+function contract{T<:Real}(𝑻::TensorBlock{T,2,4}, 𝐗::Matrix{T})
+    𝐌 = zeros(𝐗)
+    for (i,j) in 𝑻.index
+        for ll in CartesianRange(size(𝑻.block))
             a, b = ll.I
-            𝐌[i,a] += 𝑯[i,a,j,b] * 𝐗[j,b]
-            𝐌[j,b] += 𝑯[i,a,j,b] * 𝐗[i,a]
+            𝐌[i,a] += 𝑻[a,b] * 𝐗[j,b]
+            𝐌[j,b] += 𝑻[a,b] * 𝐗[i,a]
         end
     end
     return 𝐌
 end
 
-function contract{T<:Real}(𝑯::TensorBlock{T,3,6}, 𝐗::Matrix{T})
-    𝐌 = zeros(T, size(𝐗)...)
-    for n in 1:nnz(𝑯)
-        i, j, k = 𝑯.index[n]
-        for lll in CartesianRange(size(𝑯.block))
+function contract{T<:Real}(𝑻::TensorBlock{T,3,6}, 𝐗::Matrix{T})
+    𝐌 = zeros(𝐗)
+    for (i,j,k) in 𝑻.index
+        for lll in CartesianRange(size(𝑻.block))
             a, b, c = lll.I
-            𝐌[i,a] += 2.0 * 𝑯[i,a,j,b,k,c] * 𝐗[j,b] * 𝐗[k,c]
-            𝐌[j,b] += 2.0 * 𝑯[i,a,j,b,k,c] * 𝐗[i,a] * 𝐗[k,c]
-            𝐌[k,c] += 2.0 * 𝑯[i,a,j,b,k,c] * 𝐗[i,a] * 𝐗[j,b]
+            𝐌[i,a] += 2.0 * 𝑻[a,b,c] * 𝐗[j,b] * 𝐗[k,c]
+            𝐌[j,b] += 2.0 * 𝑻[a,b,c] * 𝐗[i,a] * 𝐗[k,c]
+            𝐌[k,c] += 2.0 * 𝑻[a,b,c] * 𝐗[i,a] * 𝐗[j,b]
         end
     end
     return 𝐌
 end
 
-function contract{T<:Real}(𝑯::TensorBlock{T,4,8}, 𝐗::Matrix{T})
-    𝐌 = zeros(T, size(𝐗)...)
-    for n in 1:nnz(𝑯)
-        i, j, k, m = 𝑯.index[n]
-        for llll in CartesianRange(size(𝑯.block))
+function contract{T<:Real}(𝑻::TensorBlock{T,4,8}, 𝐗::Matrix{T})
+    𝐌 = zeros(𝐗)
+    for (i, j, k, m) in 𝑻.index
+        for llll in CartesianRange(size(𝑻.block))
             a, b, c, d = llll.I
-            𝐌[i,a] += 6.0 * 𝑯[i,a,j,b,k,c,m,d] * 𝐗[j,b] * 𝐗[k,c] * 𝐗[m,d]
-            𝐌[j,b] += 6.0 * 𝑯[i,a,j,b,k,c,m,d] * 𝐗[i,a] * 𝐗[k,c] * 𝐗[m,d]
-            𝐌[k,c] += 6.0 * 𝑯[i,a,j,b,k,c,m,d] * 𝐗[i,a] * 𝐗[j,b] * 𝐗[m,d]
-            𝐌[m,d] += 6.0 * 𝑯[i,a,j,b,k,c,m,d] * 𝐗[i,a] * 𝐗[j,b] * 𝐗[k,c]
+            𝐌[i,a] += 6.0 * 𝑻[a,b,c,d] * 𝐗[j,b] * 𝐗[k,c] * 𝐗[m,d]
+            𝐌[j,b] += 6.0 * 𝑻[a,b,c,d] * 𝐗[i,a] * 𝐗[k,c] * 𝐗[m,d]
+            𝐌[k,c] += 6.0 * 𝑻[a,b,c,d] * 𝐗[i,a] * 𝐗[j,b] * 𝐗[m,d]
+            𝐌[m,d] += 6.0 * 𝑻[a,b,c,d] * 𝐗[i,a] * 𝐗[j,b] * 𝐗[k,c]
         end
     end
     return 𝐌
@@ -68,11 +58,10 @@ immutable BSSTensor{T<:Real,N,Order} <: AbstractTensor{T,N}
     dims::NTuple{Order,Int}
 end
 
-Base.nnz(𝑯::BSSTensor) = mapreduce(nnz, +, 𝑯.blocks)
-Base.size(𝑯::BSSTensor) = 𝑯.dims
-Base.size(𝑯::BSSTensor, i::Integer) = 𝑯.dims[i]
-Base.length(𝑯::BSSTensor) = prod(𝑯.dims)
-Base.:(==)(x::BSSTensor, y::BSSTensor) = x.blocks == y.blocks && x.dims == y.dims
+Base.size(A::BSSTensor) = size(A.block)
+Base.getindex(A::BSSTensor, i::Integer) = A.block[i]
+Base.getindex(A::BSSTensor, I...) = A.block[I...]
+Base.:(==)(A::BSSTensor, B::BSSTensor) = A.blocks == B.blocks && A.dims == B.dims
 
 function contract{T<:Real}(𝑯::BSSTensor{T}, 𝐱::Vector{T})
     pixelNum, labelNum = size(𝑯,1), size(𝑯,2)
