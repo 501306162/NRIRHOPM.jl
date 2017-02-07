@@ -1,15 +1,46 @@
-abstract AbstractTensor{T,N} <: AbstractArray{T,N}
+abstract AbstractSymmetricSparseTensor{T,N} <: AbstractArray{T,N}
+abstract AbstractTensorBlock{T,N} <: AbstractArray{T,N}
 
-immutable TensorBlock{T<:Real,N,Order} <: AbstractTensor{T,N}
-    block::Array{T,N}
-    index::Vector{NTuple{N,Int}}
+
+immutable ValueBlock{T<:Real,N} <: AbstractTensorBlock{T,N}
+    vals::Array{T,N}
+end
+Base.size(A::ValueBlock) = size(A.vals)
+Base.getindex(A::ValueBlock, i::Integer) = A.vals[i]
+Base.getindex{T<:Real,N}(A::ValueBlock{T,N}, I::Vararg{Int,N}) = A.vals[I...]
+Base.:(==)(A::ValueBlock, B::ValueBlock) = A.vals == B.vals
+
+
+# todo: IndexBlock{N,T<:NTuple{N,Int}} -- this is the so called triangular dispatch, which will be supported on julia-v0.6+.
+immutable IndexBlock{T<:NTuple} <: AbstractTensorBlock{T,1}
+    idxs::Vector{T}
+end
+Base.size(A::IndexBlock) = size(A.idxs)
+Base.getindex(A::IndexBlock, i::Integer) = A.idxs[i]
+Base.getindex{T<:NTuple}(A::IndexBlock{T}, I::Vararg{Int,N}) = A.idxs[I...]
+Base.:(==)(A::IndexBlock, B::IndexBlock) = A.idxs == B.idxs
+
+
+immutable BlockedTensor{Tv<:Real,N,Ti<:NTuple,Order} <: AbstractSymmetricSparseTensor{Tv,Order}
+    valBlocks::Vector{ValueBlock{Tv,N}}
+    idxBlocks::Vector{IndexBlock{Ti}}
     dims::NTuple{Order,Int}
 end
+Base.size(A::BlockedTensor) = A.dims
+function Base.getindex{Tv<:Real,N,Ti<:NTuple,Order}(A::BlockedTensor{Tv,N,Ti,Order}, I::Vararg{Int,Order})
+    out = zero(Tv)
+    # assume (i,a,j,b,k,c) indexing
+    oddIdxs = I[1:2:end]
+    evenIdxs = I[2:2:end]
+    for i = 1:length(A.idxBlocks)
+        if oddIdxs in A.idxBlocks[i]
+            out = getindex(A.valBlocks[i], evenIdxs...)
+        end
+    end
+    out
+end
+Base.:(==)(A::BlockedTensor, B::BlockedTensor) = A.valBlocks == B.valBlocks && A.idxBlocks == B.idxBlocks && A.dims == B.dims
 
-Base.size(A::TensorBlock) = size(A.block)
-Base.getindex(A::TensorBlock, i::Integer) = A.block[i]
-Base.getindex(A::TensorBlock, I...) = A.block[I...]
-Base.:(==)(A::TensorBlock, B::TensorBlock) = A.block == B.block && A.index == B.index && A.dims == B.dims
 
 function contract{T<:Real}(𝑻::TensorBlock{T,2,4}, 𝐗::Matrix{T})
     𝐌 = zeros(𝐗)
@@ -50,18 +81,7 @@ function contract{T<:Real}(𝑻::TensorBlock{T,4,8}, 𝐗::Matrix{T})
     return 𝐌
 end
 
-"""
-Blocked Sparse Symmetric pure n-th Order Tensor
-"""
-immutable BSSTensor{T<:Real,N,Order} <: AbstractTensor{T,N}
-    blocks::Vector{TensorBlock{T,N,Order}}
-    dims::NTuple{Order,Int}
-end
 
-Base.size(A::BSSTensor) = size(A.block)
-Base.getindex(A::BSSTensor, i::Integer) = A.block[i]
-Base.getindex(A::BSSTensor, I...) = A.block[I...]
-Base.:(==)(A::BSSTensor, B::BSSTensor) = A.blocks == B.blocks && A.dims == B.dims
 
 function contract{T<:Real}(𝑯::BSSTensor{T}, 𝐱::Vector{T})
     pixelNum, labelNum = size(𝑯,1), size(𝑯,2)
@@ -78,53 +98,6 @@ function contract{T<:Real}(𝑯::BSSTensor{T}, 𝐗::Matrix{T})
         𝐌 += contract(𝐛, 𝐗)
     end
     return 𝐌
-end
-
-"""
-Sparse Symmetric pure n-th Order Tensor
-"""
-immutable SSTensor{T<:Real,Order} <: AbstractTensor{T,Order}
-    data::Vector{T}
-    index::Vector{NTuple{Order,Int}}
-    dims::NTuple{Order,Int}
-end
-
-Base.nnz(𝑯::SSTensor) = length(𝑯.data)
-Base.size(𝑯::SSTensor) = 𝑯.dims
-Base.size(𝑯::SSTensor, i::Integer) = 𝑯.dims[i]
-Base.length(𝑯::SSTensor) = prod(𝑯.dims)
-
-function contract{T<:Real}(𝑯::SSTensor{T,2}, 𝐱::Vector{T})
-    𝐯 = zeros(T, size(𝑯,1))
-    for i in 1:nnz(𝑯)
-        x, y = 𝑯.index[i]
-        𝐯[x] += 𝑯.data[i] * 𝐱[y]
-        𝐯[y] += 𝑯.data[i] * 𝐱[x]
-    end
-    return 𝐯
-end
-
-function contract{T<:Real}(𝑯::SSTensor{T,3}, 𝐱::Vector{T})
-    𝐯 = zeros(T, size(𝑯,1))
-    for i in 1:nnz(𝑯)
-        x, y, z = 𝑯.index[i]
-        𝐯[x] += 2.0 * 𝑯.data[i] * 𝐱[y] * 𝐱[z]
-        𝐯[y] += 2.0 * 𝑯.data[i] * 𝐱[x] * 𝐱[z]
-        𝐯[z] += 2.0 * 𝑯.data[i] * 𝐱[x] * 𝐱[y]
-    end
-    return 𝐯
-end
-
-function contract{T<:Real}(𝑯::SSTensor{T,4}, 𝐱::Vector{T})
-    𝐯 = zeros(T, size(𝑯,1))
-    for i in 1:nnz(𝑯)
-        x, y, z, w = 𝑯.index[i]
-        𝐯[x] += 6.0 * 𝑯.data[i] * 𝐱[y] * 𝐱[z] * 𝐱[w]
-        𝐯[y] += 6.0 * 𝑯.data[i] * 𝐱[x] * 𝐱[z] * 𝐱[w]
-        𝐯[z] += 6.0 * 𝑯.data[i] * 𝐱[x] * 𝐱[y] * 𝐱[w]
-        𝐯[w] += 6.0 * 𝑯.data[i] * 𝐱[x] * 𝐱[y] * 𝐱[z]
-    end
-    return 𝐯
 end
 
 # handy operator ⊙ (\odot)
