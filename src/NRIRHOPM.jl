@@ -12,6 +12,10 @@ using Unitful
 using Ranges
 using Images
 
+# tensor
+export AbstractSymmetricSparseTensor, AbstractTensorBlockBSSTensor
+export ValueBlock, IndexBlock, BlockedTensor
+export contract, ⊙
 
 # potential
 export AbstractPotential,
@@ -24,24 +28,23 @@ export SAD, SSD,
        Potts, TAD, TQD,
        TP2D, TP3D
 
-# tensor
-export AbstractSymmetricSparseTensor, AbstractTensorBlockBSSTensor
-export ValueBlock, IndexBlock, BlockedTensor
-export contract, ⊙
+# neighbor
+export Connected4, Connected8, Connected6, Connected26, SquareCubic
+export neighbors
 
-# export Connected4, Connected8, Connected6, Connected26, neighbors
+
 # export unaryclique, pairwiseclique, treyclique, quadraclique
 # export optimize, warp, upsample, multilevel
 export loggerHOPMReg
 
-include("utility.jl")
-include("io.jl")
 include("tensor.jl")
-# include("hopms.jl")
-# include("neighbors.jl")
-# include("types.jl")
 include("potential.jl")
-# include("cliques.jl")
+include("neighbor.jl")
+# include("types.jl")
+# include("clique.jl")
+# include("hopms.jl")
+include("util.jl")
+include("io.jl")
 # include("multilevel.jl")
 
 loggerHOPMReg = basic_config("notice"; fmt="[ {date} | {level} ]: {msg}")
