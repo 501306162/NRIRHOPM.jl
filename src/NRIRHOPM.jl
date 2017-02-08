@@ -1,5 +1,6 @@
 module NRIRHOPM
 
+using Combinatorics
 using Memento
 
 using Interpolations
@@ -12,7 +13,7 @@ using Ranges
 using Images
 
 
-# potentials
+# potential
 export AbstractPotential,
        UnaryPotential, DataTerm, DataCost,
        PairwisePotential, SmoothTerm, SmoothCost, RegularTerm,
@@ -23,21 +24,25 @@ export SAD, SSD,
        Potts, TAD, TQD,
        TP2D, TP3D
 
-export TensorBlock, BSSTensor, SSTensor, ⊙
-export Connected4, Connected8, Connected6, Connected26, neighbors
-export unaryclique, pairwiseclique, treyclique, quadraclique
-export optimize, warp, upsample, multilevel
+# tensor
+export AbstractSymmetricSparseTensor, AbstractTensorBlockBSSTensor
+export ValueBlock, IndexBlock, BlockedTensor
+export contract, ⊙
+
+# export Connected4, Connected8, Connected6, Connected26, neighbors
+# export unaryclique, pairwiseclique, treyclique, quadraclique
+# export optimize, warp, upsample, multilevel
 export loggerHOPMReg
 
 include("utility.jl")
 include("io.jl")
-include("tensors.jl")
-include("hopms.jl")
-include("neighbors.jl")
-include("types.jl")
+include("tensor.jl")
+# include("hopms.jl")
+# include("neighbors.jl")
+# include("types.jl")
 include("potentials.jl")
-include("cliques.jl")
-include("multilevel.jl")
+# include("cliques.jl")
+# include("multilevel.jl")
 
 loggerHOPMReg = basic_config("notice"; fmt="[ {date} | {level} ]: {msg}")
 add_handler(loggerHOPMReg, DefaultHandler("HOPMReg.log", DefaultFormatter("[ {date} | {level} ]: {msg}")))
