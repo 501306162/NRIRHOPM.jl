@@ -2,30 +2,30 @@ using TensorOperations
 
 @testset "tensors" begin
     @testset "ValueBlock" begin
-        v = rand(3,3)
-        x = ValueBlock(v)
-        @test size(x) == size(v)
-        @test x[3] == v[3]
-        @test x[1:3] == v[1:3]
-        @test x[2,2] == v[2,2]
-        @test x == ValueBlock(v)
+        V = rand(3,3)
+        X = ValueBlock(V)
+        @test size(X) == size(V)
+        @test X[3] == V[3]
+        @test X[1:3] == V[1:3]
+        @test X[2,2] == V[2,2]
+        @test X == ValueBlock(V)
     end
 
     @testset "ValueBlock" begin
-        x = IndexBlock([(1,2),(2,2),(3,1)])
-        @test size(x) == (3,)
-        @test x[2] == x.idxs[2]
-        @test_throws BoundsError x[2,2]
+        X = IndexBlock([(1,2),(2,2),(3,1)])
+        @test size(X) == (3,)
+        @test X[2] == X.idxs[2]
+        @test_throws BoundsError X[2,2]
     end
 
     @testset "BlockedTensor" begin
-        v = rand(3,3)
-        vals = [ValueBlock(v)]
+        V = rand(3,3)
+        vals = [ValueBlock(V)]
         idxs = [IndexBlock([(1,2),(2,2),(3,1)])]
         dims = (3,3,3,2)
-        x = BlockedTensor(vals,idxs,dims)
-        @test x[:,1,:,2] == x[:,2,:,2] == x[:,3,:,1] == v
-        @test x == BlockedTensor(vals,idxs,dims)
+        X = BlockedTensor(vals,idxs,dims)
+        @test X[:,1,:,2] == X[:,2,:,2] == X[:,3,:,1] == V
+        @test X == BlockedTensor(vals,idxs,dims)
     end
 
     valN = 3
@@ -41,16 +41,21 @@ using TensorOperations
         end
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN)
-        x = BlockedTensor(vals, idxs, dims)
+        X = BlockedTensor(vals, idxs, dims)
         # convert x to a full symmetric tensor
-        y = full(x)
-        @test y[1,2,2,1] == y[2,1,1,2] == x[2,1,1,2]
-        @test y[1,3,2,1] == y[2,1,1,3] == x[2,1,1,3]
-        @test y[3,3,1,2] == y[1,2,3,3] == x[1,2,3,3]
+        Y = full(X)
+        @test Y[1,2,2,1] == Y[2,1,1,2] == X[2,1,1,2]
+        @test Y[1,3,2,1] == Y[2,1,1,3] == X[2,1,1,3]
+        @test Y[3,3,1,2] == Y[1,2,3,3] == X[1,2,3,3]
         # test `contract`
-        r = rand(valN, idxN)
-        @tensor v[a,i] := y[a,i,b,j] * r[b,j]
-        @test x ⊙ r ≈ v
+        R = rand(valN, idxN)
+        @tensor V[a,i] := Y[a,i,b,j] * R[b,j]
+        @test X ⊙ R ≈ V
+
+        r = rand(valN*idxN)
+        y = reshape(Y, valN*idxN, valN*idxN)
+        @tensor v[ai] := y[ai,bj] * r[bj]
+        @test X ⊙ r ≈ v
     end
 
     @testset "6th order contract" begin
@@ -64,16 +69,21 @@ using TensorOperations
         end
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN, valN, idxN)
-        x = BlockedTensor(vals, idxs, dims)
+        X = BlockedTensor(vals, idxs, dims)
         # convert x to a full symmetric tensor
-        y = full(x)
-        @test y[1,2,2,3,2,1] == y[2,3,2,1,1,2] == y[2,1,1,2,2,3] == x[2,1,1,2,2,3]
-        @test y[1,3,2,1,2,4] == y[2,4,1,3,2,1] == y[2,1,1,3,2,4] == x[2,1,1,3,2,4]
-        @test y[3,3,1,2,1,4] == y[3,3,1,4,1,2] == y[1,2,3,3,1,4] == x[1,2,3,3,1,4]
+        Y = full(X)
+        @test Y[1,2,2,3,2,1] == Y[2,3,2,1,1,2] == Y[2,1,1,2,2,3] == X[2,1,1,2,2,3]
+        @test Y[1,3,2,1,2,4] == Y[2,4,1,3,2,1] == Y[2,1,1,3,2,4] == X[2,1,1,3,2,4]
+        @test Y[3,3,1,2,1,4] == Y[3,3,1,4,1,2] == Y[1,2,3,3,1,4] == X[1,2,3,3,1,4]
         # test `contract`
-        r = rand(valN, idxN)
-        @tensor v[a,i] := y[a,i,b,j,c,k] * r[b,j] * r[c,k]
-        @test x ⊙ r ≈ v
+        R = rand(valN, idxN)
+        @tensor V[a,i] := Y[a,i,b,j,c,k] * R[b,j] * R[c,k]
+        @test X ⊙ R ≈ V
+
+        r = rand(valN*idxN)
+        y = reshape(Y, valN*idxN, valN*idxN, valN*idxN)
+        @tensor v[ai] := y[ai,bj,ck] * r[bj] * r[ck]
+        @test X ⊙ r ≈ v
     end
 
     @testset "8th order contract" begin
@@ -87,15 +97,20 @@ using TensorOperations
         end
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN, valN, idxN, valN, idxN)
-        x = BlockedTensor(vals, idxs, dims)
+        X = BlockedTensor(vals, idxs, dims)
         # convert x to a full symmetric tensor
-        y = full(x)
-        @test y[1,2,2,3,3,4,2,1] == y[3,4,2,3,2,1,1,2] == y[2,1,1,2,2,3,3,4] == x[2,1,1,2,2,3,3,4]
-        @test y[3,4,1,2,2,3,2,1] == y[2,3,3,4,2,1,1,2] == y[2,1,1,2,2,3,3,4] == x[2,1,1,2,2,3,3,4]
-        @test y[2,3,1,2,3,4,2,1] == y[1,2,2,1,2,3,3,4] == y[2,1,1,2,2,3,3,4] == x[2,1,1,2,2,3,3,4]
+        Y = full(X)
+        @test Y[1,2,2,3,3,4,2,1] == Y[3,4,2,3,2,1,1,2] == Y[2,1,1,2,2,3,3,4] == X[2,1,1,2,2,3,3,4]
+        @test Y[3,4,1,2,2,3,2,1] == Y[2,3,3,4,2,1,1,2] == Y[2,1,1,2,2,3,3,4] == X[2,1,1,2,2,3,3,4]
+        @test Y[2,3,1,2,3,4,2,1] == Y[1,2,2,1,2,3,3,4] == Y[2,1,1,2,2,3,3,4] == X[2,1,1,2,2,3,3,4]
         # test `contract`
-        r = rand(valN, idxN)
-        @tensor v[a,i] := y[a,i,b,j,c,k,d,m] * r[b,j] * r[c,k] * r[d,m]
-        @test x ⊙ r ≈ v
+        R = rand(valN, idxN)
+        @tensor V[a,i] := Y[a,i,b,j,c,k,d,m] * R[b,j] * R[c,k] * R[d,m]
+        @test X ⊙ R ≈ V
+
+        r = rand(valN*idxN)
+        y = reshape(Y, valN*idxN, valN*idxN, valN*idxN, valN*idxN)
+        @tensor v[ai] := y[ai,bj,ck,dm] * r[bj] * r[ck] * r[dm]
+        @test X ⊙ r ≈ v
     end
 end
