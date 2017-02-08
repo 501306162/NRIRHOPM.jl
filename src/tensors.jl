@@ -20,7 +20,7 @@ Base.getindex(A::IndexBlock, i::Integer) = A.idxs[i]
 Base.getindex{T<:NTuple}(A::IndexBlock{T}, I::Vararg{Int,N}) = A.idxs[I...]
 Base.:(==)(A::IndexBlock, B::IndexBlock) = A.idxs == B.idxs
 
-
+# todo: BlockedTensor{Tv<:Real,N,Ti<:NTuple{N,Int},Order}
 immutable BlockedTensor{Tv<:Real,N,Ti<:NTuple,Order} <: AbstractSymmetricSparseTensor{Tv,Order}
     valBlocks::Vector{ValueBlock{Tv,N}}
     idxBlocks::Vector{IndexBlock{Ti}}
@@ -28,6 +28,12 @@ immutable BlockedTensor{Tv<:Real,N,Ti<:NTuple,Order} <: AbstractSymmetricSparseT
 end
 Base.size(A::BlockedTensor) = A.dims
 function Base.getindex{Tv<:Real,N,Ti<:NTuple,Order}(A::BlockedTensor{Tv,N,Ti,Order}, I::Vararg{Int,Order})
+    # this method iterates over all idxBlocks to query the result,
+    # which is very slow and should not be used in performance-sensitive code.
+    # the use case is playing or testing small BlockedTensors in REPL, where Base.show()
+    # will automatically print the full tensor. however, things turn out so evil
+    # when dealing large BlockedTensors, one should add `;` in the end of the expression
+    # to mute printing.
     out = zero(Tv)
     # assume (i,a,j,b,k,c) indexing
     oddIdxs = I[1:2:end]
@@ -42,63 +48,52 @@ end
 Base.:(==)(A::BlockedTensor, B::BlockedTensor) = A.valBlocks == B.valBlocks && A.idxBlocks == B.idxBlocks && A.dims == B.dims
 
 
-function contract{T<:Real}(𝑻::TensorBlock{T,2,4}, 𝐗::Matrix{T})
-    𝐌 = zeros(𝐗)
-    for (i,j) in 𝑻.index
-        for ll in CartesianRange(size(𝑻.block))
-            a, b = ll.I
-            𝐌[i,a] += 𝑻[a,b] * 𝐗[j,b]
-            𝐌[j,b] += 𝑻[a,b] * 𝐗[i,a]
-        end
+# sparse tensor contraction
+contract{T<:Real}(𝑻::BlockedTensor{T}, vec::Vector{T}) = reshape(𝑻 ⊙ reshape(vec,size(𝑻,1,2))), length(vec))
+function contract{T<:Real}(𝑻::BlockedTensor{T}, mat::Matrix{T})
+    s = zeros(mat)
+    for (vals,idxs) in zip(𝑻.valBlocks, 𝑻.idxBlocks)
+        s += _contract(vals, idxs, mat)
     end
-    return 𝐌
+    return s
 end
-
-function contract{T<:Real}(𝑻::TensorBlock{T,3,6}, 𝐗::Matrix{T})
-    𝐌 = zeros(𝐗)
-    for (i,j,k) in 𝑻.index
-        for lll in CartesianRange(size(𝑻.block))
-            a, b, c = lll.I
-            𝐌[i,a] += 2.0 * 𝑻[a,b,c] * 𝐗[j,b] * 𝐗[k,c]
-            𝐌[j,b] += 2.0 * 𝑻[a,b,c] * 𝐗[i,a] * 𝐗[k,c]
-            𝐌[k,c] += 2.0 * 𝑻[a,b,c] * 𝐗[i,a] * 𝐗[j,b]
-        end
-    end
-    return 𝐌
-end
-
-function contract{T<:Real}(𝑻::TensorBlock{T,4,8}, 𝐗::Matrix{T})
-    𝐌 = zeros(𝐗)
-    for (i, j, k, m) in 𝑻.index
-        for llll in CartesianRange(size(𝑻.block))
-            a, b, c, d = llll.I
-            𝐌[i,a] += 6.0 * 𝑻[a,b,c,d] * 𝐗[j,b] * 𝐗[k,c] * 𝐗[m,d]
-            𝐌[j,b] += 6.0 * 𝑻[a,b,c,d] * 𝐗[i,a] * 𝐗[k,c] * 𝐗[m,d]
-            𝐌[k,c] += 6.0 * 𝑻[a,b,c,d] * 𝐗[i,a] * 𝐗[j,b] * 𝐗[m,d]
-            𝐌[m,d] += 6.0 * 𝑻[a,b,c,d] * 𝐗[i,a] * 𝐗[j,b] * 𝐗[k,c]
-        end
-    end
-    return 𝐌
-end
-
-
-
-function contract{T<:Real}(𝑯::BSSTensor{T}, 𝐱::Vector{T})
-    pixelNum, labelNum = size(𝑯,1), size(𝑯,2)
-    𝐌 = zeros(T, pixelNum, labelNum)
-    for 𝐛 in 𝑯.blocks
-        𝐌 += contract(𝐛, reshape(𝐱, pixelNum, labelNum))
-    end
-    𝐯 = reshape(𝐌, pixelNum*labelNum)
-end
-
-function contract{T<:Real}(𝑯::BSSTensor{T}, 𝐗::Matrix{T})
-    𝐌 = zeros(T, size(𝐗)...)
-    for 𝐛 in 𝑯.blocks
-        𝐌 += contract(𝐛, 𝐗)
-    end
-    return 𝐌
-end
-
 # handy operator ⊙ (\odot)
 ⊙ = contract
+
+function _contract{T<:Real,2}(vals::ValueBlock{T,2}, idxs::IndexBlock{NTuple{2,Int}}, mat::Matrix{T})
+    s = zeros(mat)
+    for (i,j) in idxs
+        for 𝒊 in CartesianRange(size(vals))
+            a, b = 𝒊.I
+            s[i,a] += vals[a,b] * mat[j,b]
+            s[j,b] += vals[a,b] * mat[i,a]
+        end
+    end
+    return s
+end
+
+function _contract{T<:Real,3}(vals::ValueBlock{T,3}, idxs::IndexBlock{NTuple{3,Int}}, mat::Matrix{T})
+    s = zeros(mat)
+    for (i,j,k) in idxs
+        for 𝒊 in CartesianRange(size(vals))
+            a, b, c = 𝒊.I
+            s[i,a] += 2.0 * vals[a,b,c] * mat[j,b] * mat[k,c]
+            s[j,b] += 2.0 * vals[a,b,c] * mat[i,a] * mat[k,c]
+            s[k,c] += 2.0 * vals[a,b,c] * mat[i,a] * mat[j,b]
+        end
+    end
+    return s
+end
+
+function _contract{T<:Real,4}(vals::ValueBlock{T,4}, idxs::IndexBlock{NTuple{4,Int}}, mat::Matrix{T})
+    s = zeros(mat)
+    for (i, j, k, m) in idxs, 𝒊 in CartesianRange(size(vals))
+            a, b, c, d = 𝒊.I
+            s[i,a] += 6.0 * vals[a,b,c,d] * mat[j,b] * mat[k,c] * mat[m,d]
+            s[j,b] += 6.0 * vals[a,b,c,d] * mat[i,a] * mat[k,c] * mat[m,d]
+            s[k,c] += 6.0 * vals[a,b,c,d] * mat[i,a] * mat[j,b] * mat[m,d]
+            s[m,d] += 6.0 * vals[a,b,c,d] * mat[i,a] * mat[j,b] * mat[k,c]
+        end
+    end
+    return s
+end
