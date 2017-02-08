@@ -1,6 +1,5 @@
 import NRIRHOPM: sadexp, ssdexp,
                  potts, tad, tqd,
-                 topology_preserving,
                  jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ,
                  jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
 
@@ -76,6 +75,21 @@ import NRIRHOPM: sadexp, ssdexp,
     end
 
     @testset "topology_preserving" begin
+        # 1 => topology preserving, 0 => otherwise.
+        #Refer to the following paper for further details:
+        # Cordero-Grande, Lucilio, et al. "A Markov random field approach for
+        # topology-preserving registration: Application to object-based tomographic image
+        # interpolation." IEEE Transactions on Image Processing 21.4 (2012): 2051.
+        @inline function topology_preserving{T<:Integer}(s₁::Vector{T}, s₂::Vector{T}, s₃::Vector{T}, a::Vector{T}, b::Vector{T}, c::Vector{T})
+            @inbounds begin
+                𝐤s₁, 𝐤s₂, 𝐤s₃ = s₁ + a, s₂ + b, s₃ + c
+                ∂φ₁∂φ₂ = (𝐤s₂[1] - 𝐤s₁[1]) * (𝐤s₂[2] - 𝐤s₃[2])
+                ∂φ₂∂φ₁ = (𝐤s₂[2] - 𝐤s₁[2]) * (𝐤s₂[1] - 𝐤s₃[1])
+                ∂r₁∂r₂ = (s₂[1] - s₁[1])*(s₂[2] - s₃[2])
+            end
+            v = (∂φ₁∂φ₂ - ∂φ₂∂φ₁) / ∂r₁∂r₂
+            return v > 0 ? 1.0 : 0.0
+        end
         # topology_preserving's coordinate system:   y
         #   □ ▦ □        ▦                ▦          ↑        ⬔ => p1 => a
         #   ⬓ ⬔ ⬓  =>  ⬓ ⬔   ⬓ ⬔    ⬔ ⬓   ⬔ ⬓        |        ⬓ => p2 => b

@@ -95,36 +95,6 @@ end
 
 
 """
-    topology_preserving(s₁, s₂, s₃, a, b, c)
-
-Returns the cost value: 1 => topology preserving, 0 => otherwise.
-Note that the coordinate system is:
-
-```
-       y
-       ↑
-       |
-(x,y): +---> x
-```
-
-Refer to the following paper for further details:
-
-Cordero-Grande, Lucilio, et al. "A Markov random field approach for
-topology-preserving registration: Application to object-based tomographic image
-interpolation." IEEE Transactions on Image Processing 21.4 (2012): 2051.
-"""
-@inline function topology_preserving{T<:Integer}(s₁::Vector{T}, s₂::Vector{T}, s₃::Vector{T}, a::Vector{T}, b::Vector{T}, c::Vector{T})
-    @inbounds begin
-        𝐤s₁, 𝐤s₂, 𝐤s₃ = s₁ + a, s₂ + b, s₃ + c
-        ∂φ₁∂φ₂ = (𝐤s₂[1] - 𝐤s₁[1]) * (𝐤s₂[2] - 𝐤s₃[2])
-        ∂φ₂∂φ₁ = (𝐤s₂[2] - 𝐤s₁[2]) * (𝐤s₂[1] - 𝐤s₃[1])
-        ∂r₁∂r₂ = (s₂[1] - s₁[1])*(s₂[2] - s₃[2])
-    end
-    v = (∂φ₁∂φ₂ - ∂φ₂∂φ₁) / ∂r₁∂r₂
-    return v > 0 ? 1.0 : 0.0
-end
-
-"""
     jᶠᶠ(α,β,χ)
     jᵇᶠ(α,β,χ)
     jᶠᵇ(α,β,χ)
@@ -151,6 +121,7 @@ smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 8
 @inline jᵇᶠ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+α[1]-β[1])*(1+χ[2]-α[2]) - (χ[1]-α[1])*(α[2]-β[2]) > 0 ? 1.0 : 0.0
 @inline jᶠᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+β[1]-α[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(β[2]-α[2]) > 0 ? 1.0 : 0.0
 @inline jᵇᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+α[1]-β[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(α[2]-β[2]) > 0 ? 1.0 : 0.0
+
 
 """
     jᶠᶠᶠ(α,β,χ,δ)
