@@ -12,28 +12,28 @@ import NRIRHOPM: sadexp, ssdexp,
     sourceImage = [1 0 1;
                    0 1 0;
                    1 1 0]
-    labels = [(i,j) for i in -1:1, j in -1:1]
-    imageDims = size(targetImage)
+    displacements = [(i,j) for i in -1:1, j in -1:1]
+    imageDims = indices(targetImage)
 
     @testset "sadexp" begin
-        cost = sadexp(targetImage, sourceImage, labels)
+        cost = sadexp(targetImage, sourceImage, displacements)
         @test all(cost .>= 0)
         for 𝒊 in CartesianRange(imageDims)
             i = sub2ind(imageDims, 𝒊.I...)
-            for a in find(cost[i,:] .== maximum(cost[i,:]))
-                𝐭 = CartesianIndex(labels[a])
+            for a in find(cost[:,i] .== maximum(cost[:,i]))
+                𝐭 = CartesianIndex(displacements[a])
                 @test targetImage[𝒊] == sourceImage[𝒊+𝐭]
             end
         end
     end
 
     @testset "ssdexp" begin
-        cost = ssdexp(targetImage, sourceImage, labels)
+        cost = ssdexp(targetImage, sourceImage, displacements)
         @test all(cost .>= 0)
         for 𝒊 in CartesianRange(imageDims)
             i = sub2ind(imageDims, 𝒊.I...)
-            for a in find(cost[i,:] .== maximum(cost[i,:]))
-                𝐭 = CartesianIndex(labels[a])
+            for a in find(cost[:,i] .== maximum(cost[:,i]))
+                𝐭 = CartesianIndex(displacements[a])
                 @test targetImage[𝒊] == sourceImage[𝒊+𝐭]
             end
         end

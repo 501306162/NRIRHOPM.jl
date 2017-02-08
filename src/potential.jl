@@ -1,17 +1,15 @@
 # unary potentials
-function sum_diff_exp{T,N}(𝓕, fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, labels::Array{NTuple{N}})
-    imageDims = size(fixedImg)
-    imageDims == size(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must be the same size."))
-    cost = zeros(prod(imageDims), length(labels))
-    for 𝒊 in CartesianRange(imageDims)
+function sum_diff_exp{T,N}(f, fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, displacements::AbstractArray{NTuple{N}})
+    imageDims = indices(fixedImg)
+    imageDims == indices(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same indices."))
+    cost = zeros(length(linearindices(displacements)), length(linearindices(fixedImg)))
+    for a in eachindex(displacements), 𝒊 in CartesianRange(imageDims)
         i = sub2ind(imageDims, 𝒊.I...)
-        for a in eachindex(labels)
-            𝐝 = 𝒊 + CartesianIndex(labels[a])
-            if checkbounds(Bool, movingImg, 𝐝)
-                cost[i,a] = e^-𝓕(fixedImg[𝒊] - movingImg[𝐝])
-            else
-                cost[i,a] = 0
-            end
+        𝒅 = 𝒊 + CartesianIndex(displacements[a])
+        if checkbounds(Bool, movingImg, 𝒅)
+            cost[a,i] = e^-f(fixedImg[𝒊] - movingImg[𝒅])
+        else
+            cost[a,i] = 0
         end
     end
     return cost
@@ -65,8 +63,8 @@ Refer to the following paper for further details:
 Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
 for early vision." International journal of computer vision 70.1 (2006): 43-44.
 """
-@generated function tad{N}(fp::NTuple{N}, fq::NTuple{N}, c::Real, d::Real)
-    ex = :(0)
+@generated function tad{N,T<:Real}(fp::NTuple{N,T}, fq::NTuple{N,T}, c::Real, d::Real)
+    ex = :(zero(T))
     for i = 1:N
         ex = :(abs2(fp[$i]-fq[$i]) + $ex)
     end
@@ -85,8 +83,8 @@ Refer to the following paper for further details:
 Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
 for early vision." International journal of computer vision 70.1 (2006): 44-45.
 """
-@generated function tqd{N}(fp::NTuple{N}, fq::NTuple{N}, c::Real, d::Real)
-    ex = :(0)
+@generated function tqd{N,T<:Real}(fp::NTuple{N,T}, fq::NTuple{N,T}, c::Real, d::Real)
+    ex = :(zero(T))
     for i = 1:N
         ex = :(abs2(fp[$i]-fq[$i]) + $ex)
     end

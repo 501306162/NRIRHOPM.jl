@@ -40,7 +40,7 @@ include("tensor.jl")
 # include("hopms.jl")
 # include("neighbors.jl")
 # include("types.jl")
-include("potentials.jl")
+include("potential.jl")
 # include("cliques.jl")
 # include("multilevel.jl")
 
