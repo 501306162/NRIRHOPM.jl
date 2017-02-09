@@ -8,8 +8,12 @@ abstract Connected26{CliqueSize} <: Neighborhood{3,CliqueSize}
 
 typealias SquareCubic Union{Connected8{2}, Connected26{2}}
 
+type C8Pairwise <: Connected8{2} end
+type C26Pairwise <: Connected26{2} end
+type C8Topology <: Connected8{3} end
+type C26Topology <: Connected26{4} end
 
-function neighbors{T<:SquareCubic}(::Type{T}, imageDims)
+function neighbors{T<:SquareCubic}(::T, imageDims)
     idx = NTuple{2,Int}[]
     pixelRange = CartesianRange(imageDims)
     pixelFirst, pixelEnd = first(pixelRange), last(pixelRange)
@@ -26,7 +30,7 @@ function neighbors{T<:SquareCubic}(::Type{T}, imageDims)
     return idx
 end
 
-function neighbors(::Type{Connected8{3}}, imageDims::NTuple{2,Int})
+function neighbors(::C8Topology, imageDims::NTuple{2,Int})
     # 8-Connected neighborhood for 3-element cliques
     # since the tensor is symmetric, we only consider the following cliques:
     #   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => 𝒊 => p1 => α
@@ -78,7 +82,7 @@ function neighbors(::Type{Connected8{3}}, imageDims::NTuple{2,Int})
     return idxJᶠᶠ, idxJᵇᶠ, idxJᶠᵇ, idxJᵇᵇ
 end
 
-function neighbors(::Type{Connected26{4}}, imageDims::NTuple{3,Int})
+function neighbors(::C26Topology, imageDims::NTuple{3,Int})
     # 26-Connected neighborhood for 4-element cliques
     # coordinate system(r,c,z):
     #  up  r     c --->        z × × (front to back)

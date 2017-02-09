@@ -19,6 +19,7 @@ export contract, ⊙
 
 # neighbor
 export Connected4, Connected8, Connected6, Connected26, SquareCubic
+export C8Pairwise, C26Pairwise, C8Topology, C26Topology
 export neighbors
 
 # potential model
@@ -27,7 +28,6 @@ export UnaryModel, DataCost, DataTerm
 export PairwiseModel, SmoothCost, SmoothTerm, RegularTerm
 export TreyPotential
 export QuadraPotential
-export TopologyCost, TopologyCost2D, TopologyCost3D
 export SAD, SSD
 export Potts, TAD, TQD
 export TP2D, TP3D
@@ -41,7 +41,7 @@ include("tensor.jl")
 include("neighbor.jl")
 include("potential.jl")
 include("model.jl")
-# include("clique.jl")
+include("clique.jl")
 # include("hopms.jl")
 include("util.jl")
 include("io.jl")

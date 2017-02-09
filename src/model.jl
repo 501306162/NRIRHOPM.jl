@@ -14,13 +14,7 @@ typealias TreyModel AbstractModel{3}
 
 typealias QuadraModel AbstractModel{4}
 
-# topology
-abstract TopologyCost2D <: TreyModel
-abstract TopologyCost3D <: QuadraModel
-typealias TopologyCost Union{TopologyCost2D, TopologyCost3D}
 
-
-# unary potentials
 """
     SAD()
 
@@ -42,7 +36,13 @@ end
 SSD() = SSD(ssdexp)
 
 
-# pairwise potentials
+"""
+    default_potts(𝓭, d)
+
+Returns cost value block calculated via `pottsexp`.
+"""
+default_potts(𝓭::AbstractVector{NTuple}, d) = [pottsexp(α, β, d) for α in 𝓭, β in 𝓭]
+
 """
     Potts()
     Potts(d)
@@ -56,8 +56,16 @@ immutable Potts{F<:Function, T<:Real} <: SmoothCost
     f::F
     d::T
 end
-Potts() = Potts(potts, 1.0)
-Potts(d) = Potts(potts, d)
+Potts() = Potts(default_potts, 1.0)
+Potts(d) = Potts(default_potts, d)
+
+
+"""
+    default_tad(𝓭, c, d)
+
+Returns cost value block calculated via `tadexp`.
+"""
+default_tad(𝓭::AbstractVector{NTuple}, c, d) = [tadexp(α, β, c, d) for α in 𝓭, β in 𝓭]
 
 """
     TAD()
@@ -75,8 +83,16 @@ immutable TAD{F<:Function,Tc<:Real,Td<:Real} <: SmoothCost
     c::Tc
     d::Td
 end
-TAD(c,d) = TAD(tad, c, d)
-TAD(;c=1.0, d=Inf) = TAD(tad, c, d)
+TAD(c,d) = TAD(default_tad, c, d)
+TAD(;c=1.0, d=Inf) = TAD(default_tad, c, d)
+
+
+"""
+    default_tqd(𝓭, c, d)
+
+Returns cost value block calculated via `tqdexp`.
+"""
+default_tqd(𝓭::AbstractVector{NTuple}, c, d) = [tqdexp(α, β, c, d) for α in 𝓭, β in 𝓭]
 
 """
     TQD()
@@ -94,37 +110,50 @@ immutable TQD{F<:Function,Tc<:Real,Td<:Real} <: SmoothCost
     c::Tc
     d::Td
 end
-TQD(c,d) = TQD(tqd, c, d)
-TQD(;c=1.0, d=Inf) = TQD(tqd, c, d)
+TQD(c,d) = TQD(default_tqd, c, d)
+TQD(;c=1.0, d=Inf) = TQD(default_tqd, c, d)
 
 
-# high-order potentials
+"""
+    topology2d(d)
+
+Returns 4 cost value blocks calculated from `jᶠᶠ`, `jᵇᶠ`, `jᶠᵇ`, `jᵇᵇ` respectively.
+"""
+@inline topology2d(d::AbstractVector{NTuple}) = [jᶠᶠ(α, β, χ) for α in d, β in d, χ in d], [jᵇᶠ(α, β, χ) for α in d, β in d, χ in d],
+                                                [jᶠᵇ(α, β, χ) for α in d, β in d, χ in d], [jᵇᵇ(α, β, χ) for α in d, β in d, χ in d]
+
 """
     TP2D()
 
 The topology preservation cost for 2D images(3-element cliques).
 """
-immutable TP2D{FF<:Function,BF<:Function,FB<:Function,BB<:Function} <: TopologyCost2D
-    Jᶠᶠ::FF
-    Jᵇᶠ::BF
-    Jᶠᵇ::FB
-    Jᵇᵇ::BB
+immutable TP2D{F<:Function} <: TreyModel
+    f::F
 end
-TP2D() = TP2D(jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ)
+TP2D() = TP2D(topology2d)
+
+
+"""
+    topology3d(d)
+
+Returns 8 cost value blocks calculated from `jᶠᶠᶠ`, `jᵇᶠᶠ`, `jᶠᵇᶠ`, `jᵇᵇᶠ`,
+`jᶠᶠᵇ`, `jᵇᶠᵇ`, `jᶠᵇᵇ`, `jᵇᵇᵇ` espectively.
+"""
+@inline topology3d(d::AbstractVector{NTuple}) = [jᶠᶠᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                [jᵇᶠᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                [jᶠᵇᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                [jᵇᵇᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                [jᶠᶠᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                [jᵇᶠᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                [jᶠᵇᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                [jᵇᵇᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d]
 
 """
     TP3D()
 
 The topology preservation cost for 3D images(4-element cliques).
 """
-immutable TP3D{FFF<:Function,BFF<:Function,FBF<:Function,BBF<:Function,FFB<:Function,BFB<:Function,FBB<:Function,BBB<:Function} <: TopologyCost3D
-    Jᶠᶠᶠ::FFF
-    Jᵇᶠᶠ::BFF
-    Jᶠᵇᶠ::FBF
-    Jᵇᵇᶠ::BBF
-    Jᶠᶠᵇ::FFB
-    Jᵇᶠᵇ::BFB
-    Jᶠᵇᵇ::FBB
-    Jᵇᵇᵇ::BBB
+immutable TP3D{F<:Function} <: QuadraModel
+    f::F
 end
-TP3D() = TP3D(jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ)
+TP3D() = TP3D(topology3d)
