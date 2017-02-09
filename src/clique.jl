@@ -1,14 +1,15 @@
 """
-    unaryclique(fixedImg, movingImg, labels)
-    unaryclique(fixedImg, movingImg, labels, potential)
-    unaryclique(fixedImg, movingImg, labels, potential, weight)
+    unaryclique(fixedImg, movingImg, displacements)
+    unaryclique(fixedImg, movingImg, displacements, model)
+    unaryclique(fixedImg, movingImg, displacements, model, weight)
 
 Returns the **data cost** of unary-cliques.
 """
-function unaryclique{T,N}(fixedImg::Array{T,N}, movingImg::Array{T,N}, labels::Array{NTuple{N}}, potential::DataCost=SAD(), weight::Real=1)
-    logger = get_logger(current_module())
-    debug(logger, "Calling unaryclique with weight=$weight...")
-    return weight*potential.𝓕(fixedImg, movingImg, labels)
+@generated function unaryclique{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N},
+                          displacements::AbstractArray{NTuple{N}}, model::DataCost=SAD(), weight::Real=1)
+    args = [:(getfield(model, $i)) for i = 1:nfields(model)]
+    func = pop!(args)
+    ret = :(weight * $func(fixedImg, movingImg, displacements))
 end
 
 
@@ -19,49 +20,41 @@ end
 
 Returns the **smooth cost** of pairwise-cliques.
 """
-function pairwiseclique{N}(imageDims::NTuple{N}, labels::Array{NTuple{N}}, potential::SmoothCost=TAD(), weight::Real=1)
-    logger = get_logger(current_module())
-    debug(logger, "Calling pairwiseclique with weight=$weight...")
+function pairwiseclique{N}(imageDims::NTuple{N}, labels::AbstractArray{NTuple{N}}, potential::SmoothCost=TAD(), weight::Real=1)
     pixelNum = prod(imageDims)
     labelNum = length(labels)
     tensorDims = (pixelNum, labelNum, pixelNum, labelNum)
     labels = reshape(labels, labelNum)
     args = map(x->getfield(potential,x), fieldnames(potential)[2:end])
-    block = [potential.𝓕(α, β, args...) for α in labels, β in labels]
+    block = [potential.f(α, β, args...) for α in labels, β in labels]
     block = e.^-block
-    return BSSTensor([TensorBlock(weight*block, neighbors(SquareCubic,imageDims), tensorDims)], tensorDims)
+    return BlockedTensor([ValueBlock(weight*block)], [IndexBlock(neighbors(SquareCubic,imageDims))], tensorDims)
 end
 
 
 """
-    treyclique(imageDims, labels)
-    treyclique(imageDims, labels, potential)
-    treyclique(imageDims, labels, potential, weight)
+    treyclique(imageDims, displacements)
+    treyclique(imageDims, displacements, model)
+    treyclique(imageDims, displacements, model, weight)
 
 Returns the **high order cost** of 3-element-cliques.
 """
-function treyclique(imageDims::NTuple{2}, labels::Array{NTuple{2}}, potential::TopologyCost2D=TP2D(), weight::Real=1)
-    logger = get_logger(current_module())
-    debug(logger, "Calling treyclique with weight=$weight...")
-    pixelNum = prod(imageDims)
-    labelNum = length(labels)
-    tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
-    labels = reshape(labels, labelNum)
+function treyclique(imageDims::NTuple{2}, displacements::AbstractArray{NTuple{2}}, model::TP2D=TP2D(), weight::Real=1)
+    displacements = reshape(labels, labelNum)
     #   □ ⬓ □        ⬓                ⬓      r,c-->    ⬔ => p1 => α
     #   ▦ ⬔ ▦  =>  ▦ ⬔   ▦ ⬔    ⬔ ▦   ⬔ ▦    |         ⬓ => p2 => β
     #   □ ⬓ □              ⬓    ⬓            ↓         ▦ => p3 => χ
     #              Jᵇᵇ   Jᶠᵇ    Jᶠᶠ   Jᵇᶠ
     indexJᶠᶠ, indexJᵇᶠ, indexJᶠᵇ, indexJᵇᵇ = neighbors(Connected8{3}, imageDims)
 
-    blockJᶠᶠ = [potential.Jᶠᶠ(α, β, χ) for α in labels, β in labels, χ in labels]
-    blockJᵇᶠ = [potential.Jᵇᶠ(α, β, χ) for α in labels, β in labels, χ in labels]
-    blockJᶠᵇ = [potential.Jᶠᵇ(α, β, χ) for α in labels, β in labels, χ in labels]
-    blockJᵇᵇ = [potential.Jᵇᵇ(α, β, χ) for α in labels, β in labels, χ in labels]
+    blockJᶠᶠ = [model.Jᶠᶠ(α, β, χ) for α in labels, β in labels, χ in labels]
+    blockJᵇᶠ = [model.Jᵇᶠ(α, β, χ) for α in labels, β in labels, χ in labels]
+    blockJᶠᵇ = [model.Jᶠᵇ(α, β, χ) for α in labels, β in labels, χ in labels]
+    blockJᵇᵇ = [model.Jᵇᵇ(α, β, χ) for α in labels, β in labels, χ in labels]
 
-    return BSSTensor([TensorBlock(weight*blockJᶠᶠ, indexJᶠᶠ, tensorDims),
-                      TensorBlock(weight*blockJᵇᶠ, indexJᵇᶠ, tensorDims),
-                      TensorBlock(weight*blockJᶠᵇ, indexJᶠᵇ, tensorDims),
-                      TensorBlock(weight*blockJᵇᵇ, indexJᵇᵇ, tensorDims)], tensorDims)
+    return BlockedTensor([ValueBlock(weight*blockJᶠᶠ),ValueBlock(weight*blockJᵇᶠ),ValueBlock(weight*blockJᶠᵇ),ValueBlock(weight*blockJᵇᵇ)],
+                         [IndexBlock(indexJᶠᶠ),       IndexBlock(indexJᵇᶠ),       IndexBlock(indexJᶠᵇ),       IndexBlock(indexJᵇᵇ)],
+                         ntuple(x -> isodd(x) ? length(labels) : prod(imageDims), 6))
 end
 
 
@@ -72,12 +65,10 @@ end
 
 Returns the **high order cost** for 4-element-cliques.
 """
-function quadraclique(imageDims::NTuple{3}, labels::Array{NTuple{3}}, potential::TopologyCost3D=TP3D(), weight::Real=1)
-    logger = get_logger(current_module())
-    debug(logger, "Calling quadraclique with weight=$weight...")
+function quadraclique{T}(imageDims::NTuple{3,Int}, displacements::AbstractArray{NTuple{3,T}}, potential::TP3D=TP3D(), weight::Real=1)
     pixelNum = prod(imageDims)
     labelNum = length(labels)
-    tensorDims = (pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum, pixelNum, labelNum)
+    tensorDims = ntuple(x -> isodd(x) ? labelNum : pixelNum, 6)
     labels = reshape(labels, labelNum)
     # coordinate system(r,c,z):
     #  up  r     c --->        z × × (front to back)
@@ -96,7 +87,7 @@ function quadraclique(imageDims::NTuple{3}, labels::Array{NTuple{3}}, potential:
     blockJᶠᵇᵇ = [potential.Jᶠᵇᵇ(α, β, χ, δ) for α in labels, β in labels, χ in labels, δ in labels]
     blockJᵇᵇᵇ = [potential.Jᵇᵇᵇ(α, β, χ, δ) for α in labels, β in labels, χ in labels, δ in labels]
 
-    return BSSTensor([TensorBlock(weight*blockJᶠᶠᶠ, indexJᶠᶠᶠ, tensorDims),
+    return BlockedTensor([TensorBlock(weight*blockJᶠᶠᶠ, indexJᶠᶠᶠ, tensorDims),
                       TensorBlock(weight*blockJᵇᶠᶠ, indexJᵇᶠᶠ, tensorDims),
                       TensorBlock(weight*blockJᶠᵇᶠ, indexJᶠᵇᶠ, tensorDims),
                       TensorBlock(weight*blockJᵇᵇᶠ, indexJᵇᵇᶠ, tensorDims),

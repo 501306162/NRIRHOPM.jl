@@ -1,42 +1,43 @@
-# types for multi-dispatching
-abstract AbstractPotential{Order,Dim}
+abstract AbstractModel{CliqueSize}
 
 # various dialects
-typealias UnaryPotential AbstractPotential{1}
-typealias DataTerm AbstractPotential{1}
-typealias DataCost AbstractPotential{1}
+typealias UnaryModel AbstractModel{1}
+typealias DataCost AbstractModel{1}
+typealias DataTerm AbstractModel{1}
 
-typealias PairwisePotential AbstractPotential{2}
-typealias SmoothTerm AbstractPotential{2}
-typealias SmoothCost AbstractPotential{2}
-typealias RegularTerm AbstractPotential{2}
+typealias PairwiseModel AbstractModel{2}
+typealias SmoothCost AbstractModel{2}
+typealias SmoothTerm AbstractModel{2}
+typealias RegularTerm AbstractModel{2}
 
-typealias TreyPotential AbstractPotential{3}
-typealias TopologyCost2D AbstractPotential{3,2}
+typealias TreyModel AbstractModel{3}
 
-typealias QuadraPotential AbstractPotential{4}
-typealias TopologyCost3D AbstractPotential{4,3}
+typealias QuadraModel AbstractModel{4}
 
+# topology
+abstract TopologyCost2D <: TreyModel
+abstract TopologyCost3D <: QuadraModel
 typealias TopologyCost Union{TopologyCost2D, TopologyCost3D}
+
 
 # unary potentials
 """
     SAD()
 
-The sum of absolute differences.
+The sum of absolute differences including variations.
 """
 immutable SAD{F<:Function} <: DataCost
-    𝓕::F           # 𝓕 (\mbfscrF)
+    f::F
 end
 SAD() = SAD(sadexp)
 
 """
     SSD()
 
-The sum of squared differences.
+The sum of squared differences including variations.
 """
 immutable SSD{F<:Function} <: DataCost
-    𝓕::F           # 𝓕 (\mbfscrF)
+    f::F
 end
 SSD() = SSD(ssdexp)
 
@@ -52,11 +53,11 @@ The potts model.
 * `d::Real=1.0`: the constant value in Potts model.
 """
 immutable Potts{F<:Function, T<:Real} <: SmoothCost
-    𝓕::F           # 𝓕 (\mbfscrF)
+    f::F
     d::T
 end
-Potts() = Potts(potts_model, 1.0)
-Potts(d) = Potts(potts_model, d)
+Potts() = Potts(potts, 1.0)
+Potts(d) = Potts(potts, d)
 
 """
     TAD()
@@ -70,7 +71,7 @@ The truncated absolute difference.
 * `d::Real=Inf`: controls when the cost stops increasing.
 """
 immutable TAD{F<:Function,Tc<:Real,Td<:Real} <: SmoothCost
-    𝓕::F           # 𝓕 (\mbfscrF)
+    f::F
     c::Tc
     d::Td
 end
@@ -89,7 +90,7 @@ The truncated quadratic difference.
 * `d::Real=Inf`: controls when the cost stops increasing.
 """
 immutable TQD{F<:Function,Tc<:Real,Td<:Real} <: SmoothCost
-    𝓕::F           # 𝓕 (\mbfscrF)
+    f::F
     c::Tc
     d::Td
 end
@@ -103,11 +104,11 @@ TQD(;c=1.0, d=Inf) = TQD(tqd, c, d)
 
 The topology preservation cost for 2D images(3-element cliques).
 """
-immutable TP2D <: TopologyCost2D
-    Jᶠᶠ::Function
-    Jᵇᶠ::Function
-    Jᶠᵇ::Function
-    Jᵇᵇ::Function
+immutable TP2D{FF<:Function,BF<:Function,FB<:Function,BB<:Function} <: TopologyCost2D
+    Jᶠᶠ::FF
+    Jᵇᶠ::BF
+    Jᶠᵇ::FB
+    Jᵇᵇ::BB
 end
 TP2D() = TP2D(jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ)
 
@@ -116,14 +117,14 @@ TP2D() = TP2D(jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ)
 
 The topology preservation cost for 3D images(4-element cliques).
 """
-immutable TP3D <: TopologyCost3D
-    Jᶠᶠᶠ::Function
-    Jᵇᶠᶠ::Function
-    Jᶠᵇᶠ::Function
-    Jᵇᵇᶠ::Function
-    Jᶠᶠᵇ::Function
-    Jᵇᶠᵇ::Function
-    Jᶠᵇᵇ::Function
-    Jᵇᵇᵇ::Function
+immutable TP3D{FFF<:Function,BFF<:Function,FBF<:Function,BBF<:Function,FFB<:Function,BFB<:Function,FBB<:Function,BBB<:Function} <: TopologyCost3D
+    Jᶠᶠᶠ::FFF
+    Jᵇᶠᶠ::BFF
+    Jᶠᵇᶠ::FBF
+    Jᵇᵇᶠ::BBF
+    Jᶠᶠᵇ::FFB
+    Jᵇᶠᵇ::BFB
+    Jᶠᵇᵇ::FBB
+    Jᵇᵇᵇ::BBB
 end
 TP3D() = TP3D(jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ)
