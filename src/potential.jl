@@ -1,5 +1,5 @@
 # unary potentials
-function sum_diff_exp{T,N}(f, fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, displacements::AbstractArray{NTuple{N}})
+@inline function sum_diff_exp{T,N}(f, fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, displacements::AbstractArray{NTuple{N}})
     imageDims = indices(fixedImg)
     imageDims == indices(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same indices."))
     cost = zeros(length(linearindices(displacements)), length(linearindices(fixedImg)))
@@ -16,20 +16,20 @@ function sum_diff_exp{T,N}(f, fixedImg::AbstractArray{T,N}, movingImg::AbstractA
 end
 
 """
-    sadexp(fixedImg, movingImg, labels) -> cost
+    sadexp(fixedImg, movingImg, displacements)
 
-Calculates the sum of absolute differences between fixed(target) image
-and warpped image, then applys `f(x)=e⁻ˣ` to the result.
+Calculates the sum of absolute differences between fixed(target) image and
+warpped image(moving image + displacements), then applys `f(x)=e⁻ˣ` to the result.
 """
-@inline sadexp(fixedImg, movingImg, labels) = sum_diff_exp(abs, fixedImg, movingImg, labels)
+@inline sadexp(fixedImg, movingImg, displacements) = sum_diff_exp(abs, fixedImg, movingImg, displacements)
 
 """
-    ssdexp(fixedImg, movingImg, labels) -> cost
+    ssdexp(fixedImg, movingImg, displacements)
 
-Calculates the sum of squared differences between fixed(target) image
-and warpped image, then applys `f(x)=e⁻ˣ` to the result.
+Calculates the sum of squared differences between fixed(target) image and
+warpped image(moving image + displacements), then applys `f(x)=e⁻ˣ` to the result.
 """
-@inline ssdexp(fixedImg, movingImg, labels) = sum_diff_exp(abs2, fixedImg, movingImg, labels)
+@inline ssdexp(fixedImg, movingImg, displacements) = sum_diff_exp(abs2, fixedImg, movingImg, displacements)
 
 
 # pairwise potentials
@@ -51,12 +51,18 @@ for early vision." International journal of computer vision 70.1 (2006): 43.
     return :($ex ? zero(T) : d)
 end
 
+"""
+    pottsexp(fp, fq, d)
+
+Calculates the cost value based on Potts model, then applys `f(x)=e⁻ˣ` to the result.
+"""
+@inline pottsexp(fp, fq, d) = e^-potts(fp, fq, d)
+
 
 """
     tad(fp, fq, c, d)
 
-Calculates the truncated absolute difference between two labels.
-Returns the cost value.
+Calculates the truncated absolute difference between `fp` and `fq`.
 
 Refer to the following paper for further details:
 
@@ -71,12 +77,19 @@ for early vision." International journal of computer vision 70.1 (2006): 43-44.
     return :(min(c * sqrt($ex), d))
 end
 
+"""
+    tadexp(fp, fq, c, d)
+
+Calculates the truncated absolute difference between `fp` and `fq`,
+then applys `f(x)=e⁻ˣ` to the result.
+"""
+@inline tadexp(fp, fq, c, d) = e^-tad(fp, fq, c, d)
+
 
 """
     tqd(fp, fq, c, d)
 
-Calculates the truncated quadratic difference between two labels.
-Returns the cost value.
+Calculates the truncated quadratic difference between `fp` and `fq`.
 
 Refer to the following paper for further details:
 
@@ -90,6 +103,14 @@ for early vision." International journal of computer vision 70.1 (2006): 44-45.
     end
     return :(min(c * $ex, d))
 end
+
+"""
+    tqdexp(fp, fq, c, d)
+
+Calculates the truncated quadratic difference between `fp` and `fq`,
+then applys `f(x)=e⁻ˣ` to the result.
+"""
+@inline tqdexp(fp, fq, c, d) = e^-tqd(fp, fq, c, d)
 
 
 """
@@ -120,6 +141,14 @@ smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 8
 @inline jᶠᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+β[1]-α[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(β[2]-α[2]) > 0 ? 1.0 : 0.0
 @inline jᵇᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+α[1]-β[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(α[2]-β[2]) > 0 ? 1.0 : 0.0
 
+"""
+    topology2d(𝓭)
+
+Returns 4 cost value blocks calculated from `jᶠᶠ`, `jᵇᶠ`, `jᶠᵇ`, `jᵇᵇ` respectively.
+"""
+@inline topology2d(𝓭::AbstractVector{NTuple}) = [jᶠᶠ(α, β, χ) for α in 𝓭, β in 𝓭, χ in 𝓭], [jᵇᶠ(α, β, χ) for α in 𝓭, β in 𝓭, χ in 𝓭],
+                                                 [jᶠᵇ(α, β, χ) for α in 𝓭, β in 𝓭, χ in 𝓭], [jᵇᵇ(α, β, χ) for α in 𝓭, β in 𝓭, χ in 𝓭]
+
 
 """
     jᶠᶠᶠ(α,β,χ,δ)
@@ -148,33 +177,48 @@ Karacali, Bilge, and Christos Davatzikos. "Estimating topology preserving and
 smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 870.
 """
 @inline jᶠᶠᶠ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+β[1]-α[1])*(1+χ[2]-α[2])*(1+δ[3]-α[3]) + (  χ[1]-α[1])*(  δ[2]-α[2])*(β[3]-α[3]) +
-                                                                       (  δ[1]-α[1])*(  β[2]-α[2])*(  χ[3]-α[3]) - (  δ[1]-α[1])*(1+χ[2]-α[2])*(β[3]-α[3]) -
-                                                                       (  χ[1]-α[1])*(  β[2]-α[2])*(1+δ[3]-α[3]) - (1+β[1]-α[1])*(  δ[2]-α[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
+                                                                       (   δ[1]-α[1])*(  β[2]-α[2])*(  χ[3]-α[3]) - (  δ[1]-α[1])*(1+χ[2]-α[2])*(β[3]-α[3]) -
+                                                                       (   χ[1]-α[1])*(  β[2]-α[2])*(1+δ[3]-α[3]) - (1+β[1]-α[1])*(  δ[2]-α[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
 
 @inline jᵇᶠᶠ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+χ[2]-α[2])*(1+δ[3]-α[3]) + (  χ[1]-α[1])*(  δ[2]-α[2])*(α[3]-β[3]) +
-                                                                       (  δ[1]-α[1])*(  α[2]-β[2])*(  χ[3]-α[3]) - (  δ[1]-α[1])*(1+χ[2]-α[2])*(α[3]-β[3]) -
-                                                                       (  χ[1]-α[1])*(  α[2]-β[2])*(1+δ[3]-α[3]) - (1+α[1]-β[1])*(  δ[2]-α[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
+                                                                       (   δ[1]-α[1])*(  α[2]-β[2])*(  χ[3]-α[3]) - (  δ[1]-α[1])*(1+χ[2]-α[2])*(α[3]-β[3]) -
+                                                                       (   χ[1]-α[1])*(  α[2]-β[2])*(1+δ[3]-α[3]) - (1+α[1]-β[1])*(  δ[2]-α[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
 
 @inline jᶠᵇᶠ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+β[1]-α[1])*(1+α[2]-χ[2])*(1+δ[3]-α[3]) + (  α[1]-χ[1])*(  δ[2]-α[2])*(β[3]-α[3]) +
-                                                                       (  δ[1]-α[1])*(  β[2]-α[2])*(  α[3]-χ[3]) - (  δ[1]-α[1])*(1+α[2]-χ[2])*(β[3]-α[3]) -
-                                                                       (  α[1]-χ[1])*(  β[2]-α[2])*(1+δ[3]-α[3]) - (1+β[1]-α[1])*(  δ[2]-α[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+                                                                       (   δ[1]-α[1])*(  β[2]-α[2])*(  α[3]-χ[3]) - (  δ[1]-α[1])*(1+α[2]-χ[2])*(β[3]-α[3]) -
+                                                                       (   α[1]-χ[1])*(  β[2]-α[2])*(1+δ[3]-α[3]) - (1+β[1]-α[1])*(  δ[2]-α[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
 
 @inline jᵇᵇᶠ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+α[2]-χ[2])*(1+δ[3]-α[3]) + (  α[1]-χ[1])*(  δ[2]-α[2])*(α[3]-β[3]) +
-                                                                       (  δ[1]-α[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  δ[1]-α[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
-                                                                       (  α[1]-χ[1])*(  α[2]-β[2])*(1+δ[3]-α[3]) - (1+α[1]-β[1])*(  δ[2]-α[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+                                                                       (   δ[1]-α[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  δ[1]-α[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
+                                                                       (   α[1]-χ[1])*(  α[2]-β[2])*(1+δ[3]-α[3]) - (1+α[1]-β[1])*(  δ[2]-α[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
 
 @inline jᶠᶠᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+β[1]-α[1])*(1+χ[2]-α[2])*(1+α[3]-δ[3]) + (  χ[1]-α[1])*(  α[2]-δ[2])*(β[3]-α[3]) +
-                                                                       (  α[1]-δ[1])*(  β[2]-α[2])*(  χ[3]-α[3]) - (  α[1]-δ[1])*(1+χ[2]-α[2])*(β[3]-α[3]) -
-                                                                       (  χ[1]-α[1])*(  β[2]-α[2])*(1+α[3]-δ[3]) - (1+β[1]-α[1])*(  α[2]-δ[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
+                                                                       (   α[1]-δ[1])*(  β[2]-α[2])*(  χ[3]-α[3]) - (  α[1]-δ[1])*(1+χ[2]-α[2])*(β[3]-α[3]) -
+                                                                       (   χ[1]-α[1])*(  β[2]-α[2])*(1+α[3]-δ[3]) - (1+β[1]-α[1])*(  α[2]-δ[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
 
 @inline jᵇᶠᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+χ[2]-α[2])*(1+α[3]-δ[3]) + (  χ[1]-α[1])*(  α[2]-δ[2])*(α[3]-β[3]) +
-                                                                       (  α[1]-δ[1])*(  α[2]-β[2])*(  χ[3]-α[3]) - (  α[1]-δ[1])*(1+χ[2]-α[2])*(α[3]-β[3]) -
-                                                                       (  χ[1]-α[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
+                                                                       (   α[1]-δ[1])*(  α[2]-β[2])*(  χ[3]-α[3]) - (  α[1]-δ[1])*(1+χ[2]-α[2])*(α[3]-β[3]) -
+                                                                       (   χ[1]-α[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
 
 @inline jᶠᵇᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+β[1]-α[1])*(1+α[2]-χ[2])*(1+α[3]-δ[3]) + (  α[1]-χ[1])*(  α[2]-δ[2])*(β[3]-α[3]) +
-                                                                       (  α[1]-δ[1])*(  β[2]-α[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(β[3]-α[3]) -
-                                                                       (  α[1]-χ[1])*(  β[2]-α[2])*(1+α[3]-δ[3]) - (1+β[1]-α[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+                                                                       (   α[1]-δ[1])*(  β[2]-α[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(β[3]-α[3]) -
+                                                                       (   α[1]-χ[1])*(  β[2]-α[2])*(1+α[3]-δ[3]) - (1+β[1]-α[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
 
 @inline jᵇᵇᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+α[2]-χ[2])*(1+α[3]-δ[3]) + (  α[1]-χ[1])*(  α[2]-δ[2])*(α[3]-β[3]) +
-                                                                       (  α[1]-δ[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
-                                                                       (  α[1]-χ[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+                                                                       (   α[1]-δ[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
+                                                                       (   α[1]-χ[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+
+"""
+    topology3d(𝓭)
+
+Returns 8 cost value blocks calculated from `jᶠᶠᶠ`, `jᵇᶠᶠ`, `jᶠᵇᶠ`, `jᵇᵇᶠ`,
+`jᶠᶠᵇ`, `jᵇᶠᵇ`, `jᶠᵇᵇ`, `jᵇᵇᵇ` espectively.
+"""
+@inline topology3d(𝓭::AbstractVector{NTuple}) = [jᶠᶠᶠ(α, β, χ, δ) for α in 𝓭, β in 𝓭, χ in 𝓭, δ in 𝓭],
+                                                 [jᵇᶠᶠ(α, β, χ, δ) for α in 𝓭, β in 𝓭, χ in 𝓭, δ in 𝓭],
+                                                 [jᶠᵇᶠ(α, β, χ, δ) for α in 𝓭, β in 𝓭, χ in 𝓭, δ in 𝓭],
+                                                 [jᵇᵇᶠ(α, β, χ, δ) for α in 𝓭, β in 𝓭, χ in 𝓭, δ in 𝓭],
+                                                 [jᶠᶠᵇ(α, β, χ, δ) for α in 𝓭, β in 𝓭, χ in 𝓭, δ in 𝓭],
+                                                 [jᵇᶠᵇ(α, β, χ, δ) for α in 𝓭, β in 𝓭, χ in 𝓭, δ in 𝓭],
+                                                 [jᶠᵇᵇ(α, β, χ, δ) for α in 𝓭, β in 𝓭, χ in 𝓭, δ in 𝓭],
+                                                 [jᵇᵇᵇ(α, β, χ, δ) for α in 𝓭, β in 𝓭, χ in 𝓭, δ in 𝓭]
