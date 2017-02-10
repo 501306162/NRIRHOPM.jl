@@ -1,7 +1,7 @@
-import NRIRHOPM: sadexp, ssdexp,
-                 potts, tad, tqd,
-                 jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ,
-                 jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
+import NRIRHOPM: sadexp, ssdexp
+import NRIRHOPM: potts, pottsexp, tad, tadexp, tqd, tqdexp
+import NRIRHOPM: jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ
+import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
 
 @testset "potentials" begin
     N = 3
@@ -47,6 +47,7 @@ import NRIRHOPM: sadexp, ssdexp,
             @test potts(fp, fq, d) == 0
             fq = tuple(rand(dim)...)
             @test potts(fp, fq, d) == d
+            @test pottsexp(fp, fq, d) == e^-d
         end
     end
 
@@ -59,6 +60,7 @@ import NRIRHOPM: sadexp, ssdexp,
             rate = rand()
             @test tad(fp, fq, rate, Inf) ≈ rate * hypot(fpv-fqv...)
             @test tad(fp, fq, rand(), 0) == 0
+            @test tadexp(fp, fq, rand(), 0) == 1
         end
     end
 
@@ -71,6 +73,7 @@ import NRIRHOPM: sadexp, ssdexp,
             rate = rand()
             @test tqd(fp, fq, rate, Inf) ≈ rate * hypot(fpv-fqv...)^2
             @test tqd(fp, fq, rand(), 0) == 0
+            @test tqdexp(fp, fq, rand(), 0) == 1
         end
     end
 
