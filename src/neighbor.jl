@@ -13,6 +13,10 @@ type C26Pairwise <: Connected26{2} end
 type C8Topology <: Connected8{3} end
 type C26Topology <: Connected26{4} end
 
+"""
+    neighbors(C8Pairwise(), imageDims) -> Vector{idxs}
+    neighbors(C26Pairwise(), imageDims) -> Vector{idxs}
+"""
 function neighbors{T<:SquareCubic}(::T, imageDims)
     idx = NTuple{2,Int}[]
     pixelRange = CartesianRange(imageDims)
@@ -27,9 +31,12 @@ function neighbors{T<:SquareCubic}(::T, imageDims)
             end
         end
     end
-    return idx
+    return [idx]
 end
 
+"""
+    neighbors(C8Topology(), imageDims) -> Vector{idxs}
+"""
 function neighbors(::C8Topology, imageDims::NTuple{2,Int})
     # 8-Connected neighborhood for 3-element cliques
     # since the tensor is symmetric, we only consider the following cliques:
@@ -79,9 +86,12 @@ function neighbors(::C8Topology, imageDims::NTuple{2,Int})
             push!(idxJᵇᵇ, (i,j,k))
         end
     end
-    return idxJᶠᶠ, idxJᵇᶠ, idxJᶠᵇ, idxJᵇᵇ
+    return [idxJᶠᶠ, idxJᵇᶠ, idxJᶠᵇ, idxJᵇᵇ]
 end
 
+"""
+    neighbors(C26Topology(), imageDims) -> Vector{idxs}
+"""
 function neighbors(::C26Topology, imageDims::NTuple{3,Int})
     # 26-Connected neighborhood for 4-element cliques
     # coordinate system(r,c,z):
@@ -184,5 +194,5 @@ function neighbors(::C26Topology, imageDims::NTuple{3,Int})
             push!(idxJᵇᵇᵇ, (i,j,k,m))
         end
     end
-    return idxJᶠᶠᶠ, idxJᵇᶠᶠ, idxJᶠᵇᶠ, idxJᵇᵇᶠ, idxJᶠᶠᵇ, idxJᵇᶠᵇ, idxJᶠᵇᵇ, idxJᵇᵇᵇ
+    return [idxJᶠᶠᶠ, idxJᵇᶠᶠ, idxJᶠᵇᶠ, idxJᵇᵇᶠ, idxJᶠᶠᵇ, idxJᵇᶠᵇ, idxJᶠᵇᵇ, idxJᵇᵇᵇ]
 end

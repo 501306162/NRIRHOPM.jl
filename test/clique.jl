@@ -1,29 +1,28 @@
-@testset "cliques" begin
+# define a custom DataCost type for later use
+foorand(f, m, d, x) = x * rand(length(d), length(f))
+type FooRand{F<:Function,T<:Real} <: DataCost
+    f::F
+    x::T
+end
+
+@testset "clique" begin
     imageDims = (5,5)
     fixedImg = rand(imageDims)
     movingImg = rand(imageDims)
-    labels = [(i,j) for i in -1:1, j in -1:1]
+    displacements = [(i,j) for i in -1:1, j in -1:1]
     weight = rand()
 
-    @testset "unaryclique" begin
-        @test unaryclique(fixedImg, movingImg, labels) == unaryclique(fixedImg, movingImg, labels, SAD())
-        @test unaryclique(fixedImg, movingImg, labels) == unaryclique(fixedImg, movingImg, labels, SAD(), 1)
+    @testset "default" begin
+        s = clique(fixedImg, movingImg, displacements, SAD(), weight)
+        @test size(s) == (length(displacements), prod(imageDims))
+
+        t = clique(C8Pairwise(), imageDims, displacements, TAD(), weight)
+        @test size(t) == (length(displacements), prod(imageDims), length(displacements), prod(imageDims))
+        @test size(t.valBlocks[]) == (length(displacements), length(displacements))
     end
 
-    @testset "pairwiseclique" begin
-        @test pairwiseclique(imageDims, labels) == pairwiseclique(imageDims, labels, TAD())
-        @test pairwiseclique(imageDims, labels) == pairwiseclique(imageDims, labels, TAD(), 1)
-    end
-
-    @testset "treyclique" begin
-        @test treyclique(imageDims, labels) == treyclique(imageDims, labels, TP2D())
-        @test treyclique(imageDims, labels) == treyclique(imageDims, labels, TP2D(), 1)
-    end
-
-    @testset "quadraclique" begin
-        imageDims = (3,3,3)
-        labels = [(i,j,k) for i in 0:1, j in 0:1, k in 0:1]
-        @test quadraclique(imageDims, labels) == quadraclique(imageDims, labels, TP3D())
-        @test quadraclique(imageDims, labels) == quadraclique(imageDims, labels, TP3D(), 1)
+    @testset "custom" begin
+        r = clique(fixedImg, movingImg, displacements, FooRand(foorand,10), weight)
+        @test size(r) == (length(displacements), prod(imageDims))
     end
 end

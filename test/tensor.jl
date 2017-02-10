@@ -1,6 +1,6 @@
 using TensorOperations
 
-@testset "tensors" begin
+@testset "tensor" begin
     @testset "ValueBlock" begin
         V = rand(3,3)
         X = ValueBlock(V)

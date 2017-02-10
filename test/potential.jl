@@ -3,7 +3,7 @@ import NRIRHOPM: potts, pottsexp, tad, tadexp, tqd, tqdexp
 import NRIRHOPM: jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ
 import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
 
-@testset "potentials" begin
+@testset "potential" begin
     N = 3
     targetImage = [1 0 1;
                    0 1 0;

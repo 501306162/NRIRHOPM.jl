@@ -37,35 +37,31 @@ SSD() = SSD(ssdexp)
 
 
 """
-    default_potts(𝓭, d)
+    default_potts(𝓭, d) -> Vector{vals}
 
 Returns cost value block calculated via `pottsexp`.
 """
-default_potts(𝓭::AbstractVector{NTuple}, d) = [pottsexp(α, β, d) for α in 𝓭, β in 𝓭]
+@inline default_potts(𝓭::AbstractVector{NTuple}, d) = [[pottsexp(α, β, d) for α in 𝓭, β in 𝓭]]
 
 """
     Potts()
     Potts(d)
 
-The potts model.
-
-# Arguments
-* `d::Real=1.0`: the constant value in Potts model.
+The potts model. The default value of `d` is `1.0`.
 """
 immutable Potts{F<:Function, T<:Real} <: SmoothCost
     f::F
     d::T
 end
-Potts() = Potts(default_potts, 1.0)
-Potts(d) = Potts(default_potts, d)
+Potts(d=1.0) = Potts(default_potts, d)
 
 
 """
-    default_tad(𝓭, c, d)
+    default_tad(𝓭, c, d) -> Vector{vals}
 
 Returns cost value block calculated via `tadexp`.
 """
-default_tad(𝓭::AbstractVector{NTuple}, c, d) = [tadexp(α, β, c, d) for α in 𝓭, β in 𝓭]
+@inline default_tad(𝓭::AbstractVector{NTuple}, c, d) = [[tadexp(α, β, c, d) for α in 𝓭, β in 𝓭]]
 
 """
     TAD()
@@ -88,11 +84,11 @@ TAD(;c=1.0, d=Inf) = TAD(default_tad, c, d)
 
 
 """
-    default_tqd(𝓭, c, d)
+    default_tqd(𝓭, c, d) -> Vector{vals}
 
 Returns cost value block calculated via `tqdexp`.
 """
-default_tqd(𝓭::AbstractVector{NTuple}, c, d) = [tqdexp(α, β, c, d) for α in 𝓭, β in 𝓭]
+@inline default_tqd(𝓭::AbstractVector{NTuple}, c, d) = [[tqdexp(α, β, c, d) for α in 𝓭, β in 𝓭]]
 
 """
     TQD()
@@ -115,12 +111,12 @@ TQD(;c=1.0, d=Inf) = TQD(default_tqd, c, d)
 
 
 """
-    topology2d(d)
+    topology2d(d) -> Vector{vals}
 
 Returns 4 cost value blocks calculated from `jᶠᶠ`, `jᵇᶠ`, `jᶠᵇ`, `jᵇᵇ` respectively.
 """
-@inline topology2d(d::AbstractVector{NTuple}) = [jᶠᶠ(α, β, χ) for α in d, β in d, χ in d], [jᵇᶠ(α, β, χ) for α in d, β in d, χ in d],
-                                                [jᶠᵇ(α, β, χ) for α in d, β in d, χ in d], [jᵇᵇ(α, β, χ) for α in d, β in d, χ in d]
+@inline topology2d(d::AbstractVector{NTuple}) = [[jᶠᶠ(α, β, χ) for α in d, β in d, χ in d], [jᵇᶠ(α, β, χ) for α in d, β in d, χ in d],
+                                                 [jᶠᵇ(α, β, χ) for α in d, β in d, χ in d], [jᵇᵇ(α, β, χ) for α in d, β in d, χ in d]]
 
 """
     TP2D()
@@ -134,19 +130,19 @@ TP2D() = TP2D(topology2d)
 
 
 """
-    topology3d(d)
+    topology3d(d) -> Vector{vals}
 
 Returns 8 cost value blocks calculated from `jᶠᶠᶠ`, `jᵇᶠᶠ`, `jᶠᵇᶠ`, `jᵇᵇᶠ`,
 `jᶠᶠᵇ`, `jᵇᶠᵇ`, `jᶠᵇᵇ`, `jᵇᵇᵇ` espectively.
 """
-@inline topology3d(d::AbstractVector{NTuple}) = [jᶠᶠᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                                [jᵇᶠᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                                [jᶠᵇᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                                [jᵇᵇᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                                [jᶠᶠᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                                [jᵇᶠᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                                [jᶠᵇᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                                [jᵇᵇᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d]
+@inline topology3d(d::AbstractVector{NTuple}) = [[jᶠᶠᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                 [jᵇᶠᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                 [jᶠᵇᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                 [jᵇᵇᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                 [jᶠᶠᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                 [jᵇᶠᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                 [jᶠᵇᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                                 [jᵇᵇᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d]]
 
 """
     TP3D()

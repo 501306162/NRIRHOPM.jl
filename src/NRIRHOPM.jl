@@ -22,7 +22,7 @@ export Connected4, Connected8, Connected6, Connected26, SquareCubic
 export C8Pairwise, C26Pairwise, C8Topology, C26Topology
 export neighbors
 
-# potential model
+# potential & model
 export AbstractModel
 export UnaryModel, DataCost, DataTerm
 export PairwiseModel, SmoothCost, SmoothTerm, RegularTerm
@@ -33,8 +33,11 @@ export Potts, TAD, TQD
 export TP2D, TP3D
 
 # clique
-# export unaryclique, pairwiseclique, treyclique, quadraclique
+export clique
+
 # export optimize, warp, upsample, multilevel
+
+# misc.
 export loggerHOPMReg
 
 include("tensor.jl")
