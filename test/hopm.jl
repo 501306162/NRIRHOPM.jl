@@ -5,9 +5,8 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
     tolerance = 1e-6
     n = 100
     maxIteration = 300
-    @testset "2nd order canonical" begin
-        A = Symmetric(rand(n,n))
-        A = convert(Array, A)
+    @testset "canonical" begin
+
 
         # build-in eigenpair function
         d, v, nconv, niter, nmult, resid = eigs(A, nev=1, which=:LM, tol=tolerance)
@@ -22,13 +21,7 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         lbdsparse, y = sshopm(As, 0, tol=tolerance, maxiter=maxIteration)
         y = abs.(y)
 
-        # SSTensor
-        data = Float64[]
-        index = NTuple{2,Int}[]
-        for i = 1:n, j = i+1:n
-            push!(data, A[i,j])
-            push!(index, (i,j))
-        end
+
         score, z = hopm_canonical(diag(A), SSTensor(data,index,(n,n)), rand(n), tolerance, maxIteration)
 
         @test d[] ≈ lbd ≈ lbdsparse ≈ score
