@@ -89,127 +89,30 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         @test vecnorm(z - y) < 5tolerance
     end
 
-    #
-    # @testset "2nd order mixed" begin
-    #     A = Symmetric(rand(n,n))
-    #     A = convert(Array, A)
-    #     # SSTensor
-    #     data = Float64[]
-    #     index = NTuple{2,Int}[]
-    #     for i = 1:n, j = i+1:n
-    #         push!(data, A[i,j])
-    #         push!(index, (i,j))
-    #     end
-    #     v = rand(n)
-    #     score, x = hopm_canonical(diag(A), SSTensor(data,index,(n,n)), v, tolerance, maxIteration)
-    #     energy, y = hopm_mixed(diag(A), SSTensor(data,index,(n,n)), v, tolerance, maxIteration)
-    #     @test vecnorm(x - y) < 0.1    # this is expected with n=100 since these two algorithms are not exactly the same.
-    # end
-    #
-    # @testset "3rd order mixed" begin
-    #     a = rand(n)
-    #     A = kron(a, a', a)
-    #     A = reshape(A, n, n, n)
-    #
-    #     diagA = zeros(n)
-    #     data = Float64[]
-    #     index = NTuple{3,Int}[]
-    #     for i = 1:n, j = 1:n, k = 1:n
-    #         if i == j == k
-    #             diagA[i] = A[i,j,k]
-    #         elseif i == j || i == k || j == k
-    #             A[i,j,k] = 0
-    #         elseif i < j < k
-    #             push!(data, A[i,j,k])
-    #             push!(index, (i,j,k))
-    #         end
-    #     end
-    #     v = rand(n)
-    #     score, x = hopm_canonical(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), v, tolerance, maxIteration)
-    #     energy, y = hopm_mixed(diagA, SSTensor([0.0],[(1,1)],(n,n)), SSTensor(data,index,(n,n,n)), v, tolerance, maxIteration)
-    #     @test vecnorm(x - y) < 0.01    # this is expected with n=100 since these two algorithms are not exactly the same.
-    # end
-    #
-    # @testset "2nd order constrain vecnorm" begin
-    #     imageDims = (5,5)
-    #     labels = [[(i,j) for i in -1:1, j in -1:1]...]
-    #     pixelNum = prod(imageDims)
-    #     labelNum = length(labels)
-    #     x = rand(pixelNum*labelNum)
-    #     X = reshape(x, pixelNum, labelNum)
-    #
-    #     ss = pairwiseclique4validation(imageDims, labels);
-    #     bss = pairwiseclique(imageDims, labels, TAD());
-    #
-    #     h = 10*rand(pixelNum*labelNum)
-    #     ssScore, v = hopm_mixed(h, ss, x, tolerance, maxIteration)
-    #     bssScore, V = hopm_mixed(h, bss, X, tolerance, maxIteration, false)
-    #
-    #     @test ssScore ≈ bssScore
-    #     @test vecnorm(v - reshape(V, pixelNum*labelNum)) < tolerance
-    # end
-    #
-    # @testset "2nd order constrain row" begin
-    #     imageDims = (5,5)
-    #     labels = [[(i,j) for i in -1:1, j in -1:1]...]
-    #     pixelNum = prod(imageDims)
-    #     labelNum = length(labels)
-    #     x = rand(pixelNum*labelNum)
-    #     X = reshape(x, pixelNum, labelNum)
-    #
-    #     ss = pairwiseclique4validation(imageDims, labels);
-    #     bss = pairwiseclique(imageDims, labels, TAD());
-    #
-    #     h = 10*rand(pixelNum*labelNum)
-    #     vecnormScore, v = hopm_mixed(h, ss, x, tolerance, maxIteration)
-    #     constrainRowScore, R = hopm_mixed(h, bss, X, tolerance, maxIteration, true)
-    #
-    #     @show vecnormScore, constrainRowScore
-    #     @show vecnorm(v - reshape(R, pixelNum*labelNum))
-    # end
-    #
-    # @testset "3rd order constrain vecnorm" begin
-    #     imageDims = (3,3)
-    #     labels = [[(i,j) for i in -1:1, j in -1:1]...]
-    #     pixelNum = prod(imageDims)
-    #     labelNum = length(labels)
-    #     x = rand(pixelNum*labelNum)
-    #     X = reshape(x, pixelNum, labelNum)
-    #
-    #     ss2 = pairwiseclique4validation(imageDims, labels);
-    #     bss2 = pairwiseclique(imageDims, labels, TAD());
-    #
-    #     ss3 = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
-    #     bss3 = treyclique(imageDims, labels, TP2D());
-    #
-    #     h = 10*rand(pixelNum*labelNum)
-    #     ssScore, v = hopm_mixed(h, ss2, ss3, x, tolerance, maxIteration)
-    #     bssScore, V = hopm_mixed(h, bss2, bss3, X, tolerance, maxIteration, false)
-    #
-    #     @test ssScore ≈ bssScore
-    #     @test vecnorm(v - reshape(V, pixelNum*labelNum)) < tolerance
-    # end
-    #
-    # @testset "3rd order constrain row" begin
-    #     imageDims = (3,3)
-    #     labels = [[(i,j) for i in -1:1, j in -1:1]...]
-    #     pixelNum = prod(imageDims)
-    #     labelNum = length(labels)
-    #     x = rand(pixelNum*labelNum)
-    #     X = reshape(x, pixelNum, labelNum)
-    #
-    #     ss2 = pairwiseclique4validation(imageDims, labels);
-    #     bss2 = pairwiseclique(imageDims, labels, TAD());
-    #
-    #     ss3 = treyclique4validation(imageDims, [[[i,j] for i in -1:1, j in -1:1]...]);
-    #     bss3 = treyclique(imageDims, labels, TP2D());
-    #
-    #     h = 10*rand(pixelNum*labelNum)
-    #     vecnormScore, v = hopm_mixed(h, ss2, ss3, x, tolerance, maxIteration)
-    #     constrainRowScore, R = hopm_mixed(h, bss2, bss3, X, tolerance, maxIteration, true)
-    #
-    #     @show vecnormScore, constrainRowScore
-    #     @show vecnorm(v - reshape(R, pixelNum*labelNum))
-    # end
+    @testset "2nd order mixed" begin
+        𝐭 = rand(valN, idxN)
+        𝐌 = rand(valN, idxN)
+        Ex, X = hopm_canonical(𝐭, 𝐓, 𝐌, tolerance, maxIteration)
+        Ey, Y = hopm_mixed(𝐭, 𝐓, 𝐌, :vecnorm, tolerance, maxIteration)
+        Ez, Z = hopm_mixed(𝐭, 𝐓, 𝐌, :column, tolerance, maxIteration)
+        println("The following values should not deviate too much from each other: ")
+        @show Ex, Ey, Ez/idxN
+        @show vecnorm(X - Y)
+        @show vecnorm(X - Z)
+        @show vecnorm(Y - Z)
+    end
+
+    @testset "3rd order mixed" begin
+        𝐭 = 10*rand(valN, idxN)
+        𝐌 = rand(valN, idxN)
+        Ex, X = hopm_canonical(𝐭, 𝐓, 𝑻, 𝐌, tolerance, maxIteration)
+        Ey, Y = hopm_mixed(𝐭, 𝐓, 𝑻, 𝐌, :vecnorm, tolerance, maxIteration)
+        Ez, Z = hopm_mixed(𝐭, 𝐓, 𝑻, 𝐌, :column, tolerance, maxIteration)
+        println("The following values should not deviate too much from each other: ")
+        @show Ex, Ey, Ez/idxN
+        @show vecnorm(X - Y)
+        @show vecnorm(X - Z)
+        @show vecnorm(Y - Z)
+    end
 end
 # end
