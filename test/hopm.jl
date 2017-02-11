@@ -1,12 +1,18 @@
 using TensorDecompositions
-import NRIRHOPM: hopm_mixed, hopm_canonical
-# for i = 1:100
+import NRIRHOPM: constrain!, hopm_mixed, hopm_canonical
+
 @testset "hopm" begin
+    @testset "constrain!" begin
+        x = rand(5,10)
+        y = copy(x)
+        constrain!(x, :vecnorm)
+        @test x ≈ y/vecnorm(y)
+    end
+
     tolerance = 1e-7
     maxIteration = 300
     valN = 3
     idxN = 4
-
     # construct pairwise tensor
     pvals = [ValueBlock(rand(valN, valN))]
     pindex = NTuple{2,Int}[]
@@ -103,7 +109,7 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
     end
 
     @testset "3rd order mixed" begin
-        𝐭 = 10*rand(valN, idxN)
+        𝐭 = rand(valN, idxN)
         𝐌 = rand(valN, idxN)
         Ex, X = hopm_canonical(𝐭, 𝐓, 𝑻, 𝐌, tolerance, maxIteration)
         Ey, Y = hopm_mixed(𝐭, 𝐓, 𝑻, 𝐌, :vecnorm, tolerance, maxIteration)
@@ -115,4 +121,3 @@ import NRIRHOPM: hopm_mixed, hopm_canonical
         @show vecnorm(Y - Z)
     end
 end
-# end

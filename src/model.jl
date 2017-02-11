@@ -80,7 +80,7 @@ immutable TAD{F<:Function,Tc<:Real,Td<:Real} <: SmoothCost
     d::Td
 end
 TAD(c,d) = TAD(default_tad, c, d)
-TAD(;c=1.0, d=Inf) = TAD(default_tad, c, d)
+TAD(;c=1.0, d=Inf) = TAD(c, d)
 
 
 """
@@ -107,7 +107,7 @@ immutable TQD{F<:Function,Tc<:Real,Td<:Real} <: SmoothCost
     d::Td
 end
 TQD(c,d) = TQD(default_tqd, c, d)
-TQD(;c=1.0, d=Inf) = TQD(default_tqd, c, d)
+TQD(;c=1.0, d=Inf) = TQD(c, d)
 
 
 """
@@ -153,3 +153,6 @@ immutable TP3D{F<:Function} <: QuadraModel
     f::F
 end
 TP3D() = TP3D(topology3d)
+
+# topology
+typealias TopologyCost Union{TP2D, TP3D}

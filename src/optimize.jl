@@ -1,6 +1,6 @@
 @generated function optimize{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N},
                                   displacements::Array{NTuple{N}}, imageDims::NTuple{N},
-                                  datacost::DataCost, α::Real,
+                                  data::DataCost, α::Real,
                                   smooth::SmoothCost, β::Real,
                                   method::AbstractHOPMMethod, spectrum::AbstractMatrix
                                  )
@@ -10,14 +10,16 @@
     ret = quote
         logger = get_logger(current_module())
         info(logger, "Creating data cost with weight=$α: ")
-        @timelog dcost = clique(fixedImg, movingImg, displacements, datacost, α)
-        size(fixedImg) == imageDims || downsample!(imageDims, size(fixedImg), dcost)
+        @timelog datacost = clique(fixedImg, movingImg, displacements, data, α)
+        datacost = size(fixedImg) == imageDims ? datacost : downsample(imageDims, size(fixedImg), datacost)
 
         info(logger, "Creating smooth cost with weight=$β: ")
-        @timelog pcost = clique($pneighbor, imageDims, displacements, smooth, β)
+        @timelog smoothcost = clique($pneighbor, imageDims, displacements, smooth, β)
 
         info(logger, "Optimizing via High Order Power Method: ")
-        @timelog energy, spectrum = $func(dcost, pcost, spectrum, $(fixedArgs...))
+        @timelog energy, spectrum = $func(datacost, smoothcost, spectrum, $(fixedArgs...))
+
+        energy, spectrum
     end
 end
 
@@ -36,7 +38,7 @@ end
         logger = get_logger(current_module())
         info(logger, "Creating data cost with weight=$α: ")
         @timelog datacost = clique(fixedImg, movingImg, displacements, data, α)
-        size(fixedImg) == imageDims || downsample!(imageDims, size(fixedImg), dcost)
+        datacost = size(fixedImg) == imageDims ? datacost : downsample(imageDims, size(fixedImg), datacost)
 
         info(logger, "Creating smooth cost with weight=$β: ")
         @timelog smoothcost = clique($pneighbor, imageDims, displacements, smooth, β)
@@ -46,5 +48,7 @@ end
 
         info(logger, "Optimizing via High Order Power Method: ")
         @timelog energy, spectrum = $func(datacost, smoothcost, topologycost, spectrum, $(fixedArgs...))
+
+        energy, spectrum
     end
 end

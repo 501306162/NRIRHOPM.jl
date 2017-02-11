@@ -5,7 +5,6 @@ using Memento
 
 using Interpolations
 import FixedSizeArrays: Vec
-export Vec
 
 using NIfTI
 using Unitful
@@ -30,12 +29,20 @@ export TreyPotential
 export QuadraPotential
 export SAD, SSD
 export Potts, TAD, TQD
-export TP2D, TP3D
+export TP2D, TP3D, TopologyCost
 
 # clique
 export clique
 
-# export optimize, warp, upsample, multilevel
+# hopm & method
+export AbstractMethod, AbstractHOPMMethod
+export CanonHOPM, MixHOPM
+
+# interpolate
+export fieldlize, upsample, downsample, warp
+
+# optimize
+export optimize
 
 # misc.
 export loggerHOPMReg
@@ -46,8 +53,9 @@ include("potential.jl")
 include("model.jl")
 include("clique.jl")
 include("hopm.jl")
-# include("method.jl")
-# include("optimize.jl")
+include("interpolate.jl")
+include("method.jl")
+include("optimize.jl")
 include("util.jl")
 include("io.jl")
 # include("multilevel.jl")
