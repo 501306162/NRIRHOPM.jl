@@ -19,7 +19,7 @@ Duchenne, Olivier, et al. "A tensor-based algorithm for high-order graph matchin
 IEEE transactions on pattern analysis and machine intelligence 33.12 (2011): 2383-2395.
 """
 function hopm_mixed(𝐭::AbstractMatrix, 𝐓::BlockedTensor, 𝐌::AbstractMatrix,
-                    constraint::Symbol, tol::Float64, maxIter::Integer)
+                    constraint::Symbol, tol::Real, maxIter::Integer)
     𝐌₀ = copy(𝐌)
     constrain!(𝐌₀, constraint)
     𝐌ᵢ = 𝐌₀
@@ -41,7 +41,7 @@ function hopm_mixed(𝐭::AbstractMatrix, 𝐓::BlockedTensor, 𝐌::AbstractMat
 end
 
 function hopm_mixed(𝐭::AbstractMatrix, 𝐓::BlockedTensor, 𝑻::BlockedTensor, 𝐌::AbstractMatrix,
-                    constraint::Symbol, tol::Float64, maxIter::Integer)
+                    constraint::Symbol, tol::Real, maxIter::Integer)
     𝐌₀ = copy(𝐌)
     constrain!(𝐌₀, constraint)
     𝐌ᵢ = 𝐌₀
@@ -70,21 +70,21 @@ end
 The canonical high order power method for calculating tensor eigenpairs.
 """
 function hopm_canonical(𝐭::AbstractMatrix, 𝐓::BlockedTensor, 𝐌::AbstractMatrix,
-                        tol::Float64, maxIter::Integer
+                        tol::Real, maxIter::Integer
                        )
     e, 𝐯 = hopm_canonical(reshape(𝐭, length(𝐭)), 𝐓, reshape(𝐌, length(𝐌)), tol, maxIter)
     return e, reshape(𝐯, size(𝐭))
 end
 
 function hopm_canonical(𝐭::AbstractMatrix, 𝐓::BlockedTensor, 𝑻::BlockedTensor, 𝐌::AbstractMatrix,
-                        tol::Float64, maxIter::Integer
+                        tol::Real, maxIter::Integer
                        )
     e, 𝐯 = hopm_canonical(reshape(𝐭, length(𝐭)), 𝐓, 𝑻, reshape(𝐌, length(𝐌)), tol, maxIter)
     return e, reshape(𝐯, size(𝐭))
 end
 
 function hopm_canonical(𝐭::AbstractVector, 𝐓::BlockedTensor, 𝐯::AbstractVector,
-                        tol::Float64, maxIter::Integer
+                        tol::Real, maxIter::Integer
                        )
     𝐯₀ = copy(𝐯)
     normalize!(𝐯₀)
@@ -107,7 +107,7 @@ function hopm_canonical(𝐭::AbstractVector, 𝐓::BlockedTensor, 𝐯::Abstrac
 end
 
 function hopm_canonical(𝐭::AbstractVector, 𝐓::BlockedTensor, 𝑻::BlockedTensor, 𝐯::AbstractVector,
-                        tol::Float64, maxIter::Integer
+                        tol::Real, maxIter::Integer
                        )
     𝐯₀ = copy(𝐯)
     normalize!(𝐯₀)
