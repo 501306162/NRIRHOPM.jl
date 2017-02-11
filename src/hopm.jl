@@ -10,10 +10,8 @@ function constrain!(x::AbstractMatrix, constraint::Symbol)
 end
 
 """
-    hopm_mixed(𝐡, 𝐇, 𝐒, tol, maxIter, constrainRow) -> (energy, spectrum)
-    hopm_mixed(𝐡, 𝐇, 𝑯, 𝐒, tol, maxIter, constrainRow) -> (energy, spectrum)
-    hopm_mixed(𝐡, 𝐇, 𝐯, tol, maxIter) -> (energy, vector)
-    hopm_mixed(𝐡, 𝐇, 𝑯, 𝐯, tol, maxIter) -> (energy, vector)
+    hopm_mixed(𝐭, 𝐓, 𝐌, constraint, tol, maxIter) -> (energy, spectrum)
+    hopm_mixed(𝐭, 𝐓, 𝑻, 𝐌, constraint, tol, maxIter) -> (energy, spectrum)
 
 Refer to the following paper(Algorithm 4) for further details:
 
@@ -66,11 +64,25 @@ end
 
 
 """
-    hopm_canonical(𝐡, 𝐇, 𝐯, tol, maxIter) -> (energy, vector)
-    hopm_canonical(𝐡, 𝐇, 𝑯, 𝐯, tol, maxIter) -> (energy, vector)
+    hopm_canonical(𝐭, 𝐓, 𝐌, tol, maxIter) -> (energy, spectrum)
+    hopm_canonical(𝐭, 𝐓, 𝑻, 𝐌, tol, maxIter) -> (energy, spectrum)
 
 The canonical high order power method for calculating tensor eigenpairs.
 """
+function hopm_canonical(𝐭::AbstractMatrix, 𝐓::BlockedTensor, 𝐌::AbstractMatrix,
+                        tol::Float64, maxIter::Integer
+                       )
+    e, 𝐯 = hopm_canonical(reshape(𝐭, length(𝐭)), 𝐓, reshape(𝐌, length(𝐌)), tol, maxIter)
+    return e, reshape(𝐯, size(𝐭))
+end
+
+function hopm_canonical(𝐭::AbstractMatrix, 𝐓::BlockedTensor, 𝑻::BlockedTensor, 𝐌::AbstractMatrix,
+                        tol::Float64, maxIter::Integer
+                       )
+    e, 𝐯 = hopm_canonical(reshape(𝐭, length(𝐭)), 𝐓, 𝑻, reshape(𝐌, length(𝐌)), tol, maxIter)
+    return e, reshape(𝐯, size(𝐭))
+end
+
 function hopm_canonical(𝐭::AbstractVector, 𝐓::BlockedTensor, 𝐯::AbstractVector,
                         tol::Float64, maxIter::Integer
                        )
