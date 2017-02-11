@@ -18,8 +18,6 @@
 
         info(logger, "Optimizing via High Order Power Method: ")
         @timelog energy, spectrum = $func(datacost, smoothcost, spectrum, $(fixedArgs...))
-
-        energy, spectrum
     end
 end
 
@@ -48,7 +46,5 @@ end
 
         info(logger, "Optimizing via High Order Power Method: ")
         @timelog energy, spectrum = $func(datacost, smoothcost, topologycost, spectrum, $(fixedArgs...))
-
-        energy, spectrum
     end
 end

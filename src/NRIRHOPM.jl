@@ -6,10 +6,12 @@ using Memento
 using Interpolations
 import FixedSizeArrays: Vec
 
+using FileIO
+using Images
 using NIfTI
 using Unitful
 using Ranges
-using Images
+
 
 # tensor
 export AbstractSymmetricSparseTensor, AbstractTensorBlockBSSTensor
@@ -25,8 +27,8 @@ export neighbors
 export AbstractModel
 export UnaryModel, DataCost, DataTerm
 export PairwiseModel, SmoothCost, SmoothTerm, RegularTerm
-export TreyPotential
-export QuadraPotential
+export TreyModel
+export QuadraModel
 export SAD, SSD
 export Potts, TAD, TQD
 export TP2D, TP3D, TopologyCost
@@ -44,7 +46,11 @@ export fieldlize, upsample, downsample, warp
 # optimize
 export optimize
 
+# multilevel
+
+
 # misc.
+export @timelog
 export loggerHOPMReg
 
 include("tensor.jl")

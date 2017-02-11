@@ -1,8 +1,10 @@
 # define a custom DataCost type for later use
 foorand(f, m, d, x) = x * rand(length(d), length(f))
-type FooRand{F<:Function,T<:Real} <: DataCost
-    f::F
-    x::T
+if !isdefined(:FooRand)
+    type FooRand{F<:Function,T<:Real} <: DataCost
+        f::F
+        x::T
+    end
 end
 
 @testset "clique" begin

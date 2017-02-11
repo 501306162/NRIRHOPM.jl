@@ -5,6 +5,7 @@ Memento
 FixedSizeArrays
 Interpolations
 
+FileIO
 Images 0.6
 NIfTI
 Unitful
