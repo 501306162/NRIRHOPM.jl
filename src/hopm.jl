@@ -1,6 +1,6 @@
 function constrain!(x::AbstractMatrix, constraint::Symbol)
     if constraint == :vecnorm
-        x .= 1/vecnorm(x)
+        x .*= 1/vecnorm(x)
     elseif constraint == :column
         for c in indices(x,2)
             normalize!(@view x[:,c])
