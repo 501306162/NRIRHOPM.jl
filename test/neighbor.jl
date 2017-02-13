@@ -1,4 +1,4 @@
-@testset "neighbors" begin
+@testset "neighbor" begin
     @testset "8-connected neighborhood" begin
         # test for simplest 8-connected neighborhood
         # coordinate system(r,c):
@@ -6,13 +6,13 @@
         #  to  |   left to right
         # down ↓
         # coordinate => point => label:
-        # ii => p1 => α   jj => p2 => β   kk => p3 => χ
+        # 𝒊 => p1 => α   𝒋 => p2 => β   𝒌 => p3 => χ
 
-        # pairwise cliques(p1,p2)
+        # pairwise-cliques(p1,p2)
         #  1  4  7       11  12  13
         #  2  5  8  <=>  21  22  23
         #  3  6  9       31  32  33
-        index = neighbors(Connected8{2}, (3,3))
+        index = neighbors(C8Pairwise(), (3,3))
 
         pixel11 = []
         pixel21 = [(2,1)]
@@ -24,13 +24,13 @@
         pixel23 = [(8,4), (8,5), (8,6), (8,7)]
         pixel33 = [(9,5), (9,6), (9,8)]
 
-        @test index == [pixel11; pixel21; pixel31; pixel12; pixel22; pixel32; pixel13; pixel23; pixel33]
+        @test index[] == [pixel11; pixel21; pixel31; pixel12; pixel22; pixel32; pixel13; pixel23; pixel33]
 
-        # trey cliques(p1,p2,p3)
+        # trey-cliques(p1,p2,p3)
         #  1  4  7       11  12  13
         #  2  5  8  <=>  21  22  23
         #  3  6  9       31  32  33
-        ◸, ◺, ◹, ◿ = neighbors(Connected8{3}, (3,3))
+        ◸, ◺, ◹, ◿ = neighbors(C8Topology(), (3,3))
 
         @test ◸ == [(1,2,4), (2,3,5), (4,5,7), (5,6,8)]
         @test ◺ == [(2,1,5), (3,2,6), (5,4,8), (6,5,9)]
@@ -44,9 +44,9 @@
         #  to  |   left to right     × ×
         # down ↓
         # coordinate => point => label:
-        # iii => p1 => α   jjj => p2 => β   kkk => p3 => χ   mmm => p5 => δ
+        # 𝒊 => p1 => α   𝒋 => p2 => β   𝒌 => p3 => χ   𝒎 => p5 => δ
 
-        # pairwise cliques(p1,p2)
+        # pairwise-cliques(p1,p2)
         #  1  4  7        111  121  131
         #  2  5  8   <=>  211  221  231
         #  3  6  9        311  321  331
@@ -59,7 +59,7 @@
         # 20 23 26   <=>  213  223  233
         # 21 24 27        313  323  333
         #-----------back---------------
-        index = neighbors(Connected26{2}, (3,3,3))
+        index = neighbors(C26Pairwise(), (3,3,3))
 
         voxel111 = []
         voxel211 = [(2,1)]
@@ -91,11 +91,11 @@
         voxel233 = [(26,13), (26,14), (26,15), (26,16), (26,17), (26,18), (26,22), (26,23), (26,24), (26,25)]
         voxel333 = [(27,14), (27,15), (27,17), (27,18), (27,23), (27,24), (27,26)]
 
-        @test index == [voxel111; voxel211; voxel311; voxel121; voxel221; voxel321; voxel131; voxel231; voxel331;
-                        voxel112; voxel212; voxel312; voxel122; voxel222; voxel322; voxel132; voxel232; voxel332;
-                        voxel113; voxel213; voxel313; voxel123; voxel223; voxel323; voxel133; voxel233; voxel333]
+        @test index[] == [voxel111; voxel211; voxel311; voxel121; voxel221; voxel321; voxel131; voxel231; voxel331;
+                          voxel112; voxel212; voxel312; voxel122; voxel222; voxel322; voxel132; voxel232; voxel332;
+                          voxel113; voxel213; voxel313; voxel123; voxel223; voxel323; voxel133; voxel233; voxel333]
 
-        # quadra cliques (p1,p2,p3,p5)
+        # quadra-cliques (p1,p2,p3,p5)
         #  1  4  7        111  121  131
         #  2  5  8   <=>  211  221  231
         #  3  6  9        311  321  331
@@ -108,7 +108,7 @@
         # 20 23 26   <=>  213  223  233
         # 21 24 27        313  323  333
         #-----------back---------------
-        fff, bff, fbf, bbf, ffb, bfb, fbb, bbb = neighbors(Connected26{4}, (3,3,3))
+        fff, bff, fbf, bbf, ffb, bfb, fbb, bbb = neighbors(C26Topology(), (3,3,3))
 
         @test fff == [(1,2,4,10), (2,3,5,11), (4,5,7,13), (5,6,8,14),
                       (10,11,13,19), (11,12,14,20), (13,14,16,22), (14,15,17,23)]
@@ -133,6 +133,5 @@
 
         @test bbb == [(14,13,11,5), (15,14,12,6), (17,16,14,8), (18,17,15,9),
                       (23,22,20,14), (24,23,21,15), (26,25,23,17), (27,26,24,18)]
-
     end
 end

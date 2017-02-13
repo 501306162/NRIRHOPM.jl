@@ -1,10 +1,9 @@
-import NRIRHOPM: sadexp, ssdexp,
-                 potts, tad, tqd,
-                 topology_preserving,
-                 jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ,
-                 jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
+import NRIRHOPM: sadexp, ssdexp
+import NRIRHOPM: potts, pottsexp, tad, tadexp, tqd, tqdexp
+import NRIRHOPM: jᶠᶠ, jᵇᶠ, jᶠᵇ, jᵇᵇ
+import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, jᵇᶠᵇ, jᶠᵇᵇ, jᵇᵇᵇ
 
-@testset "potentials" begin
+@testset "potential" begin
     N = 3
     targetImage = [1 0 1;
                    0 1 0;
@@ -13,28 +12,28 @@ import NRIRHOPM: sadexp, ssdexp,
     sourceImage = [1 0 1;
                    0 1 0;
                    1 1 0]
-    labels = [(i,j) for i in -1:1, j in -1:1]
-    imageDims = size(targetImage)
+    displacements = [(i,j) for i in -1:1, j in -1:1]
+    imageDims = indices(targetImage)
 
     @testset "sadexp" begin
-        cost = sadexp(targetImage, sourceImage, labels)
+        cost = sadexp(targetImage, sourceImage, displacements)
         @test all(cost .>= 0)
         for 𝒊 in CartesianRange(imageDims)
             i = sub2ind(imageDims, 𝒊.I...)
-            for a in find(cost[i,:] .== maximum(cost[i,:]))
-                𝐭 = CartesianIndex(labels[a])
+            for a in find(cost[:,i] .== maximum(cost[:,i]))
+                𝐭 = CartesianIndex(displacements[a])
                 @test targetImage[𝒊] == sourceImage[𝒊+𝐭]
             end
         end
     end
 
     @testset "ssdexp" begin
-        cost = ssdexp(targetImage, sourceImage, labels)
+        cost = ssdexp(targetImage, sourceImage, displacements)
         @test all(cost .>= 0)
         for 𝒊 in CartesianRange(imageDims)
             i = sub2ind(imageDims, 𝒊.I...)
-            for a in find(cost[i,:] .== maximum(cost[i,:]))
-                𝐭 = CartesianIndex(labels[a])
+            for a in find(cost[:,i] .== maximum(cost[:,i]))
+                𝐭 = CartesianIndex(displacements[a])
                 @test targetImage[𝒊] == sourceImage[𝒊+𝐭]
             end
         end
@@ -48,6 +47,7 @@ import NRIRHOPM: sadexp, ssdexp,
             @test potts(fp, fq, d) == 0
             fq = tuple(rand(dim)...)
             @test potts(fp, fq, d) == d
+            @test pottsexp(fp, fq, d) == e^-d
         end
     end
 
@@ -60,6 +60,7 @@ import NRIRHOPM: sadexp, ssdexp,
             rate = rand()
             @test tad(fp, fq, rate, Inf) ≈ rate * hypot(fpv-fqv...)
             @test tad(fp, fq, rand(), 0) == 0
+            @test tadexp(fp, fq, rand(), 0) == 1
         end
     end
 
@@ -72,10 +73,26 @@ import NRIRHOPM: sadexp, ssdexp,
             rate = rand()
             @test tqd(fp, fq, rate, Inf) ≈ rate * hypot(fpv-fqv...)^2
             @test tqd(fp, fq, rand(), 0) == 0
+            @test tqdexp(fp, fq, rand(), 0) == 1
         end
     end
 
     @testset "topology_preserving" begin
+        # 1 => topology preserving, 0 => otherwise.
+        #Refer to the following paper for further details:
+        # Cordero-Grande, Lucilio, et al. "A Markov random field approach for
+        # topology-preserving registration: Application to object-based tomographic image
+        # interpolation." IEEE Transactions on Image Processing 21.4 (2012): 2051.
+        @inline function topology_preserving{T<:Integer}(s₁::Vector{T}, s₂::Vector{T}, s₃::Vector{T}, a::Vector{T}, b::Vector{T}, c::Vector{T})
+            @inbounds begin
+                𝐤s₁, 𝐤s₂, 𝐤s₃ = s₁ + a, s₂ + b, s₃ + c
+                ∂φ₁∂φ₂ = (𝐤s₂[1] - 𝐤s₁[1]) * (𝐤s₂[2] - 𝐤s₃[2])
+                ∂φ₂∂φ₁ = (𝐤s₂[2] - 𝐤s₁[2]) * (𝐤s₂[1] - 𝐤s₃[1])
+                ∂r₁∂r₂ = (s₂[1] - s₁[1])*(s₂[2] - s₃[2])
+            end
+            v = (∂φ₁∂φ₂ - ∂φ₂∂φ₁) / ∂r₁∂r₂
+            return v > 0 ? 1.0 : 0.0
+        end
         # topology_preserving's coordinate system:   y
         #   □ ▦ □        ▦                ▦          ↑        ⬔ => p1 => a
         #   ⬓ ⬔ ⬓  =>  ⬓ ⬔   ⬓ ⬔    ⬔ ⬓   ⬔ ⬓        |        ⬓ => p2 => b

@@ -12,7 +12,7 @@ matrix:
 notifications:
   email: false
 script:
-- if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-- julia --compilecache=no --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("NRIRHOPM"); Pkg.test("NRIRHOPM"; coverage=true)'
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia --compilecache=no --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("NRIRHOPM"); Pkg.test("NRIRHOPM"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("NRIRHOPM")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

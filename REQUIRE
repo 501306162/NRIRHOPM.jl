@@ -1,15 +1,12 @@
 julia 0.5
-Reexport
+Combinatorics
+Memento
 
 FixedSizeArrays
 Interpolations
 
+FileIO
 Images 0.6
 NIfTI
 Unitful
 Ranges
-
-Plots
-GR
-
-Memento
