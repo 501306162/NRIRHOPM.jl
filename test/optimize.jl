@@ -14,8 +14,7 @@
     pixelNum, displaceNum = prod(imageDims), length(displacements)
 
     @testset "data+smooth" begin
-        energy, spectrum = optimize(fixed, moving, displacements, imageDims,
-                                    SAD(), 1, TAD(), 0.05, MixHOPM(), rand(displaceNum,pixelNum))
+        energy, spectrum = optimize(fixed, moving, displacements, imageDims, MixHOPM(), SAD(), 1, TAD(), 0.05)
         indicator = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
         displacementField = fieldlize(indicator, displacements, imageDims)
         warppedImg = warp(moving, displacementField)
@@ -23,9 +22,7 @@
     end
 
     @testset "data+smooth+topology" begin
-        energy, spectrum = optimize(fixed, moving, displacements, imageDims,
-                                    SAD(), 1, TAD(), 0.05, TP2D(), 0.01,
-                                    MixHOPM(), rand(displaceNum,pixelNum))
+        energy, spectrum = optimize(fixed, moving, displacements, imageDims, MixHOPM(), SAD(), 1, TAD(), 0.05, TP2D(), 0.01)
         indicator = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
         displacementField = fieldlize(indicator, displacements, imageDims)
         warppedImg = warp(moving, displacementField)
