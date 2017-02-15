@@ -1,50 +1,41 @@
-function multilevel(fixedImg, movingImg, labelSets, grids;
+function multilevel(fixedImg, movingImg, displacementSet, gridSet;
                     datacost::DataCost=SAD(), α::Real=1,
                     smooth::SmoothCost=TAD(), β::Real=1,
-                    topology::TopologyCost3D=TP3D(), χ::Real=1,
-                    tolerance::Float64=1e-5,
-                    maxIteration::Integer=300,
-                    constrainRow::Bool=false
+                    topology::TopologyCost=TP3D(), χ::Real=1
                    )
     logger = get_logger(current_module())
     info(logger, "Start multilevel processing...")
-    level = length(labelSets)
-    movingImgs = Vector(level)
+    level = length(displacementSet)
+    warppedImgs = Vector(level)
     displacementFields = Vector(level)
     spectrums = Vector(level)
     energy = Vector(level)
 
-    gridDims = grids[1]
-    labels = labelSets[1]
-    info(logger, "Level 1:")
-    info(logger, "Image Dimension: $(size(fixedImg))")
-    info(logger, "Grid Dimension: $(gridDims)")
-    info(logger, "Label Total Number: $(length(labels))")
-    𝐒₀ = rand(prod(gridDims), length(labels))
-    energy[1], spectrum = optimize(fixedImg, movingImg, displacements, gridDims,
-                                   datacost, α, smooth, β, topology, χ,
-                                   MixHOPM(), spectrum)
-    spectrums[1] = spectrum
-    indicator = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
-    displacements[1] = reshape([Vec(labels[i]) for i in indicator], grids[1])
-    movingImgs[1] = warp(movingImg, displacements[1])
+    # enforce eltype consistency
+    fixedImg = convert(AbstractArray{Float64}, fixedImg)
+    movingImg = convert(AbstractArray{Float64}, movingImg)
+
+    if χ != 0
+        info(logger, "Level 0: ")
+        info(logger, "Image Dimension: $(size(fixedImg))")
+        info(logger, "Grid Dimension: $(gridSet[1])")
+        energy[1], spectrums[1] = optimize(fixedImg, movingImg, displacementSet[1], gridSet[1], MixHOPM(), datacost, α, smooth, β, topology, χ)
+        indicator = [indmax(spectrums[1][:,i]) for i in indices(spectrums[1],2)]
+        displacementFields[1] = fieldlize(indicator, displacementSet[1], gridSet[1])
+        warppedImgs[1] = warp(movingImg, displacementFields[1])
+    else
+        warppedImgs[1] = copy(movingImg)
+    end
 
     for l = 2:level
-        labels = labelSets[l]
-        info(logger, "Level $l: ")
+        info(logger, "Level $(l-1): ")
         info(logger, "Image Dimension: $(size(fixedImg))")
-        info(logger, "Grid Dimension: $(grids[l])")
-        info(logger, "Label Total Number: $(length(labels))")
-        # upsample spectrum to latest level
-        spectrumSampled = upsample(grids[l], gridDims, spectrums[l-1])
-        energy, spectrum = optimize(fixedImg, movingImgs[l-1], grids[l], labels,
-                                    datacost, α, smooth, β,
-                                    𝐒₀=spectrumSampled, tolerance=tolerance,
-                                    maxIteration=maxIteration, constrainRow=constrainRow)
-        spectrums[l] = spectrum
-        indicator = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
-        displacementFields[l] = fieldlize(indicator, labelSets[l], grids[l])
-        movingImgs[l] = warp(movingImgs[l-1], displacements[l])
+        info(logger, "Grid Dimension: $(gridSet[l])")
+        energy[l], spectrums[l] = optimize(fixedImg, warppedImgs[l-1], displacementSet[l], gridSet[l], MixHOPM(), datacost, α, smooth, β)
+        indicator = [indmax(spectrums[l][:,i]) for i in indices(spectrums[l],2)]
+        displacementFields[l] = fieldlize(indicator, displacementSet[l], gridSet[l])
+        warppedImgs[l] = warp(warppedImgs[l-1], displacementFields[l])
     end
-    return movingImgs, displacements, spectrums
+
+    return warppedImgs, displacementFields, spectrums, energy
 end

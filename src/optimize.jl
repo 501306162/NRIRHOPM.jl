@@ -17,7 +17,7 @@
             factors = map(x->imageDims[x]/gridDims[x], 1:N)
             scaled = [tuple(map(x->factors[x]*𝐝[x],1:N)...) for 𝐝 in displacements]
             @timelog datacost = clique(fixedImg, movingImg, displacements, data, α)
-            datacost = downsample(imageDims, size(fixedImg), datacost)
+            datacost = downsample(gridDims, imageDims, datacost)
         end
 
         info(logger, "Creating smooth cost with weight=$β: ")
@@ -49,7 +49,7 @@ end
             factors = map(x->imageDims[x]/gridDims[x], 1:N)
             scaled = [tuple(map(x->factors[x]*𝐝[x],1:N)...) for 𝐝 in displacements]
             @timelog datacost = clique(fixedImg, movingImg, displacements, data, α)
-            datacost = downsample(imageDims, size(fixedImg), datacost)
+            datacost = downsample(gridDims, imageDims, datacost)
         end
 
         info(logger, "Creating smooth cost with weight=$β: ")
