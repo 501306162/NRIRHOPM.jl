@@ -41,13 +41,13 @@ export AbstractMethod, AbstractHOPMMethod
 export CanonHOPM, MixHOPM
 
 # interpolate
-export fieldlize, upsample, downsample, warp
+export fieldlize, downsample, warp
 
 # optimize
 export optimize
 
 # multilevel
-
+export multilevel
 
 # misc.
 export @timelog
@@ -64,9 +64,9 @@ include("method.jl")
 include("optimize.jl")
 include("util.jl")
 include("io.jl")
-# include("multilevel.jl")
+include("multilevel.jl")
 
-loggerHOPMReg = basic_config("notice"; fmt="[ {date} | {level} ]: {msg}")
+loggerHOPMReg = basic_config("info"; fmt="[ {date} | {level} ]: {msg}")
 add_handler(loggerHOPMReg, DefaultHandler("HOPMReg.log", DefaultFormatter("[ {date} | {level} ]: {msg}")))
 
 end # module

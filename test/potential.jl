@@ -15,6 +15,12 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
     displacements = [(i,j) for i in -1:1, j in -1:1]
     imageDims = indices(targetImage)
 
+    @testset "sum_diff_exp" begin
+        FloatDisplacements = [(i,j) for i in -1:0.5:1, j in -1:0.5:1]
+        cost = sadexp(targetImage, sourceImage, FloatDisplacements)
+        @test all(cost .>= 0)
+    end
+
     @testset "sadexp" begin
         cost = sadexp(targetImage, sourceImage, displacements)
         @test all(cost .>= 0)

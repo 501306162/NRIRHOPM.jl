@@ -2,12 +2,14 @@
 @inline function sum_diff_exp{T,N}(f, fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, displacements::AbstractArray{NTuple{N}})
     imageDims = indices(fixedImg)
     imageDims == indices(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same indices."))
+    movingImgITP = interpolate(movingImg, BSpline(Linear()), OnGrid())
     cost = zeros(length(linearindices(displacements)), length(linearindices(fixedImg)))
     for a in eachindex(displacements), 𝒊 in CartesianRange(imageDims)
         i = sub2ind(imageDims, 𝒊.I...)
-        𝒅 = 𝒊 + CartesianIndex(displacements[a])
-        if checkbounds(Bool, movingImg, 𝒅)
-            cost[a,i] = e^-f(fixedImg[𝒊] - movingImg[𝒅])
+        # Todo: 𝐝 = 𝒊.I .+ displacements[a] (pending julia-v0.6)
+        𝐝 = tuple([𝒊[i]+displacements[a][i] for i = 1:N]...)
+        if Base.checkbounds_indices(Bool, indices(movingImg), 𝐝)
+            cost[a,i] = e^-f(fixedImg[𝒊] - movingImgITP[𝐝...])
         else
             cost[a,i] = 0
         end
