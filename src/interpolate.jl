@@ -12,30 +12,27 @@ function interpolate_spectrum{N}(dimsOut::NTuple{N}, dimsIn::NTuple{N}, spectrum
     return spectrumInterpolated
 end
 
-upsample(dimsUp, dims, spectrum) = interpolate_spectrum(dimsUp, dims, spectrum)
 downsample(dimsDown, dims, spectrum) = interpolate_spectrum(dimsDown, dims, spectrum)
 
-function warp{N,T<:Real,Dim}(movingImg, displacementField::Array{Vec{N,T},Dim})
+function warp{N,T<:Real,D<:Interpolations.Degree}(movingImg, displacementField::Array{Vec{N,T},N}, itpType::D=Linear())
     logger = get_logger(current_module())
     imageDims = size(movingImg)
     gridDims = size(displacementField)
-    warppedImg = zeros(movingImg)
-    if imageDims != gridDims
-        knots = ntuple(x->linspace(1, imageDims[x], gridDims[x]), Val{N})
-        displacementITP = interpolate(knots, displacementField, Gridded(Linear()))
-        movingImgITP = interpolate(movingImg, BSpline(Linear()), OnGrid())
-        for 𝒊 in CartesianRange(imageDims)
-            𝐝 = Vec(𝒊.I...) + displacementITP[𝒊]
+    # scale displacementField
+    # Todo: factors = imageDims ./ gridDims (pending julia-v0.6)
+    factors = map(x->imageDims[x]/gridDims[x], 1:N)
+    scaled = [Vec(map(x->factors[x]*𝐝[x],1:N)) for 𝐝 in displacementField]
+    knots = ntuple(x->linspace(1, imageDims[x], gridDims[x]), Val{N})
+    displacementITP = interpolate(knots, scaled, Gridded(itpType))
+    movingImgITP = interpolate(movingImg, BSpline(Linear()), OnGrid())
+    warppedImg = zeros(size(movingImg))
+    for 𝒊 in CartesianRange(imageDims)
+        # Todo: 𝐝 = 𝒊.I .+ collect(displacementITP[𝒊]) (pending julia-v0.6)
+        𝐝 = tuple([𝒊[i]+displacementITP[𝒊][i] for i = 1:N]...)
+        if Base.checkbounds_indices(Bool, indices(movingImg), 𝐝)
             warppedImg[𝒊] = movingImgITP[𝐝...]
-        end
-    else
-        for 𝒊 in CartesianRange(imageDims)
-            𝒅 = 𝒊 + CartesianIndex(displacementField[𝒊]...)
-            if checkbounds(Bool, movingImg, 𝒅)
-                warppedImg[𝒊] = movingImg[𝒅]
-            else
-                warn(logger, "𝒅($𝒅) is outbound, skipped.")
-            end
+        else
+            warn(logger, "𝐝($𝐝) is outbound, skipped.")
         end
     end
     return warppedImg

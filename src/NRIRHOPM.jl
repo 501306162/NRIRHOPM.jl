@@ -41,7 +41,7 @@ export AbstractMethod, AbstractHOPMMethod
 export CanonHOPM, MixHOPM
 
 # interpolate
-export fieldlize, upsample, downsample, warp
+export fieldlize, downsample, warp
 
 # optimize
 export optimize
