@@ -1,5 +1,4 @@
 using Interpolations
-import FixedSizeArrays: Vec
 
 @testset "interpolate" begin
     @testset "sample" begin
@@ -76,8 +75,8 @@ import FixedSizeArrays: Vec
                   4 4 2 2;
                   3 3 1 1;
                   3 3 1 1]
-        displacementField = [Vec(1,1) Vec(0,0);
-                             Vec(0,0) Vec(-1,-1)]
+        displacementField = [(1,1) ( 0, 0);
+                             (0,0) (-1,-1)]
         warpped = warp(moving, displacementField, Constant())
         @test warpped == fixed
     end

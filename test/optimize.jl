@@ -16,7 +16,7 @@
     @testset "data+smooth" begin
         energy, spectrum = optimize(fixed, moving, displacements, imageDims, MixHOPM(), SAD(), 1, TAD(), 0.05)
         indicator = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
-        displacementField = fieldlize(indicator, displacements, imageDims)
+        displacementField = reshape([displacements[i] for i in indicator], imageDims)
         warppedImg = warp(moving, displacementField)
         @test warppedImg == fixed
     end
@@ -24,7 +24,7 @@
     @testset "data+smooth+topology" begin
         energy, spectrum = optimize(fixed, moving, displacements, imageDims, MixHOPM(), SAD(), 1, TAD(), 0.05, TP2D(), 0.01)
         indicator = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
-        displacementField = fieldlize(indicator, displacements, imageDims)
+        displacementField = reshape([displacements[i] for i in indicator], imageDims)
         warppedImg = warp(moving, displacementField)
         @test warppedImg == fixed
     end

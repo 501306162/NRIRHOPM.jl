@@ -14,8 +14,8 @@
             @timelog datacost = clique(fixedImg, movingImg, displacements, data, α)
         else
             # Todo: factors = imageDims ./ gridDims (pending julia-v0.6)
-            factors = map(x->imageDims[x]/gridDims[x], 1:N)
-            scaled = [tuple(map(x->factors[x]*𝐝[x],1:N)...) for 𝐝 in displacements]
+            factors = map(/, imageDims, gridDims)
+            scaled = [map(*, factors, 𝐝) for 𝐝 in displacements]
             @timelog datacost = clique(fixedImg, movingImg, displacements, data, α)
             datacost = downsample(gridDims, imageDims, datacost)
         end
@@ -46,8 +46,8 @@ end
             @timelog datacost = clique(fixedImg, movingImg, displacements, data, α)
         else
             # Todo: factors = imageDims ./ gridDims (pending julia-v0.6)
-            factors = map(x->imageDims[x]/gridDims[x], 1:N)
-            scaled = [tuple(map(x->factors[x]*𝐝[x],1:N)...) for 𝐝 in displacements]
+            factors = map(/, imageDims, gridDims)
+            scaled = [map(*, factors, 𝐝) for 𝐝 in displacements]
             @timelog datacost = clique(fixedImg, movingImg, displacements, data, α)
             datacost = downsample(gridDims, imageDims, datacost)
         end
