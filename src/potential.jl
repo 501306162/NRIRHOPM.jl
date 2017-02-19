@@ -143,6 +143,10 @@ smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 8
 @inline jᶠᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+β[1]-α[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(β[2]-α[2]) > 0 ? 1.0 : 0.0
 @inline jᵇᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+α[1]-β[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(α[2]-β[2]) > 0 ? 1.0 : 0.0
 
+jᶠᶠexp{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = jᶠᶠ(α, β, χ) == 1.0 ? 1.0 : e^-1
+jᵇᶠexp{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = jᵇᶠ(α, β, χ) == 1.0 ? 1.0 : e^-1
+jᶠᵇexp{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = jᶠᵇ(α, β, χ) == 1.0 ? 1.0 : e^-1
+jᵇᵇexp{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = jᵇᵇ(α, β, χ) == 1.0 ? 1.0 : e^-1
 
 """
     jᶠᶠᶠ(α,β,χ,δ)
@@ -201,3 +205,12 @@ smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 8
 @inline jᵇᵇᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+α[2]-χ[2])*(1+α[3]-δ[3]) + (  α[1]-χ[1])*(  α[2]-δ[2])*(α[3]-β[3]) +
                                                                        (   α[1]-δ[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
                                                                        (   α[1]-χ[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+
+jᶠᶠᶠexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᶠᶠᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᵇᶠᶠexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᵇᶠᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᶠᵇᶠexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᶠᵇᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᵇᵇᶠexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᵇᵇᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᶠᶠᵇexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᶠᶠᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᵇᶠᵇexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᵇᶠᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᶠᵇᵇexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᶠᵇᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᵇᵇᵇexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᵇᵇᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
