@@ -5,6 +5,7 @@ using Memento
 
 using Interpolations
 import FixedSizeArrays: Vec
+using StaticArrays
 
 using FileIO
 using Images

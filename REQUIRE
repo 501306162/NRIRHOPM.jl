@@ -3,6 +3,7 @@ Combinatorics
 Memento
 
 FixedSizeArrays
+StaticArrays
 Interpolations
 
 FileIO

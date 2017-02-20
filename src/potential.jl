@@ -1,5 +1,5 @@
 # unary potentials
-function sum_diff_exp{T,N}(f, fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, displacements::AbstractArray{NTuple{N}})
+function sum_diff_exp{T,N}(f, fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, displacements::AbstractArray{StaticVector})
     imageDims = indices(fixedImg)
     imageDims == indices(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same indices."))
     movingImgITP = interpolate(movingImg, BSpline(Linear()), OnGrid())
@@ -23,7 +23,7 @@ end
 Calculates the sum of absolute differences between fixed(target) image and
 warpped image(moving image + displacements), then applys `f(x)=e⁻ˣ` to the result.
 """
-@inline sadexp(fixedImg, movingImg, displacements) = sum_diff_exp(abs, fixedImg, movingImg, displacements)
+sadexp(fixedImg, movingImg, displacements) = sum_diff_exp(abs, fixedImg, movingImg, displacements)
 
 """
     ssdexp(fixedImg, movingImg, displacements)
@@ -31,7 +31,7 @@ warpped image(moving image + displacements), then applys `f(x)=e⁻ˣ` to the re
 Calculates the sum of squared differences between fixed(target) image and
 warpped image(moving image + displacements), then applys `f(x)=e⁻ˣ` to the result.
 """
-@inline ssdexp(fixedImg, movingImg, displacements) = sum_diff_exp(abs2, fixedImg, movingImg, displacements)
+ssdexp(fixedImg, movingImg, displacements) = sum_diff_exp(abs2, fixedImg, movingImg, displacements)
 
 
 # pairwise potentials
@@ -45,9 +45,9 @@ Refer to the following paper for further details:
 Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
 for early vision." International journal of computer vision 70.1 (2006): 43.
 """
-@generated function potts{T<:Real,N}(fp::NTuple{N}, fq::NTuple{N}, d::T)
+@generated function potts{S,T<:Real}(fp::SVector{S,T}, fq::SVector{S,T}, d::T)
     ex = :(true)
-    for i = 1:N
+    for i = 1:S
         ex = :($ex && (fp[$i] == fq[$i]))
     end
     return :($ex ? zero(T) : d)
@@ -58,7 +58,7 @@ end
 
 Calculates the cost value based on Potts model, then applys `f(x)=e⁻ˣ` to the result.
 """
-@inline pottsexp(fp, fq, d) = e^-potts(fp, fq, d)
+pottsexp(fp, fq, d) = e^-potts(fp, fq, d)
 
 
 """
@@ -71,9 +71,9 @@ Refer to the following paper for further details:
 Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
 for early vision." International journal of computer vision 70.1 (2006): 43-44.
 """
-@generated function tad{N,T<:Real}(fp::NTuple{N,T}, fq::NTuple{N,T}, c::Real, d::Real)
+@generated function tad{S,T<:Real}(fp::SVector{S,T}, fq::SVector{S,T}, c::Real, d::Real)
     ex = :(zero(T))
-    for i = 1:N
+    for i = 1:S
         ex = :(abs2(fp[$i]-fq[$i]) + $ex)
     end
     return :(min(c * sqrt($ex), d))
@@ -85,7 +85,7 @@ end
 Calculates the truncated absolute difference between `fp` and `fq`,
 then applys `f(x)=e⁻ˣ` to the result.
 """
-@inline tadexp(fp, fq, c, d) = e^-tad(fp, fq, c, d)
+tadexp(fp, fq, c, d) = e^-tad(fp, fq, c, d)
 
 
 """
@@ -98,9 +98,9 @@ Refer to the following paper for further details:
 Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
 for early vision." International journal of computer vision 70.1 (2006): 44-45.
 """
-@generated function tqd{N,T<:Real}(fp::NTuple{N,T}, fq::NTuple{N,T}, c::Real, d::Real)
+@generated function tqd{S,T<:Real}(fp::SVector{S,T}, fq::SVector{S,T}, c::Real, d::Real)
     ex = :(zero(T))
-    for i = 1:N
+    for i = 1:S
         ex = :(abs2(fp[$i]-fq[$i]) + $ex)
     end
     return :(min(c * $ex, d))
@@ -112,7 +112,7 @@ end
 Calculates the truncated quadratic difference between `fp` and `fq`,
 then applys `f(x)=e⁻ˣ` to the result.
 """
-@inline tqdexp(fp, fq, c, d) = e^-tqd(fp, fq, c, d)
+tqdexp(fp, fq, c, d) = e^-tqd(fp, fq, c, d)
 
 
 """
@@ -138,15 +138,15 @@ Refer to the following paper for further details:
 Karacali, Bilge, and Christos Davatzikos. "Estimating topology preserving and
 smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 870.
 """
-@inline jᶠᶠ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+β[1]-α[1])*(1+χ[2]-α[2]) - (χ[1]-α[1])*(β[2]-α[2]) > 0 ? 1.0 : 0.0
-@inline jᵇᶠ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+α[1]-β[1])*(1+χ[2]-α[2]) - (χ[1]-α[1])*(α[2]-β[2]) > 0 ? 1.0 : 0.0
-@inline jᶠᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+β[1]-α[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(β[2]-α[2]) > 0 ? 1.0 : 0.0
-@inline jᵇᵇ{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = (1+α[1]-β[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(α[2]-β[2]) > 0 ? 1.0 : 0.0
+jᶠᶠ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}) = (1+β[1]-α[1])*(1+χ[2]-α[2]) - (χ[1]-α[1])*(β[2]-α[2]) > 0 ? 1.0 : 0.0
+jᵇᶠ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}) = (1+α[1]-β[1])*(1+χ[2]-α[2]) - (χ[1]-α[1])*(α[2]-β[2]) > 0 ? 1.0 : 0.0
+jᶠᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}) = (1+β[1]-α[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(β[2]-α[2]) > 0 ? 1.0 : 0.0
+jᵇᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}) = (1+α[1]-β[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(α[2]-β[2]) > 0 ? 1.0 : 0.0
 
-jᶠᶠexp{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = jᶠᶠ(α, β, χ) == 1.0 ? 1.0 : e^-1
-jᵇᶠexp{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = jᵇᶠ(α, β, χ) == 1.0 ? 1.0 : e^-1
-jᶠᵇexp{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = jᶠᵇ(α, β, χ) == 1.0 ? 1.0 : e^-1
-jᵇᵇexp{N}(α::NTuple{N}, β::NTuple{N}, χ::NTuple{N}) = jᵇᵇ(α, β, χ) == 1.0 ? 1.0 : e^-1
+jᶠᶠexp(α, β, χ) = jᶠᶠ(α, β, χ) == 1.0 ? 1.0 : e^-1
+jᵇᶠexp(α, β, χ) = jᵇᶠ(α, β, χ) == 1.0 ? 1.0 : e^-1
+jᶠᵇexp(α, β, χ) = jᶠᵇ(α, β, χ) == 1.0 ? 1.0 : e^-1
+jᵇᵇexp(α, β, χ) = jᵇᵇ(α, β, χ) == 1.0 ? 1.0 : e^-1
 
 """
     jᶠᶠᶠ(α,β,χ,δ)
@@ -174,43 +174,43 @@ Refer to the following paper for further details:
 Karacali, Bilge, and Christos Davatzikos. "Estimating topology preserving and
 smooth displacement fields." IEEE Transactions on Medical Imaging 23.7 (2004): 870.
 """
-@inline jᶠᶠᶠ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+β[1]-α[1])*(1+χ[2]-α[2])*(1+δ[3]-α[3]) + (  χ[1]-α[1])*(  δ[2]-α[2])*(β[3]-α[3]) +
-                                                                       (   δ[1]-α[1])*(  β[2]-α[2])*(  χ[3]-α[3]) - (  δ[1]-α[1])*(1+χ[2]-α[2])*(β[3]-α[3]) -
-                                                                       (   χ[1]-α[1])*(  β[2]-α[2])*(1+δ[3]-α[3]) - (1+β[1]-α[1])*(  δ[2]-α[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
+jᶠᶠᶠ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::SVector{S,T}) = ((1+β[1]-α[1])*(1+χ[2]-α[2])*(1+δ[3]-α[3]) + (  χ[1]-α[1])*(  δ[2]-α[2])*(β[3]-α[3]) +
+                                                                                      (   δ[1]-α[1])*(  β[2]-α[2])*(  χ[3]-α[3]) - (  δ[1]-α[1])*(1+χ[2]-α[2])*(β[3]-α[3]) -
+                                                                                      (   χ[1]-α[1])*(  β[2]-α[2])*(1+δ[3]-α[3]) - (1+β[1]-α[1])*(  δ[2]-α[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
 
-@inline jᵇᶠᶠ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+χ[2]-α[2])*(1+δ[3]-α[3]) + (  χ[1]-α[1])*(  δ[2]-α[2])*(α[3]-β[3]) +
-                                                                       (   δ[1]-α[1])*(  α[2]-β[2])*(  χ[3]-α[3]) - (  δ[1]-α[1])*(1+χ[2]-α[2])*(α[3]-β[3]) -
-                                                                       (   χ[1]-α[1])*(  α[2]-β[2])*(1+δ[3]-α[3]) - (1+α[1]-β[1])*(  δ[2]-α[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
+jᵇᶠᶠ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::SVector{S,T}) = ((1+α[1]-β[1])*(1+χ[2]-α[2])*(1+δ[3]-α[3]) + (  χ[1]-α[1])*(  δ[2]-α[2])*(α[3]-β[3]) +
+                                                                                      (   δ[1]-α[1])*(  α[2]-β[2])*(  χ[3]-α[3]) - (  δ[1]-α[1])*(1+χ[2]-α[2])*(α[3]-β[3]) -
+                                                                                      (   χ[1]-α[1])*(  α[2]-β[2])*(1+δ[3]-α[3]) - (1+α[1]-β[1])*(  δ[2]-α[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
 
-@inline jᶠᵇᶠ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+β[1]-α[1])*(1+α[2]-χ[2])*(1+δ[3]-α[3]) + (  α[1]-χ[1])*(  δ[2]-α[2])*(β[3]-α[3]) +
-                                                                       (   δ[1]-α[1])*(  β[2]-α[2])*(  α[3]-χ[3]) - (  δ[1]-α[1])*(1+α[2]-χ[2])*(β[3]-α[3]) -
-                                                                       (   α[1]-χ[1])*(  β[2]-α[2])*(1+δ[3]-α[3]) - (1+β[1]-α[1])*(  δ[2]-α[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+jᶠᵇᶠ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::SVector{S,T}) = ((1+β[1]-α[1])*(1+α[2]-χ[2])*(1+δ[3]-α[3]) + (  α[1]-χ[1])*(  δ[2]-α[2])*(β[3]-α[3]) +
+                                                                                      (   δ[1]-α[1])*(  β[2]-α[2])*(  α[3]-χ[3]) - (  δ[1]-α[1])*(1+α[2]-χ[2])*(β[3]-α[3]) -
+                                                                                      (   α[1]-χ[1])*(  β[2]-α[2])*(1+δ[3]-α[3]) - (1+β[1]-α[1])*(  δ[2]-α[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
 
-@inline jᵇᵇᶠ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+α[2]-χ[2])*(1+δ[3]-α[3]) + (  α[1]-χ[1])*(  δ[2]-α[2])*(α[3]-β[3]) +
-                                                                       (   δ[1]-α[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  δ[1]-α[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
-                                                                       (   α[1]-χ[1])*(  α[2]-β[2])*(1+δ[3]-α[3]) - (1+α[1]-β[1])*(  δ[2]-α[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+jᵇᵇᶠ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::SVector{S,T}) = ((1+α[1]-β[1])*(1+α[2]-χ[2])*(1+δ[3]-α[3]) + (  α[1]-χ[1])*(  δ[2]-α[2])*(α[3]-β[3]) +
+                                                                                      (   δ[1]-α[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  δ[1]-α[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
+                                                                                      (   α[1]-χ[1])*(  α[2]-β[2])*(1+δ[3]-α[3]) - (1+α[1]-β[1])*(  δ[2]-α[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
 
-@inline jᶠᶠᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+β[1]-α[1])*(1+χ[2]-α[2])*(1+α[3]-δ[3]) + (  χ[1]-α[1])*(  α[2]-δ[2])*(β[3]-α[3]) +
-                                                                       (   α[1]-δ[1])*(  β[2]-α[2])*(  χ[3]-α[3]) - (  α[1]-δ[1])*(1+χ[2]-α[2])*(β[3]-α[3]) -
-                                                                       (   χ[1]-α[1])*(  β[2]-α[2])*(1+α[3]-δ[3]) - (1+β[1]-α[1])*(  α[2]-δ[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
+jᶠᶠᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::SVector{S,T}) = ((1+β[1]-α[1])*(1+χ[2]-α[2])*(1+α[3]-δ[3]) + (  χ[1]-α[1])*(  α[2]-δ[2])*(β[3]-α[3]) +
+                                                                                      (   α[1]-δ[1])*(  β[2]-α[2])*(  χ[3]-α[3]) - (  α[1]-δ[1])*(1+χ[2]-α[2])*(β[3]-α[3]) -
+                                                                                      (   χ[1]-α[1])*(  β[2]-α[2])*(1+α[3]-δ[3]) - (1+β[1]-α[1])*(  α[2]-δ[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
 
-@inline jᵇᶠᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+χ[2]-α[2])*(1+α[3]-δ[3]) + (  χ[1]-α[1])*(  α[2]-δ[2])*(α[3]-β[3]) +
-                                                                       (   α[1]-δ[1])*(  α[2]-β[2])*(  χ[3]-α[3]) - (  α[1]-δ[1])*(1+χ[2]-α[2])*(α[3]-β[3]) -
-                                                                       (   χ[1]-α[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
+jᵇᶠᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::SVector{S,T}) = ((1+α[1]-β[1])*(1+χ[2]-α[2])*(1+α[3]-δ[3]) + (  χ[1]-α[1])*(  α[2]-δ[2])*(α[3]-β[3]) +
+                                                                                      (   α[1]-δ[1])*(  α[2]-β[2])*(  χ[3]-α[3]) - (  α[1]-δ[1])*(1+χ[2]-α[2])*(α[3]-β[3]) -
+                                                                                      (   χ[1]-α[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(χ[3]-α[3])) > 0 ? 1.0 : 0.0
 
-@inline jᶠᵇᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+β[1]-α[1])*(1+α[2]-χ[2])*(1+α[3]-δ[3]) + (  α[1]-χ[1])*(  α[2]-δ[2])*(β[3]-α[3]) +
-                                                                       (   α[1]-δ[1])*(  β[2]-α[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(β[3]-α[3]) -
-                                                                       (   α[1]-χ[1])*(  β[2]-α[2])*(1+α[3]-δ[3]) - (1+β[1]-α[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+jᶠᵇᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::SVector{S,T}) = ((1+β[1]-α[1])*(1+α[2]-χ[2])*(1+α[3]-δ[3]) + (  α[1]-χ[1])*(  α[2]-δ[2])*(β[3]-α[3]) +
+                                                                                      (   α[1]-δ[1])*(  β[2]-α[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(β[3]-α[3]) -
+                                                                                      (   α[1]-χ[1])*(  β[2]-α[2])*(1+α[3]-δ[3]) - (1+β[1]-α[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
 
-@inline jᵇᵇᵇ{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = ((1+α[1]-β[1])*(1+α[2]-χ[2])*(1+α[3]-δ[3]) + (  α[1]-χ[1])*(  α[2]-δ[2])*(α[3]-β[3]) +
-                                                                       (   α[1]-δ[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
-                                                                       (   α[1]-χ[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
+jᵇᵇᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::SVector{S,T}) = ((1+α[1]-β[1])*(1+α[2]-χ[2])*(1+α[3]-δ[3]) + (  α[1]-χ[1])*(  α[2]-δ[2])*(α[3]-β[3]) +
+                                                                                      (   α[1]-δ[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
+                                                                                      (   α[1]-χ[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(α[3]-χ[3])) > 0 ? 1.0 : 0.0
 
-jᶠᶠᶠexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᶠᶠᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
-jᵇᶠᶠexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᵇᶠᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
-jᶠᵇᶠexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᶠᵇᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
-jᵇᵇᶠexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᵇᵇᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
-jᶠᶠᵇexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᶠᶠᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
-jᵇᶠᵇexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᵇᶠᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
-jᶠᵇᵇexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᶠᵇᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
-jᵇᵇᵇexp{N}(α::NTuple{N},β::NTuple{N},χ::NTuple{N},δ::NTuple{N}) = jᵇᵇᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᶠᶠᶠexp(α, β, χ, δ) = jᶠᶠᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᵇᶠᶠexp(α, β, χ, δ) = jᵇᶠᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᶠᵇᶠexp(α, β, χ, δ) = jᶠᵇᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᵇᵇᶠexp(α, β, χ, δ) = jᵇᵇᶠ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᶠᶠᵇexp(α, β, χ, δ) = jᶠᶠᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᵇᶠᵇexp(α, β, χ, δ) = jᵇᶠᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᶠᵇᵇexp(α, β, χ, δ) = jᶠᵇᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
+jᵇᵇᵇexp(α, β, χ, δ) = jᵇᵇᵇ(α, β, χ, δ) == 1 ? 1.0 : e^-1
