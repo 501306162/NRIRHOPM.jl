@@ -1,11 +1,11 @@
 # define a custom DataCost type for later use
-foorand(f, m, d, x) = x * rand(length(d), length(f))
-if !isdefined(:FooRand)
-    type FooRand{F<:Function,T<:Real} <: DataCost
-        f::F
-        x::T
-    end
-end
+# foorand(f, m, d, x) = x * rand(length(d), length(f))
+# if !isdefined(:FooRand)
+#     type FooRand{F<:Function,T<:Real} <: DataCost
+#         f::F
+#         x::T
+#     end
+# end
 
 @testset "clique" begin
     imageDims = (5,5)
@@ -24,6 +24,13 @@ end
     end
 
     @testset "custom" begin
+        eval(quote
+            type FooRand{F<:Function,T<:Real} <: DataCost
+                f::F
+                x::T
+            end
+            foorand(f, m, d, x) = x * rand(length(d), length(f))
+        end)
         r = clique(fixedImg, movingImg, displacements, FooRand(foorand,10), weight)
         @test size(r) == (length(displacements), prod(imageDims))
     end
