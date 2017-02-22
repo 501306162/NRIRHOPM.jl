@@ -7,7 +7,7 @@
     end
 
     @testset "PairwiseModel" begin
-        displacements = [[(i,j) for i in 1:2, j in 1:2]...]
+        displacements = [[SVector(i,j) for i in 1:2, j in 1:2]...]
         displaceLen = length(displacements)
         p = Potts()
         vals = p.f(displacements, p.d)
@@ -28,13 +28,13 @@
     end
 
     @testset "TopologyModel" begin
-        displacements = [[(i,j) for i in 1:2, j in 1:2]...]
+        displacements = [[SVector(i,j) for i in 1:2, j in 1:2]...]
         displaceLen = length(displacements)
         t2d = TP2D()
         vals = t2d.f(displacements)
         @test size(vals[]) == (displaceLen, displaceLen, displaceLen)
 
-        displacements = [[(i,j,k) for i in 1:2, j in 1:2, k in 1:2]...]
+        displacements = [[SVector(i,j,k) for i in 1:2, j in 1:2, k in 1:2]...]
         displaceLen = length(displacements)
         t3d = TP3D()
         vals = t3d.f(displacements)

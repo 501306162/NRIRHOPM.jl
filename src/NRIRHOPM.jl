@@ -1,11 +1,12 @@
 module NRIRHOPM
 
+using Reexport
 using Combinatorics
 using Memento
 
 using Interpolations
 import FixedSizeArrays: Vec
-using StaticArrays
+@reexport using StaticArrays
 
 using FileIO
 using Images

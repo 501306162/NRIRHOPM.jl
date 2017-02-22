@@ -11,7 +11,7 @@
     imageDims = (5,5)
     fixedImg = rand(imageDims)
     movingImg = rand(imageDims)
-    displacements = [(i,j) for i in -1:1, j in -1:1]
+    displacements = [SVector(i,j) for i in -1:1, j in -1:1]
     weight = rand()
 
     @testset "default" begin

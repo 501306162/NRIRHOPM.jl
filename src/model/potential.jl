@@ -1,14 +1,14 @@
 # unary potentials
-function sum_diff_exp{T,N}(f, fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, displacements::AbstractArray{StaticVector})
+function sum_diff_exp{S,T<:Real}(f, fixedImg::AbstractArray, movingImg::AbstractArray, displacements::AbstractArray{SVector{S,T}})
     imageDims = indices(fixedImg)
     imageDims == indices(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same indices."))
+    length(imageDims) == S || throw(DimensionMismatch("Images and displacement vectors are NOT in the same dimension."))
     movingImgITP = interpolate(movingImg, BSpline(Linear()), OnGrid())
     cost = zeros(length(linearindices(displacements)), length(linearindices(fixedImg)))
     for a in eachindex(displacements), 𝒊 in CartesianRange(imageDims)
         i = sub2ind(imageDims, 𝒊.I...)
-        # Todo: 𝐝 = 𝒊.I .+ displacements[a] (pending julia-v0.6)
-        𝐝 = map(+, 𝒊.I, displacements[a])
-        if Base.checkbounds_indices(Bool, indices(movingImg), 𝐝)
+        𝐝 = SVector(𝒊) + displacements[a]
+        if checkbounds(Bool, movingImg, 𝐝...)
             cost[a,i] = e^-f(fixedImg[𝒊] - movingImgITP[𝐝...])
         else
             cost[a,i] = 0
@@ -45,12 +45,12 @@ Refer to the following paper for further details:
 Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
 for early vision." International journal of computer vision 70.1 (2006): 43.
 """
-@generated function potts{S,T<:Real}(fp::SVector{S,T}, fq::SVector{S,T}, d::T)
+@generated function potts{S,Td<:Real}(fp::SVector{S}, fq::SVector{S}, d::Td)
     ex = :(true)
     for i = 1:S
         ex = :($ex && (fp[$i] == fq[$i]))
     end
-    return :($ex ? zero(T) : d)
+    return :($ex ? zero(Td) : d)
 end
 
 """
