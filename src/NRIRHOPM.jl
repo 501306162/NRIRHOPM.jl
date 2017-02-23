@@ -5,7 +5,6 @@ using Combinatorics
 using Memento
 
 using Interpolations
-import FixedSizeArrays: Vec
 @reexport using StaticArrays
 
 using FileIO

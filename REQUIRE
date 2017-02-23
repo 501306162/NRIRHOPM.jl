@@ -3,9 +3,8 @@ Reexport
 Combinatorics
 Memento
 
-FixedSizeArrays
-StaticArrays
 Interpolations
+StaticArrays 0.3
 
 FileIO
 Images 0.6
