@@ -3,25 +3,27 @@ function sum_diff_exp{S,T<:Real}(f, fixedImg::AbstractArray, movingImg::Abstract
     imageDims = size(fixedImg)
     imageDims == size(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same size."))
     length(imageDims) == S || throw(DimensionMismatch("Images and displacement vectors are NOT in the same dimension."))
-    cost = zeros(length(displacements), prod(gridDims))
+    cost = zeros(length(displacements), gridDims...)
     blockDims = map(/, imageDims, gridDims)
     blockDims = map(x->Int(floor(x)), blockDims)
     gridRange = CartesianRange(gridDims)
     𝒊₀ = first(gridRange)
     for a in eachindex(displacements), 𝒊 in gridRange
+        # offset = (𝒊 - 𝒊₀).I .* blockDims (pending 0.6)
         offset = map(*, (𝒊 - 𝒊₀).I, blockDims)
         s = zero(Float64)
         for 𝒋 in CartesianRange(blockDims)
+            # 𝐤 = offset .+ 𝒋.I
             𝐤 = map(+, offset, 𝒋.I)
-            𝐝 = SVector(𝐤) + displacements[a]
+            # 𝐝 = 𝐤 .+ blockDims .* displacements[a]
+            𝐝 = map(+, 𝐤, map(*, blockDims, displacements[a]))
             if checkbounds(Bool, movingImg, 𝐝...)
                 s += e^-f(fixedImg[𝐤...] - movingImg[𝐝...])
             end
         end
-        i = sub2ind(gridDims, 𝒊.I...)
-        cost[a,i] = s
+        cost[a,𝒊] = s
     end
-    return cost
+    return reshape(cost, length(displacements), prod(gridDims))
 end
 
 """
@@ -139,7 +141,7 @@ coordinate system(r,c):
        ↓
        r
 coordinate => point => label:
- ii => p1 => α   jj => p2 => β   kk => p3 => χ
+ 𝒊 => p1 => α   𝒋 => p2 => β   𝒌 => p3 => χ
 ```
 
 Refer to the following paper for further details:
@@ -175,7 +177,7 @@ coordinate system(r,c,z):
   to  |   left to right     × ×
  down ↓
 coordinate => point => label:
- iii => p1 => α   jjj => p2 => β   kkk => p3 => χ   mmm => p5 => δ
+ 𝒊 => p1 => α   𝒋 => p2 => β   𝒌 => p3 => χ   𝒎 => p5 => δ
 ```
 
 Refer to the following paper for further details:

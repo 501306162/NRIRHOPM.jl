@@ -39,10 +39,9 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
                            0 0 1 1 0 0;
                            1 1 1 1 0 0;
                            1 1 1 1 0 0]
-            displacementsScale = [SVector(i,j) for i in -2:2:2, j in -2:2:2]
-            costScale = sadexp(targetScale, sourceScale, displacementsScale, (3,3))
+            costScale = sadexp(targetScale, sourceScale, displacements, (3,3))
             @test all(costScale .>= 0)
-            for i in eachindex(targetImage) 
+            for i in eachindex(targetImage)
                 @test find(cost[:,i] .== maximum(cost[:,i])) == find(costScale[:,i] .== maximum(costScale[:,i]))
             end
         end
