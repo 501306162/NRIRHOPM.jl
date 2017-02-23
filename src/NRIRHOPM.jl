@@ -54,18 +54,19 @@ export multilevel
 export @timelog
 export loggerHOPMReg
 
-include("tensor.jl")
-include("model/neighbor.jl")
+include("util.jl")
 include("model/potential.jl")
+include("model/neighbor.jl")
 include("model/model.jl")
 include("model/clique.jl")
+include("optimizer/tensor.jl")
 include("optimizer/hopm.jl")
-include("interpolate.jl")
 include("optimizer/method.jl")
 include("optimizer/optimize.jl")
-include("util.jl")
-include("io.jl")
+include("label.jl")
+include("interpolate.jl")
 include("multilevel.jl")
+include("io.jl")
 
 loggerHOPMReg = basic_config("info"; fmt="[ {date} | {level} ]: {msg}")
 add_handler(loggerHOPMReg, DefaultHandler("HOPMReg.log", DefaultFormatter("[ {date} | {level} ]: {msg}")))
