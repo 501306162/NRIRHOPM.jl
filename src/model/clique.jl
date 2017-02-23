@@ -1,14 +1,15 @@
 """
     clique(fixedImg, movingImg, labels, model)
-    clique(fixedImg, movingImg, labels, model, weight)
+    clique(fixedImg, movingImg, labels, model, gridDims)
+    clique(fixedImg, movingImg, labels, model, gridDims, weight)
 
 Returns the **data cost** which should be a `length(labels)` by
 `length(fixedImg)` Float64 Matrix, the so called "spectrum".
 """
-@generated function clique{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, labels::AbstractArray, model::AbstractModel, weight::Real=1)
+@generated function clique{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, labels::AbstractArray, model::AbstractModel, gridDims::NTuple{N,Int}=size(fixedImg), weight::Real=1)
     fixedArgs = [:(getfield(model, $i)) for i = 1:nfields(model)]
     func = shift!(fixedArgs)
-    return :(weight*$func(fixedImg, movingImg, labels, $(fixedArgs...)))
+    return :(weight*$func(fixedImg, movingImg, labels, gridDims, $(fixedArgs...)))
 end
 
 """

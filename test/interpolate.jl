@@ -21,7 +21,7 @@ using Interpolations
                       3 3 3 3 1 1 1 1;
                       3 3 3 3 1 1 1 1]
 
-            spectrum = sadexp(fixed, moving, [(4,4),(-4,-4)])
+            spectrum = sadexp(fixed, moving, [SVector(4,4),SVector(-4,-4)])
 
             # (8,8) => (4,4)
             spectrumDown = downsample((4,4), (8,8), spectrum)
@@ -48,7 +48,7 @@ using Interpolations
                       2 3 4;
                       3 4 1]
 
-            spectrum = sadexp(fixed, moving, [(2,2),(-2,-2)])
+            spectrum = sadexp(fixed, moving, [SVector(2,2),SVector(-2,-2)])
             indicatorExpected = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
 
             inputDims, outDims = (3,3), (8,8)
@@ -58,7 +58,7 @@ using Interpolations
             fixedUp = fixedITP[1:8,1:8]
             movingUp = movingITP[1:8,1:8]
 
-            spectrum = sadexp(fixedUp, movingUp, [(2*8/3,2*8/3),(-2*8/3,-2*8/3)])
+            spectrum = sadexp(fixedUp, movingUp, [SVector(2*8/3,2*8/3),SVector(-2*8/3,-2*8/3)])
             spectrumDown = downsample((3,3), (8,8), spectrum)
             indicator = [indmax(spectrumDown[:,i]) for i in indices(spectrumDown,2)]
 

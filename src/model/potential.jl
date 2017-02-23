@@ -1,37 +1,46 @@
 # unary potentials
-function sum_diff_exp{S,T<:Real}(f, fixedImg::AbstractArray, movingImg::AbstractArray, displacements::AbstractArray{SVector{S,T}})
-    imageDims = indices(fixedImg)
-    imageDims == indices(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same indices."))
+function sum_diff_exp{S,T<:Real}(f, fixedImg::AbstractArray, movingImg::AbstractArray, displacements::AbstractArray{SVector{S,T}}, gridDims::NTuple)
+    imageDims = size(fixedImg)
+    imageDims == size(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same size."))
     length(imageDims) == S || throw(DimensionMismatch("Images and displacement vectors are NOT in the same dimension."))
-    movingImgITP = interpolate(movingImg, BSpline(Linear()), OnGrid())
-    cost = zeros(length(linearindices(displacements)), length(linearindices(fixedImg)))
-    for a in eachindex(displacements), 𝒊 in CartesianRange(imageDims)
-        i = sub2ind(imageDims, 𝒊.I...)
-        𝐝 = SVector(𝒊) + displacements[a]
-        if checkbounds(Bool, movingImg, 𝐝...)
-            cost[a,i] = e^-f(fixedImg[𝒊] - movingImgITP[𝐝...])
-        else
-            cost[a,i] = 0
+    cost = zeros(length(displacements), prod(gridDims))
+    blockDims = map(/, imageDims, gridDims)
+    blockDims = map(x->Int(floor(x)), blockDims)
+    gridRange = CartesianRange(gridDims)
+    𝒊₀ = first(gridRange)
+    for a in eachindex(displacements), 𝒊 in gridRange
+        offset = map(*, (𝒊 - 𝒊₀).I, blockDims)
+        s = zero(Float64)
+        for 𝒋 in CartesianRange(blockDims)
+            𝐤 = map(+, offset, 𝒋.I)
+            𝐝 = SVector(𝐤) + displacements[a]
+            if checkbounds(Bool, movingImg, 𝐝...)
+                s += e^-f(fixedImg[𝐤...] - movingImg[𝐝...])
+            end
         end
+        i = sub2ind(gridDims, 𝒊.I...)
+        cost[a,i] = s
     end
     return cost
 end
 
 """
     sadexp(fixedImg, movingImg, displacements)
+    sadexp(fixedImg, movingImg, displacements, gridDims)
 
 Calculates the sum of absolute differences between fixed(target) image and
 warpped image(moving image + displacements), then applys `f(x)=e⁻ˣ` to the result.
 """
-sadexp(fixedImg, movingImg, displacements) = sum_diff_exp(abs, fixedImg, movingImg, displacements)
+sadexp(fixedImg, movingImg, displacements, gridDims=size(fixedImg)) = sum_diff_exp(abs, fixedImg, movingImg, displacements, gridDims)
 
 """
     ssdexp(fixedImg, movingImg, displacements)
+    ssdexp(fixedImg, movingImg, displacements, gridDims)
 
 Calculates the sum of squared differences between fixed(target) image and
 warpped image(moving image + displacements), then applys `f(x)=e⁻ˣ` to the result.
 """
-ssdexp(fixedImg, movingImg, displacements) = sum_diff_exp(abs2, fixedImg, movingImg, displacements)
+ssdexp(fixedImg, movingImg, displacements, gridDims=size(fixedImg)) = sum_diff_exp(abs2, fixedImg, movingImg, displacements, gridDims)
 
 
 # pairwise potentials

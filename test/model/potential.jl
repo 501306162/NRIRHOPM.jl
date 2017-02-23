@@ -15,12 +15,6 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
     displacements = [SVector(i,j) for i in -1:1, j in -1:1]
     imageDims = indices(targetImage)
 
-    @testset "sum_diff_exp" begin
-        FloatDisplacements = [SVector(i,j) for i in -1:0.5:1, j in -1:0.5:1]
-        cost = sadexp(targetImage, sourceImage, FloatDisplacements)
-        @test all(cost .>= 0)
-    end
-
     @testset "sadexp" begin
         cost = sadexp(targetImage, sourceImage, displacements)
         @test all(cost .>= 0)
@@ -29,6 +23,27 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             for a in find(cost[:,i] .== maximum(cost[:,i]))
                 𝐝 = SVector(𝒊) + displacements[a]
                 @test targetImage[𝒊] == sourceImage[𝐝...]
+            end
+        end
+        @testset "scale" begin
+            targetScale = [1 1 0 0 1 1;
+                           1 1 0 0 1 1;
+                           0 0 1 1 0 0;
+                           0 0 1 1 0 0;
+                           0 0 1 1 1 1;
+                           0 0 1 1 1 1]
+
+            sourceScale = [1 1 0 0 1 1;
+                           1 1 0 0 1 1;
+                           0 0 1 1 0 0;
+                           0 0 1 1 0 0;
+                           1 1 1 1 0 0;
+                           1 1 1 1 0 0]
+            displacementsScale = [SVector(i,j) for i in -2:2:2, j in -2:2:2]
+            costScale = sadexp(targetScale, sourceScale, displacementsScale, (3,3))
+            @test all(costScale .>= 0)
+            for i in eachindex(targetImage) 
+                @test find(cost[:,i] .== maximum(cost[:,i])) == find(costScale[:,i] .== maximum(costScale[:,i]))
             end
         end
     end

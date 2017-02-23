@@ -9,7 +9,7 @@
               11 12 19 14 15;
               16 13 18 17 20;
               21 22 23 24 25]
-    displacements = [(i,j) for i in -2:2, j in -2:2]
+    displacements = [SVector(i,j) for i in -2:2, j in -2:2]
     imageDims = size(fixed)
     pixelNum, displaceNum = prod(imageDims), length(displacements)
 

@@ -1,12 +1,3 @@
-# define a custom DataCost type for later use
-# foorand(f, m, d, x) = x * rand(length(d), length(f))
-# if !isdefined(:FooRand)
-#     type FooRand{F<:Function,T<:Real} <: DataCost
-#         f::F
-#         x::T
-#     end
-# end
-
 @testset "clique" begin
     imageDims = (5,5)
     fixedImg = rand(imageDims)
@@ -15,23 +6,25 @@
     weight = rand()
 
     @testset "default" begin
-        s = clique(fixedImg, movingImg, displacements, SAD(), weight)
+        s = clique(fixedImg, movingImg, displacements, SAD())
         @test size(s) == (length(displacements), prod(imageDims))
 
-        t = clique(C8Pairwise(), imageDims, displacements, TAD(), weight)
+        t = clique(C8Pairwise(), imageDims, displacements, TAD())
         @test size(t) == (length(displacements), prod(imageDims), length(displacements), prod(imageDims))
         @test size(t.valBlocks[]) == (length(displacements), length(displacements))
     end
 
     @testset "custom" begin
         eval(quote
-            type FooRand{F<:Function,T<:Real} <: DataCost
-                f::F
-                x::T
+            if !isdefined(:FooRand)
+                type FooRand{F<:Function,T<:Real} <: DataCost
+                    f::F
+                    x::T
+                end
+                foorand(f, m, d, g, x) = x * rand(length(d), length(f))
             end
-            foorand(f, m, d, x) = x * rand(length(d), length(f))
         end)
-        r = clique(fixedImg, movingImg, displacements, FooRand(foorand,10), weight)
+        r = clique(fixedImg, movingImg, displacements, FooRand(foorand,10))
         @test size(r) == (length(displacements), prod(imageDims))
     end
 end
