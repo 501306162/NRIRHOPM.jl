@@ -1,4 +1,4 @@
-# copied from Base
+# The following two functions are inspired or copied from Julia's Base
 function timelog_sprint(elapsedtime, bytes, gctime, allocs)
     const _mem_units = ["byte", "KB", "MB", "GB", "TB", "PB"]
     const _cnt_units = ["", " k", " M", " G", " T", " P"]

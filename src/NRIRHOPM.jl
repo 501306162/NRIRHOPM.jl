@@ -14,16 +14,6 @@ using Unitful
 using Ranges
 
 
-# tensor
-export AbstractSymmetricSparseTensor, AbstractTensorBlockBSSTensor
-export ValueBlock, IndexBlock, BlockedTensor
-export contract, ⊙
-
-# neighbor
-export Connected4, Connected8, Connected6, Connected26, SquareCubic
-export C8Pairwise, C26Pairwise, C8Topology, C26Topology
-export neighbors
-
 # potential & model
 export AbstractModel
 export UnaryModel, DataCost, DataTerm
@@ -34,20 +24,33 @@ export SAD, SSD
 export Potts, TAD, TQD
 export TP2D, TP3D, TopologyCost
 
+# neighbor
+export Connected4, Connected8, Connected6, Connected26, SquareCubic
+export C8Pairwise, C26Pairwise, C8Topology, C26Topology
+export neighbors
+
 # clique
 export clique
+
+# tensor
+export AbstractSymmetricSparseTensor, AbstractTensorBlockBSSTensor
+export ValueBlock, IndexBlock, BlockedTensor
+export contract, ⊙
 
 # hopm & method
 export AbstractMethod, AbstractHOPMMethod
 export CanonHOPM, MixHOPM
 
-# interpolate
-export downsample, warp
-
 # optimize
 export optimize
 
-# multilevel
+# label
+export DVec2D, DVec3D, DVec, fieldlize
+
+# interpolate
+export upsample, warp
+
+# multiscale
 export multilevel
 
 # misc.
@@ -65,7 +68,7 @@ include("optimizer/method.jl")
 include("optimizer/optimize.jl")
 include("label.jl")
 include("interpolate.jl")
-include("multilevel.jl")
+include("multiscale.jl")
 include("io.jl")
 
 loggerHOPMReg = basic_config("info"; fmt="[ {date} | {level} ]: {msg}")

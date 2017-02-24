@@ -4,8 +4,8 @@ function sum_diff_exp{S,T<:Real}(f, fixedImg::AbstractArray, movingImg::Abstract
     imageDims == size(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same size."))
     length(imageDims) == S || throw(DimensionMismatch("Images and displacement vectors are NOT in the same dimension."))
     cost = zeros(length(displacements), gridDims...)
-    blockDims = map(/, imageDims, gridDims)
-    blockDims = map(x->Int(floor(x)), blockDims)
+    # blockDims = imageDims .÷ gridDims
+    blockDims = map(div, imageDims, gridDims)
     gridRange = CartesianRange(gridDims)
     𝒊₀ = first(gridRange)
     for a in eachindex(displacements), 𝒊 in gridRange

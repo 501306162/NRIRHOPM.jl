@@ -32,7 +32,7 @@ end
     ret = quote
         logger = get_logger(current_module())
         info(logger, "Creating data cost with weight=$α: ")
-        @timelog datacost = clique(fixedImg, movingImg, labels, data, α)
+        @timelog datacost = clique(fixedImg, movingImg, labels, data, gridDims, α)
 
         info(logger, "Creating smooth cost with weight=$β: ")
         @timelog smoothcost = clique($pneighbor, gridDims, labels, smooth, β)
