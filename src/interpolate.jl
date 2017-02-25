@@ -4,8 +4,9 @@ function upsample{T<:DVec,N}(displacementField::AbstractArray{T,N}, imageDims::N
     scaleFactors = T(map(div, imageDims, gridDims))
     knots = ntuple(x->linspace(1, gridDims[x]*scaleFactors[x], gridDims[x]), Val{N})
     itp = interpolate(knots, [scaleFactors.*𝐝 for 𝐝 in displacementField], Gridded(Linear()))
-    scaledField = similar(displacementField, imageDims)
-    for 𝒊 in CartesianRange(imageDims)
+    scaledField = zeros(T, imageDims)
+    scaledDims = convert(NTuple{N,Int}, map(*, gridDims, scaleFactors))
+    for 𝒊 in CartesianRange(scaledDims)
         scaledField[𝒊] = itp[𝒊]
     end
     return scaledField
