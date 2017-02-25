@@ -19,7 +19,7 @@ moving[2,2,2] = 23
 moving[2,2,3] = 25
 moving[1,3,3] = 16
 
-displacements = [(i,j,k) for i in -1:1, j in -1:1, k in -1:1]
+displacements = [SVector(i,j,k) for i in -1:1, j in -1:1, k in -1:1]
 
 warpped, d, spec, energy = multilevel(fixed, moving, [displacements], [(3,3,3)], topology=TP3D(), β=0.1, χ=0.01)
 
@@ -35,7 +35,7 @@ fixedUp = fixedITP[1:6,1:6,1:6]
 movingITP = interpolate(knots, moving, Gridded(Linear()))
 movingUp = movingITP[1:6,1:6,1:6]
 
-displacements = [(i,j,k) for i in -1:1, j in -1:1, k in -1:1]
+displacements = [SVector(i,j,k) for i in -1:1, j in -1:1, k in -1:1]
 displacementSet = [displacements, displacements]
 gridSet = [dim0, dim1]
 

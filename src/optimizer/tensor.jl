@@ -75,7 +75,7 @@ end
 
 function _contract{T<:Real}(vals::ValueBlock{T,2}, idxs::IndexBlock{NTuple{2,Int}}, mat::Matrix{T})
     s = zeros(mat)
-    for (i,j) in idxs, 𝒊 in CartesianRange(size(vals))
+    @inbounds for (i,j) in idxs, 𝒊 in CartesianRange(size(vals))
         a, b = 𝒊.I
         s[a,i] += vals[a,b] * mat[b,j]
         s[b,j] += vals[a,b] * mat[a,i]
@@ -85,7 +85,7 @@ end
 
 function _contract{T<:Real}(vals::ValueBlock{T,3}, idxs::IndexBlock{NTuple{3,Int}}, mat::Matrix{T})
     s = zeros(mat)
-    for (i,j,k) in idxs, 𝒊 in CartesianRange(size(vals))
+    @inbounds for (i,j,k) in idxs, 𝒊 in CartesianRange(size(vals))
         a, b, c = 𝒊.I
         s[a,i] += 2.0 * vals[a,b,c] * mat[b,j] * mat[c,k]
         s[b,j] += 2.0 * vals[a,b,c] * mat[a,i] * mat[c,k]
@@ -96,7 +96,7 @@ end
 
 function _contract{T<:Real}(vals::ValueBlock{T,4}, idxs::IndexBlock{NTuple{4,Int}}, mat::Matrix{T})
     s = zeros(mat)
-    for (i, j, k, m) in idxs, 𝒊 in CartesianRange(size(vals))
+    @inbounds for (i, j, k, m) in idxs, 𝒊 in CartesianRange(size(vals))
         a, b, c, d = 𝒊.I
         s[a,i] += 6.0 * vals[a,b,c,d] * mat[b,j] * mat[c,k] * mat[d,m]
         s[b,j] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[c,k] * mat[d,m]

@@ -1,9 +1,10 @@
 julia 0.5
+Reexport
 Combinatorics
 Memento
 
-FixedSizeArrays
 Interpolations
+StaticArrays 0.3
 
 FileIO
 Images 0.6

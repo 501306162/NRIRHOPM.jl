@@ -1,38 +1,30 @@
-fieldlize(indicator, displacements, ImageDims) = reshape([Vec(displacements[i]) for i in indicator], ImageDims)
-
-function interpolate_spectrum{N}(dimsOut::NTuple{N}, dimsIn::NTuple{N}, spectrum::Matrix)
-    spectrumVec = reshape([Vec(spectrum[:,i]) for i = 1:prod(dimsIn)], dimsIn)
-    knots = ntuple(x->linspace(1, dimsOut[x], dimsIn[x]), Val{N})
-    spectrumVecITP = interpolate(knots, spectrumVec, Gridded(Linear()))
-    spectrumInterpolated = zeros(size(spectrum,1), prod(dimsOut))
-    for 𝒊 in CartesianRange(dimsOut)
-        c = sub2ind(dimsOut, 𝒊.I...)
-        spectrumInterpolated[:,c] = collect(spectrumVecITP[𝒊])
+function upsample{T<:DVec,N}(displacementField::AbstractArray{T,N}, imageDims::NTuple{N,Int})
+    gridDims = size(displacementField)
+    # scaleFactors = T(imageDims .÷ gridDims) (pending julia-v0.6)
+    scaleFactors = T(map(div, imageDims, gridDims))
+    knots = ntuple(x->linspace(1, gridDims[x]*scaleFactors[x], gridDims[x]), Val{N})
+    itp = interpolate(knots, [scaleFactors.*𝐝 for 𝐝 in displacementField], Gridded(Linear()))
+    scaledField = zeros(T, imageDims)
+    scaledDims = convert(NTuple{N,Int}, map(*, gridDims, scaleFactors))
+    for 𝒊 in CartesianRange(scaledDims)
+        scaledField[𝒊] = itp[𝒊]
     end
-    return spectrumInterpolated
+    return scaledField
 end
 
-downsample(dimsDown, dims, spectrum) = interpolate_spectrum(dimsDown, dims, spectrum)
-
-function warp{N,T<:Real,D<:Interpolations.Degree}(movingImg, displacementField::Array{Vec{N,T},N}, itpType::D=Linear())
-    logger = get_logger(current_module())
-    imageDims = size(movingImg)
-    gridDims = size(displacementField)
-    # scale displacementField
-    # Todo: factors = imageDims ./ gridDims (pending julia-v0.6)
-    factors = map(x->imageDims[x]/gridDims[x], 1:N)
-    scaled = [Vec(map(x->factors[x]*𝐝[x],1:N)) for 𝐝 in displacementField]
-    knots = ntuple(x->linspace(1, imageDims[x], gridDims[x]), Val{N})
-    displacementITP = interpolate(knots, scaled, Gridded(itpType))
-    movingImgITP = interpolate(movingImg, BSpline(Linear()), OnGrid())
-    warppedImg = zeros(size(movingImg))
-    for 𝒊 in CartesianRange(imageDims)
-        # Todo: 𝐝 = 𝒊.I .+ collect(displacementITP[𝒊]) (pending julia-v0.6)
-        𝐝 = tuple([𝒊[i]+displacementITP[𝒊][i] for i = 1:N]...)
-        if Base.checkbounds_indices(Bool, indices(movingImg), 𝐝)
-            warppedImg[𝒊] = movingImgITP[𝐝...]
+function warp(movingImg, displacementField)
+    # itp = extrapolate(interpolate(movingImg, BSpline(Linear()), OnGrid()), Flat())
+    itp = interpolate(movingImg, BSpline(Linear()), OnGrid())
+    warppedImg = similar(movingImg)
+    outboudscount = 0
+    for 𝒊 in CartesianRange(size(movingImg))
+        𝐝 = map(+, 𝒊.I, displacementField[𝒊])
+        if checkbounds(Bool, movingImg, 𝐝...)
+            warppedImg[𝒊] = itp[𝐝...]
         else
-            warn(logger, "𝐝($𝐝) is outbound, skipped.")
+            warn("$𝒊 => $𝐝 outbouds!")
+            outboudscount += 1
+            outboudscount == 30 && break
         end
     end
     return warppedImg

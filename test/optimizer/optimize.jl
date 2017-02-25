@@ -9,14 +9,14 @@
               11 12 19 14 15;
               16 13 18 17 20;
               21 22 23 24 25]
-    displacements = [(i,j) for i in -2:2, j in -2:2]
+    displacements = [SVector(i,j) for i in -2:2, j in -2:2]
     imageDims = size(fixed)
     pixelNum, displaceNum = prod(imageDims), length(displacements)
 
     @testset "data+smooth" begin
         energy, spectrum = optimize(fixed, moving, displacements, imageDims, MixHOPM(), SAD(), 1, TAD(), 0.05)
         indicator = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
-        displacementField = fieldlize(indicator, displacements, imageDims)
+        displacementField = reshape([displacements[i] for i in indicator], imageDims)
         warppedImg = warp(moving, displacementField)
         @test warppedImg == fixed
     end
@@ -24,7 +24,7 @@
     @testset "data+smooth+topology" begin
         energy, spectrum = optimize(fixed, moving, displacements, imageDims, MixHOPM(), SAD(), 1, TAD(), 0.05, TP2D(), 0.01)
         indicator = [indmax(spectrum[:,i]) for i in indices(spectrum,2)]
-        displacementField = fieldlize(indicator, displacements, imageDims)
+        displacementField = reshape([displacements[i] for i in indicator], imageDims)
         warppedImg = warp(moving, displacementField)
         @test warppedImg == fixed
     end
