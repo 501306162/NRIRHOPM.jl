@@ -115,8 +115,8 @@ TQD(;c=1.0, d=Inf) = TQD(c, d)
 
 Returns 4 cost value blocks calculated from `jᶠᶠ`, `jᵇᶠ`, `jᶠᵇ`, `jᵇᵇ` respectively.
 """
-@inline topology2d(d::AbstractVector) = [[jᶠᶠ(α, β, χ) for α in d, β in d, χ in d], [jᵇᶠ(α, β, χ) for α in d, β in d, χ in d],
-                                         [jᶠᵇ(α, β, χ) for α in d, β in d, χ in d], [jᵇᵇ(α, β, χ) for α in d, β in d, χ in d]]
+@inline topology2d(d::AbstractVector) = [[jᶠᶠexp(α, β, χ) for α in d, β in d, χ in d], [jᵇᶠexp(α, β, χ) for α in d, β in d, χ in d],
+                                         [jᶠᵇexp(α, β, χ) for α in d, β in d, χ in d], [jᵇᵇexp(α, β, χ) for α in d, β in d, χ in d]]
 
 """
     TP2D()
@@ -135,14 +135,14 @@ TP2D() = TP2D(topology2d)
 Returns 8 cost value blocks calculated from `jᶠᶠᶠ`, `jᵇᶠᶠ`, `jᶠᵇᶠ`, `jᵇᵇᶠ`,
 `jᶠᶠᵇ`, `jᵇᶠᵇ`, `jᶠᵇᵇ`, `jᵇᵇᵇ` espectively.
 """
-@inline topology3d(d::AbstractVector) = [[jᶠᶠᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                         [jᵇᶠᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                         [jᶠᵇᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                         [jᵇᵇᶠ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                         [jᶠᶠᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                         [jᵇᶠᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                         [jᶠᵇᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
-                                         [jᵇᵇᵇ(α, β, χ, δ) for α in d, β in d, χ in d, δ in d]]
+@inline topology3d(d::AbstractVector) = [[jᶠᶠᶠexp(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                         [jᵇᶠᶠexp(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                         [jᶠᵇᶠexp(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                         [jᵇᵇᶠexp(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                         [jᶠᶠᵇexp(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                         [jᵇᶠᵇexp(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                         [jᶠᵇᵇexp(α, β, χ, δ) for α in d, β in d, χ in d, δ in d],
+                                         [jᵇᵇᵇexp(α, β, χ, δ) for α in d, β in d, χ in d, δ in d]]
 
 """
     TP3D()

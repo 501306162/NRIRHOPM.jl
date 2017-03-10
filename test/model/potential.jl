@@ -94,7 +94,6 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
     end
 
     @testset "topology preserving" begin
-        # 1 => topology preserving, 0 => otherwise.
         #Refer to the following paper for further details:
         # Cordero-Grande, Lucilio, et al. "A Markov random field approach for
         # topology-preserving registration: Application to object-based tomographic image
@@ -105,7 +104,6 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             ∂φ₂∂φ₁ = (𝐤s₂[2] - 𝐤s₁[2]) * (𝐤s₂[1] - 𝐤s₃[1])
             ∂r₁∂r₂ = (s₂[1] - s₁[1])*(s₂[2] - s₃[2])
             v = (∂φ₁∂φ₂ - ∂φ₂∂φ₁) / ∂r₁∂r₂
-            return v > 0 ? 1.0 : 0.0
         end
         # topology_preserving's coordinate system:   y
         #   □ ▦ □        ▦                ▦          ↑        ⬔ => p1 => a
@@ -123,29 +121,29 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             p1 = @SVector rand(UInt8, 2); a0 = @SVector [-1,-1]; a1 = @SVector [ 1, 1]
             p2 = p1 - [1,0];              b0 = @SVector [ 0,-1]; b1 = @SVector [ 0,-1]
             p3 = p1 + [0,1];              c0 = @SVector [-1, 1]; c1 = @SVector [-1, 1]
-            @test jᵇᶠ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) == 0
-            @test jᵇᶠ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) == 1
+            @test jᵇᶠ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
+            @test jᵇᶠ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
 
             # test for Jᵇᵇ
             p1 = @SVector rand(UInt8, 2); a0 = @SVector [-1,-1]; a1 = @SVector [1,-1]
             p2 = p1 - @SVector [1,0];     b0 = @SVector [ 0, 0]; b1 = @SVector [0, 0]
             p3 = p1 - @SVector [0,1];     c0 = @SVector [ 0, 0]; c1 = @SVector [0, 0]
-            @test jᵇᵇ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) == 0
-            @test jᵇᵇ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) == 1
+            @test jᵇᵇ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
+            @test jᵇᵇ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
 
             # test for Jᶠᵇ
             p1 = @SVector rand(UInt8, 2); a0 = @SVector [1,-1]; a1 = @SVector [-1, 1]
             p2 = p1 + @SVector [1,0];     b0 = @SVector [0, 0]; b1 = @SVector [ 0, 0]
             p3 = p1 - @SVector [0,1];     c0 = @SVector [0, 0]; c1 = @SVector [ 0, 0]
-            @test jᶠᵇ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) == 0
-            @test jᶠᵇ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) == 1
+            @test jᶠᵇ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
+            @test jᶠᵇ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
 
             # test for Jᶠᶠ
             p1 = @SVector rand(UInt8, 2); a0 = @SVector [1, 1]; a1 = @SVector [-1,-1]
             p2 = p1 + @SVector [1,0];     b0 = @SVector [0, 0]; b1 = @SVector [ 0, 0]
             p3 = p1 + @SVector [0,1];     c0 = @SVector [0, 0]; c1 = @SVector [ 0, 0]
-            @test jᶠᶠ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) == 0
-            @test jᶠᶠ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) == 1
+            @test jᶠᶠ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
+            @test jᶠᶠ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
         end
 
         # coordinate system(r,c,z):
@@ -159,16 +157,22 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             b = @SVector [0,0,0]
             c = @SVector [0,0,0]
             d = @SVector [0,0,0]
-            @test jᶠᶠᶠ(a,b,c,d) == jᵇᶠᶠ(a,b,c,d) == jᶠᵇᶠ(a,b,c,d) == jᵇᵇᶠ(a,b,c,d) == 1
-            @test jᶠᶠᵇ(a,b,c,d) == jᵇᶠᵇ(a,b,c,d) == jᶠᵇᵇ(a,b,c,d) == jᵇᵇᵇ(a,b,c,d) == 1
-            @test jᶠᶠᶠ(SVector( 1, 1, 1),b,c,d) == 0
-            @test jᵇᶠᶠ(SVector(-1, 1, 1),b,c,d) == 0
-            @test jᶠᵇᶠ(SVector( 1,-1, 1),b,c,d) == 0
-            @test jᵇᵇᶠ(SVector(-1,-1, 1),b,c,d) == 0
-            @test jᶠᶠᵇ(SVector( 1, 1,-1),b,c,d) == 0
-            @test jᵇᶠᵇ(SVector(-1, 1,-1),b,c,d) == 0
-            @test jᶠᵇᵇ(SVector( 1,-1,-1),b,c,d) == 0
-            @test jᵇᵇᵇ(SVector(-1,-1,-1),b,c,d) == 0
+            @test jᶠᶠᶠ(a,b,c,d) > 0
+            @test jᵇᶠᶠ(a,b,c,d) > 0
+            @test jᶠᵇᶠ(a,b,c,d) > 0
+            @test jᵇᵇᶠ(a,b,c,d) > 0
+            @test jᶠᶠᵇ(a,b,c,d) > 0
+            @test jᵇᶠᵇ(a,b,c,d) > 0
+            @test jᶠᵇᵇ(a,b,c,d) > 0
+            @test jᵇᵇᵇ(a,b,c,d) > 0
+            @test jᶠᶠᶠ(SVector( 1, 1, 1),b,c,d) ≤ 0
+            @test jᵇᶠᶠ(SVector(-1, 1, 1),b,c,d) ≤ 0
+            @test jᶠᵇᶠ(SVector( 1,-1, 1),b,c,d) ≤ 0
+            @test jᵇᵇᶠ(SVector(-1,-1, 1),b,c,d) ≤ 0
+            @test jᶠᶠᵇ(SVector( 1, 1,-1),b,c,d) ≤ 0
+            @test jᵇᶠᵇ(SVector(-1, 1,-1),b,c,d) ≤ 0
+            @test jᶠᵇᵇ(SVector( 1,-1,-1),b,c,d) ≤ 0
+            @test jᵇᵇᵇ(SVector(-1,-1,-1),b,c,d) ≤ 0
         end
     end
 end
