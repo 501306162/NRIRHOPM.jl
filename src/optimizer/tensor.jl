@@ -66,36 +66,31 @@ contract(𝑻::BlockedTensor, 𝐯::Vector) = reshape(𝑻 ⊙ reshape(𝐯,size
 function contract(𝑻::BlockedTensor, 𝐕::Matrix)
     𝐌 = zeros(𝐕)
     for (vals,idxs) in zip(𝑻.valBlocks, 𝑻.idxBlocks)
-        𝐌 += _contract(vals, idxs, 𝐕)
+        _contract!(𝐌, vals, idxs, 𝐕)
     end
     return 𝐌
 end
 # handy operator ⊙ (\odot)
 ⊙ = contract
 
-function _contract{T<:Real}(vals::ValueBlock{T,2}, idxs::IndexBlock{NTuple{2,Int}}, mat::Matrix{T})
-    s = zeros(mat)
+function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,2}, idxs::IndexBlock{NTuple{2,Int}}, mat::Matrix{T})
     @inbounds for (i,j) in idxs, 𝒊 in CartesianRange(size(vals))
         a, b = 𝒊.I
         s[a,i] += vals[a,b] * mat[b,j]
         s[b,j] += vals[a,b] * mat[a,i]
     end
-    return s
 end
 
-function _contract{T<:Real}(vals::ValueBlock{T,3}, idxs::IndexBlock{NTuple{3,Int}}, mat::Matrix{T})
-    s = zeros(mat)
+function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,3}, idxs::IndexBlock{NTuple{3,Int}}, mat::Matrix{T})
     @inbounds for (i,j,k) in idxs, 𝒊 in CartesianRange(size(vals))
         a, b, c = 𝒊.I
         s[a,i] += 2.0 * vals[a,b,c] * mat[b,j] * mat[c,k]
         s[b,j] += 2.0 * vals[a,b,c] * mat[a,i] * mat[c,k]
         s[c,k] += 2.0 * vals[a,b,c] * mat[a,i] * mat[b,j]
     end
-    return s
 end
 
-function _contract{T<:Real}(vals::ValueBlock{T,4}, idxs::IndexBlock{NTuple{4,Int}}, mat::Matrix{T})
-    s = zeros(mat)
+function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,4}, idxs::IndexBlock{NTuple{4,Int}}, mat::Matrix{T})
     @inbounds for (i, j, k, m) in idxs, 𝒊 in CartesianRange(size(vals))
         a, b, c, d = 𝒊.I
         s[a,i] += 6.0 * vals[a,b,c,d] * mat[b,j] * mat[c,k] * mat[d,m]
@@ -103,5 +98,4 @@ function _contract{T<:Real}(vals::ValueBlock{T,4}, idxs::IndexBlock{NTuple{4,Int
         s[c,k] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[b,j] * mat[d,m]
         s[d,m] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[b,j] * mat[c,k]
     end
-    return s
 end
