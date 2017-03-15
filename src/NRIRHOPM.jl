@@ -8,7 +8,7 @@ using Interpolations
 @reexport using StaticArrays
 
 using FileIO
-using Images
+@reexport using Images
 using NIfTI
 using Unitful
 using Ranges
