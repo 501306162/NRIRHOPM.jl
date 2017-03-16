@@ -7,7 +7,7 @@ using Memento
 using Interpolations
 @reexport using StaticArrays
 
-using FileIO
+@reexport using FileIO
 @reexport using Images
 using NIfTI
 using Unitful
@@ -53,6 +53,9 @@ export upsample, warp
 # multiscale
 export multilevel
 
+# io
+export readDIRLab
+
 # misc.
 export @timelog
 export loggerHOPMReg
@@ -69,7 +72,8 @@ include("optimizer/optimize.jl")
 include("label.jl")
 include("interpolate.jl")
 include("multiscale.jl")
-include("io.jl")
+include("io/constant.jl")
+include("io/io.jl")
 
 loggerHOPMReg = basic_config("info"; fmt="[ {date} | {level} ]: {msg}")
 add_handler(loggerHOPMReg, DefaultHandler("HOPMReg.log", DefaultFormatter("[ {date} | {level} ]: {msg}")))
