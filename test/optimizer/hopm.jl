@@ -23,7 +23,7 @@ import NRIRHOPM: constrain!, hopm_mixed, hopm_canonical
     end
     pidxs = [IndexBlock(pindex)]
     pdims = (valN, idxN, valN, idxN)
-    𝐓 = BlockedTensor(pvals, pidxs, pdims)
+    𝐓 = CompositeBlockedTensor(pvals, pidxs, pdims)
     full𝐓 = full(𝐓)
 
     # construct high order tensor
@@ -36,7 +36,7 @@ import NRIRHOPM: constrain!, hopm_mixed, hopm_canonical
     end
     tidxs = [IndexBlock(tindex)]
     tdims = (valN, idxN, valN, idxN, valN, idxN)
-    𝑻 = BlockedTensor(tvals, tidxs, tdims)
+    𝑻 = CompositeBlockedTensor(tvals, tidxs, tdims)
     full𝑻 = full(𝑻)
 
     @testset "2nd order canonical" begin
@@ -85,7 +85,7 @@ import NRIRHOPM: constrain!, hopm_mixed, hopm_canonical
         y = abs.(y)
 
         # hopm_canonical
-        zero𝐓 = BlockedTensor([ValueBlock(zeros(valN,valN,valN))], [IndexBlock(NTuple{3,Int}[])], size(𝐓))
+        zero𝐓 = CompositeBlockedTensor([ValueBlock(zeros(valN,valN,valN))], [IndexBlock(NTuple{3,Int}[])], size(𝐓))
         energy, Z = hopm_canonical(𝐭, zero𝐓, 𝑻, rand(valN, idxN), tolerance, maxIteration)
         z = reshape(Z, length(Z))
 

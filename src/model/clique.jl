@@ -21,10 +21,18 @@ Todo: document this
 @generated function clique{N,C}(neighbor::Neighborhood{N,C}, imageDims::NTuple{N}, labels::AbstractArray, model::AbstractModel, weight::Real=1)
     fixedArgs = [:(getfield(model, $i)) for i = 1:nfields(model)]
     func = shift!(fixedArgs)
-    ret = quote
-        𝓭 = reshape(labels, length(labels))
-        vals = $func(𝓭, $(fixedArgs...))
-        idxs = neighbors(neighbor, imageDims)
-        BlockedTensor(map(x->ValueBlock(weight*x), vals), map(x->IndexBlock(x), idxs), ntuple(x->isodd(x) ? length(labels) : prod(imageDims), Val{2*$C}))
+    if neighbor <: CnTopology
+        ret = quote
+            valBlocks = $func(reshape(labels, length(labels)), $(fixedArgs...))
+            idxBlocks = neighbors(neighbor, imageDims)
+            CompositeBlockedTensor(map(x->ValueBlock(weight*x), valBlocks), map(x->IndexBlock(x), idxBlocks), ntuple(x->isodd(x) ? length(labels) : prod(imageDims), Val{2*$C}))
+        end
+    else
+        ret = quote
+            vals = $func(reshape(labels, length(labels)), $(fixedArgs...))
+            idxs = neighbors(neighbor, imageDims)
+            BlockedTensor(weight*vals, idxs, ntuple(x->isodd(x) ? length(labels) : prod(imageDims), Val{2*$C}))
+        end
     end
+    ret
 end

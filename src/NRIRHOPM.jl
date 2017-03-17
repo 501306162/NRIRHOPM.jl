@@ -28,7 +28,7 @@ export TP2D, TP3D, TopologyCost
 
 # neighbor
 export Connected4, Connected8, Connected6, Connected26, SquareCubic
-export C8Pairwise, C26Pairwise, C8Topology, C26Topology
+export C8Pairwise, C26Pairwise, C8Topology, C26Topology, CnTopology
 export neighbors
 
 # clique
@@ -36,7 +36,7 @@ export clique
 
 # tensor
 export AbstractSymmetricSparseTensor, AbstractTensorBlockBSSTensor
-export ValueBlock, IndexBlock, BlockedTensor
+export ValueBlock, IndexBlock, CompositeBlockedTensor
 export contract, ⊙
 
 # hopm & method

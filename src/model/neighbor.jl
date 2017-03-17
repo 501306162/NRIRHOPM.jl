@@ -13,6 +13,8 @@ type C26Pairwise <: Connected26{2} end
 type C8Topology <: Connected8{3} end
 type C26Topology <: Connected26{4} end
 
+typealias CnTopology Union{C8Topology, C26Topology}
+
 """
     neighbors(C8Pairwise(), imageDims) -> Vector{idxs}
     neighbors(C26Pairwise(), imageDims) -> Vector{idxs}
@@ -31,7 +33,7 @@ function neighbors{T<:SquareCubic}(::T, imageDims)
             end
         end
     end
-    return [idx]
+    return idx
 end
 
 """

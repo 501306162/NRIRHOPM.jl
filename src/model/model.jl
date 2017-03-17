@@ -41,7 +41,14 @@ SSD() = SSD(ssdexp)
 
 Returns cost value block calculated via `pottsexp`.
 """
-default_potts(𝓭::AbstractVector, d) = [[pottsexp(α, β, d) for α in 𝓭, β in 𝓭]]
+default_potts(𝓭::AbstractVector, d) = [pottsexp(α, β, d) for α in 𝓭, β in 𝓭]
+
+"""
+    p3_potts(𝓭, d) -> Vector{vals}
+
+Returns cost value block calculated via `p3pottsexp`.
+"""
+p3_potts(𝓭::AbstractVector, d) = [p3pottsexp(α, β, χ, d) for α in 𝓭, β in 𝓭, χ in 𝓭]
 
 """
     Potts()
@@ -61,7 +68,7 @@ Potts(d=1.0) = Potts(default_potts, d)
 
 Returns cost value block calculated via `tadexp`.
 """
-default_tad(𝓭::AbstractVector, c, d) = [[tadexp(α, β, c, d) for α in 𝓭, β in 𝓭]]
+default_tad(𝓭::AbstractVector, c, d) = [tadexp(α, β, c, d) for α in 𝓭, β in 𝓭]
 
 """
     TAD()
@@ -88,7 +95,7 @@ TAD(;c=1.0, d=Inf) = TAD(c, d)
 
 Returns cost value block calculated via `tqdexp`.
 """
-default_tqd(𝓭::AbstractVector, c, d) = [[tqdexp(α, β, c, d) for α in 𝓭, β in 𝓭]]
+default_tqd(𝓭::AbstractVector, c, d) = [tqdexp(α, β, c, d) for α in 𝓭, β in 𝓭]
 
 """
     TQD()

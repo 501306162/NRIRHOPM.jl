@@ -12,19 +12,19 @@
         p = Potts()
         vals = p.f(displacements, p.d)
         @test p.d == 1
-        @test size(vals[]) == (displaceLen, displaceLen)
+        @test size(vals) == (displaceLen, displaceLen)
 
         t = TAD()
         vals = t.f(displacements, t.c, t.d)
         @test t.c == 1.0
         @test t.d == Inf
-        @test size(vals[]) == (displaceLen, displaceLen)
+        @test size(vals) == (displaceLen, displaceLen)
 
         t = TQD()
         vals = t.f(displacements, t.c, t.d)
         @test t.c == 1.0
         @test t.d == Inf
-        @test size(vals[]) == (displaceLen, displaceLen)
+        @test size(vals) == (displaceLen, displaceLen)
     end
 
     @testset "TopologyModel" begin

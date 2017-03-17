@@ -18,20 +18,20 @@ using TensorOperations
         @test_throws BoundsError X[2,2]
     end
 
-    @testset "BlockedTensor" begin
+    @testset "CompositeBlockedTensor" begin
         V = rand(3,3)
         vals = [ValueBlock(V)]
         idxs = [IndexBlock([(1,2),(2,2),(3,1)])]
         dims = (3,3,3,2)
-        X = BlockedTensor(vals,idxs,dims)
+        X = CompositeBlockedTensor(vals,idxs,dims)
         @test X[:,1,:,2] == X[:,2,:,2] == X[:,3,:,1] == V
-        @test X == BlockedTensor(vals,idxs,dims)
+        @test X == CompositeBlockedTensor(vals,idxs,dims)
     end
 
     valN = 3
     idxN = 4
     @testset "4th order contract" begin
-        # construct a BlockedTensor
+        # construct a CompositeBlockedTensor
         vals = [ValueBlock(rand(valN, valN))]
         index = NTuple{2,Int}[]
         for 𝒊 in CartesianRange((idxN,idxN))
@@ -41,7 +41,7 @@ using TensorOperations
         end
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN)
-        X = BlockedTensor(vals, idxs, dims)
+        X = CompositeBlockedTensor(vals, idxs, dims)
         # convert x to a full symmetric tensor
         Y = full(X)
         @test Y[1,2,2,1] == Y[2,1,1,2] == X[2,1,1,2]
@@ -59,7 +59,7 @@ using TensorOperations
     end
 
     @testset "6th order contract" begin
-        # construct a BlockedTensor
+        # construct a CompositeBlockedTensor
         vals = [ValueBlock(rand(valN, valN, valN))]
         index = NTuple{3,Int}[]
         for 𝒊 in CartesianRange((idxN,idxN,idxN))
@@ -69,7 +69,7 @@ using TensorOperations
         end
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN, valN, idxN)
-        X = BlockedTensor(vals, idxs, dims)
+        X = CompositeBlockedTensor(vals, idxs, dims)
         # convert x to a full symmetric tensor
         Y = full(X)
         @test Y[1,2,2,3,2,1] == Y[2,3,2,1,1,2] == Y[2,1,1,2,2,3] == X[2,1,1,2,2,3]
@@ -87,7 +87,7 @@ using TensorOperations
     end
 
     @testset "8th order contract" begin
-        # construct a BlockedTensor
+        # construct a CompositeBlockedTensor
         vals = [ValueBlock(rand(valN, valN, valN, valN))]
         index = NTuple{4,Int}[]
         for 𝒊 in CartesianRange((idxN,idxN,idxN,idxN))
@@ -97,7 +97,7 @@ using TensorOperations
         end
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN, valN, idxN, valN, idxN)
-        X = BlockedTensor(vals, idxs, dims)
+        X = CompositeBlockedTensor(vals, idxs, dims)
         # convert x to a full symmetric tensor
         Y = full(X)
         @test Y[1,2,2,3,3,4,2,1] == Y[3,4,2,3,2,1,1,2] == Y[2,1,1,2,2,3,3,4] == X[2,1,1,2,2,3,3,4]

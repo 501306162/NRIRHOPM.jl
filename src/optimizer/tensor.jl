@@ -1,6 +1,24 @@
 abstract AbstractSymmetricSparseTensor{T,N} <: AbstractArray{T,N}
 abstract AbstractTensorBlock{T,N} <: AbstractArray{T,N}
 
+immutable BlockedTensor{Tv<:Real,N,Ti<:NTuple,Order} <: AbstractSymmetricSparseTensor{Tv,Order}
+    vals::Array{Tv,N}
+    idxs::Vector{Ti}
+    dims::NTuple{Order,Int}
+end
+Base.:(==)(A::BlockedTensor, B::BlockedTensor) = A.vals == B.vals && A.idxs == B.idxs && A.dims == B.dims
+function Base.getindex{Tv<:Real,N,Ti<:NTuple,Order}(A::BlockedTensor{Tv,N,Ti,Order}, I::Vararg{Int,Order})
+    # do NOT use this method in performance-sensitive code
+    out = zero(Tv)
+    # assume (a,i,b,j,c,k) indexing
+    oddIdxs = I[1:2:end]
+    evenIdxs = I[2:2:end]
+    if evenIdxs in A.idxs
+        out = getindex(A.vals, oddIdxs...)
+    end
+    out
+end
+
 
 immutable ValueBlock{T<:Real,N} <: AbstractTensorBlock{T,N}
     vals::Array{T,N}
@@ -9,7 +27,6 @@ Base.size(A::ValueBlock) = size(A.vals)
 Base.getindex(A::ValueBlock, i::Integer) = A.vals[i]
 Base.getindex{T<:Real,N}(A::ValueBlock{T,N}, I::Vararg{Int,N}) = A.vals[I...]
 Base.:(==)(A::ValueBlock, B::ValueBlock) = A.vals == B.vals
-
 
 # todo: IndexBlock{N,T<:NTuple{N,Int}} -- this is the so called triangular dispatch, which will be supported on julia-v0.6+.
 immutable IndexBlock{T<:NTuple} <: AbstractTensorBlock{T,1}
@@ -20,20 +37,18 @@ Base.getindex(A::IndexBlock, i::Integer) = A.idxs[i]
 Base.getindex(A::IndexBlock, I...) = A.idxs[I...]
 Base.:(==)(A::IndexBlock, B::IndexBlock) = A.idxs == B.idxs
 
-
-# todo: BlockedTensor{Tv<:Real,N,Ti<:NTuple{N,Int},Order}
-immutable BlockedTensor{Tv<:Real,N,Ti<:NTuple,Order} <: AbstractSymmetricSparseTensor{Tv,Order}
+# todo: CompositeBlockedTensor{Tv<:Real,N,Ti<:NTuple{N,Int},Order}
+immutable CompositeBlockedTensor{Tv<:Real,N,Ti<:NTuple,Order} <: AbstractSymmetricSparseTensor{Tv,Order}
     valBlocks::Vector{ValueBlock{Tv,N}}
     idxBlocks::Vector{IndexBlock{Ti}}
     dims::NTuple{Order,Int}
 end
-Base.size(A::BlockedTensor) = A.dims
-function Base.getindex{Tv<:Real,N,Ti<:NTuple,Order}(A::BlockedTensor{Tv,N,Ti,Order}, I::Vararg{Int,Order})
+function Base.getindex{Tv<:Real,N,Ti<:NTuple,Order}(A::CompositeBlockedTensor{Tv,N,Ti,Order}, I::Vararg{Int,Order})
     # this method iterates over all idxBlocks to query the result,
     # which is very slow and should not be used in performance-sensitive code.
-    # the use case is playing or testing small BlockedTensors in REPL, where Base.show()
+    # the use case is playing or testing small CompositeBlockedTensors in REPL, where Base.show()
     # will automatically print the full tensor. however, things turn out so evil
-    # when dealing large BlockedTensors, one should add `;` in the end of the expression
+    # when dealing large CompositeBlockedTensors, one should add `;` in the end of the expression
     # to mute printing.
     out = zero(Tv)
     # assume (a,i,b,j,c,k) indexing
@@ -46,7 +61,11 @@ function Base.getindex{Tv<:Real,N,Ti<:NTuple,Order}(A::BlockedTensor{Tv,N,Ti,Ord
     end
     out
 end
-function Base.full{Tv<:Real,N,Ti<:NTuple,Order}(A::BlockedTensor{Tv,N,Ti,Order})
+Base.:(==)(A::CompositeBlockedTensor, B::CompositeBlockedTensor) = A.valBlocks == B.valBlocks && A.idxBlocks == B.idxBlocks && A.dims == B.dims
+
+
+Base.size(A::AbstractSymmetricSparseTensor) = A.dims
+function Base.full{Tv<:Real,Order}(A::AbstractSymmetricSparseTensor{Tv,Order})
     B = reshape(A, ntuple(x->prod(size(A,1,2)), Int(Order/2)))
     S = zeros(B)
     for 𝒊 in CartesianRange(size(B))
@@ -58,20 +77,38 @@ function Base.full{Tv<:Real,N,Ti<:NTuple,Order}(A::BlockedTensor{Tv,N,Ti,Order})
     end
     return reshape(S, size(A))
 end
-Base.:(==)(A::BlockedTensor, B::BlockedTensor) = A.valBlocks == B.valBlocks && A.idxBlocks == B.idxBlocks && A.dims == B.dims
 
 
 # sparse tensor contraction
-contract(𝑻::BlockedTensor, 𝐯::Vector) = reshape(𝑻 ⊙ reshape(𝐯,size(𝑻,1,2)), length(𝐯))
-function contract(𝑻::BlockedTensor, 𝐕::Matrix)
+function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,4}, 𝐕::Matrix)
+    𝐌 = zeros(𝐕)
+    @inbounds for (i,j) in 𝑻.idxs, 𝒊 in CartesianRange(size(𝑻.vals))
+        a, b = 𝒊.I
+        𝐌[a,i] += 𝑻.vals[a,b] * 𝐕[b,j]
+        𝐌[b,j] += 𝑻.vals[a,b] * 𝐕[a,i]
+    end
+    return 𝐌
+end
+
+function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,6}, 𝐕::Matrix)
+    𝐌 = zeros(𝐕)
+    @inbounds for (i,j,k) in 𝑻.idxs, 𝒊 in CartesianRange(size(𝑻.vals))
+        a, b, c = 𝒊.I
+        𝐌[a,i] += 2.0 * vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
+        𝐌[b,j] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
+        𝐌[c,k] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
+    end
+    return 𝐌
+end
+
+
+function contract(𝑻::CompositeBlockedTensor, 𝐕::Matrix)
     𝐌 = zeros(𝐕)
     for (vals,idxs) in zip(𝑻.valBlocks, 𝑻.idxBlocks)
         _contract!(𝐌, vals, idxs, 𝐕)
     end
     return 𝐌
 end
-# handy operator ⊙ (\odot)
-⊙ = contract
 
 function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,2}, idxs::IndexBlock{NTuple{2,Int}}, mat::Matrix{T})
     @inbounds for (i,j) in idxs, 𝒊 in CartesianRange(size(vals))
@@ -99,3 +136,8 @@ function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,4}, idxs::IndexBlo
         s[d,m] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[b,j] * mat[c,k]
     end
 end
+
+contract(𝑻::AbstractSymmetricSparseTensor, 𝐯::Vector) = reshape(𝑻 ⊙ reshape(𝐯,size(𝑻,1,2)), length(𝐯))
+
+# handy operator ⊙ (\odot)
+⊙ = contract

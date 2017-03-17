@@ -119,6 +119,25 @@ then applys `f(x)=e⁻ˣ` to the result.
 tqdexp(fp, fq, c, d) = e^-tqd(fp, fq, c, d)
 
 
+# high-order potentials
+"""
+    p3potts(fp, fq, fr, d)
+
+Returns the cost value based on P³ Potts model.
+
+Refer to the following paper for further details:
+
+Kohli, Pushmeet, M. Pawan Kumar, and Philip HS Torr. "Solving energies with higher order cliques." In CVPR. 2007.
+"""
+@generated p3potts{S,Td<:Real}(fp::SVector{S}, fq::SVector{S}, fr::SVector{S}, d::Td) = :((@nall $S x->(fp[x] == fq[x] == fr[x])) ? zero(Td) : d)
+
+"""
+    p3pottsexp(fp, fq, fr, d)
+
+Calculates the cost value based on Potts model, then applys `f(x)=e⁻ˣ` to the result.
+"""
+p3pottsexp(fp, fq, fr, d) = e^-p3potts(fp, fq, fr, d)
+
 """
     jᶠᶠ(α,β,χ)
     jᵇᶠ(α,β,χ)
