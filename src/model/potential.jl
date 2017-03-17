@@ -16,12 +16,10 @@
                 if @nall $N x->(1 ≤ d_x ≤ imageDims[x])
                     fixed = @nref $N fixedImg k
                     moving = @nref $N movingImg d
-                    s += f(fixed - moving)
-                else
-                    s = Inf
+                    s += e^-f(fixed - moving)
                 end
             end
-            cost[a,i] = e^-s
+            cost[a,i] = s
         end
         reshape(cost, length(displacements), prod(gridDims))
     end
