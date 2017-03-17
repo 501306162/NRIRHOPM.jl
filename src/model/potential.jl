@@ -1,29 +1,30 @@
 # unary potentials
-function sum_diff_exp{S,T<:Real}(f, fixedImg::AbstractArray, movingImg::AbstractArray, displacements::AbstractArray{SVector{S,T}}, gridDims::NTuple)
-    imageDims = size(fixedImg)
-    imageDims == size(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same size."))
-    length(imageDims) == S || throw(DimensionMismatch("Images and displacement vectors are NOT in the same dimension."))
-    cost = zeros(length(displacements), gridDims...)
-    # blockDims = imageDims .÷ gridDims
-    blockDims = map(div, imageDims, gridDims)
-    gridRange = CartesianRange(gridDims)
-    𝒊₀ = first(gridRange)
-    for a in eachindex(displacements), 𝒊 in gridRange
-        # offset = (𝒊 - 𝒊₀).I .* blockDims (pending 0.6)
-        offset = map(*, (𝒊 - 𝒊₀).I, blockDims)
-        s = zero(Float64)
-        for 𝒋 in CartesianRange(blockDims)
-            # 𝐤 = offset .+ 𝒋.I
-            𝐤 = map(+, offset, 𝒋.I)
-            # 𝐝 = 𝐤 .+ blockDims .* displacements[a]
-            𝐝 = map(+, 𝐤, map(*, blockDims, displacements[a]))
-            if checkbounds(Bool, movingImg, 𝐝...)
-                s += e^-f(fixedImg[𝐤...] - movingImg[𝐝...])
+@generated function sum_diff_exp{N,Ti<:Real,Td<:Real}(f, fixedImg::AbstractArray{Ti,N}, movingImg::AbstractArray{Ti,N}, displacements::AbstractArray{SVector{N,Td}}, gridDims::NTuple)
+    quote
+        imageDims = size(fixedImg)
+        imageDims == size(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same size."))
+        length(imageDims) == $N || throw(DimensionMismatch("Images and displacement vectors are NOT in the same dimension."))
+        # blockDims = imageDims .÷ gridDims
+        blockDims = map(div, imageDims, gridDims)
+        cost = zeros(length(displacements), gridDims...)
+        for a in eachindex(displacements), i in CartesianRange(gridDims)
+            @nexprs $N x->offset_x = (i[x] - 1) * blockDims[x]
+            s = zero(Float64)
+            for j in CartesianRange(blockDims)
+                @nexprs $N x->k_x = offset_x + j[x]
+                @nexprs $N x->d_x = k_x + blockDims[x] * displacements[a][x]
+                if @nall $N x->(1 ≤ d_x ≤ imageDims[x])
+                    fixed = @nref $N fixedImg k
+                    moving = @nref $N movingImg d
+                    s += f(fixed - moving)
+                else
+                    s = Inf
+                end
             end
+            cost[a,i] = e^-s
         end
-        cost[a,𝒊] = s
+        reshape(cost, length(displacements), prod(gridDims))
     end
-    return reshape(cost, length(displacements), prod(gridDims))
 end
 
 """

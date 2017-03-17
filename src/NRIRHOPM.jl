@@ -1,5 +1,7 @@
 module NRIRHOPM
 
+using Base.Cartesian
+
 using Reexport
 using Combinatorics
 using Memento
