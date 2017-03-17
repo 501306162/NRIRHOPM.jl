@@ -57,13 +57,7 @@ Refer to the following paper for further details:
 Felzenszwalb, Pedro F., and Daniel P. Huttenlocher. "Efficient belief propagation
 for early vision." International journal of computer vision 70.1 (2006): 43.
 """
-@generated function potts{S,Td<:Real}(fp::SVector{S}, fq::SVector{S}, d::Td)
-    ex = :(true)
-    for i = 1:S
-        ex = :($ex && (fp[$i] == fq[$i]))
-    end
-    return :($ex ? zero(Td) : d)
-end
+@generated potts{S,Td<:Real}(fp::SVector{S}, fq::SVector{S}, d::Td) = :((@nall $S x->(fp[x] == fq[x])) ? zero(Td) : d)
 
 """
     pottsexp(fp, fq, d)
@@ -155,24 +149,10 @@ jᵇᶠ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}) = (1+α
 jᶠᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}) = (1+β[1]-α[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(β[2]-α[2])
 jᵇᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}) = (1+α[1]-β[1])*(1+α[2]-χ[2]) - (α[1]-χ[1])*(α[2]-β[2])
 
-function jᶠᶠexp(α, β, χ)
-    x = jᶠᶠ(α, β, χ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᵇᶠexp(α, β, χ)
-    x = jᵇᶠ(α, β, χ)
-    return x > 0.0 ? e^-x : 0.0
-end
-function jᶠᵇexp(α, β, χ)
-    x = jᶠᵇ(α, β, χ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᵇᵇexp(α, β, χ)
-    x = jᵇᵇ(α, β, χ)
-    return x > 0.0 ? e^-x : 0.0
-end
+jᶠᶠexp(α, β, χ) = jᶠᶠ(α, β, χ) |> x->x > 0.0 ? e^-x : 0.0
+jᵇᶠexp(α, β, χ) = jᵇᶠ(α, β, χ) |> x->x > 0.0 ? e^-x : 0.0
+jᶠᵇexp(α, β, χ) = jᶠᵇ(α, β, χ) |> x->x > 0.0 ? e^-x : 0.0
+jᵇᵇexp(α, β, χ) = jᵇᵇ(α, β, χ) |> x->x > 0.0 ? e^-x : 0.0
 
 """
     jᶠᶠᶠ(α,β,χ,δ)
@@ -240,42 +220,11 @@ jᵇᵇᵇ{S,T<:Real}(α::SVector{S,T}, β::SVector{S,T}, χ::SVector{S,T}, δ::
   (  α[1]-δ[1])*(  α[2]-β[2])*(  α[3]-χ[3]) - (  α[1]-δ[1])*(1+α[2]-χ[2])*(α[3]-β[3]) -
   (  α[1]-χ[1])*(  α[2]-β[2])*(1+α[3]-δ[3]) - (1+α[1]-β[1])*(  α[2]-δ[2])*(α[3]-χ[3]))
 
-function jᶠᶠᶠexp(α, β, χ, δ)
-    x = jᶠᶠᶠ(α, β, χ, δ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᵇᶠᶠexp(α, β, χ, δ)
-    x = jᵇᶠᶠ(α, β, χ, δ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᶠᵇᶠexp(α, β, χ, δ)
-    x = jᶠᵇᶠ(α, β, χ, δ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᵇᵇᶠexp(α, β, χ, δ)
-    x = jᵇᵇᶠ(α, β, χ, δ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᶠᶠᵇexp(α, β, χ, δ)
-    x = jᶠᶠᵇ(α, β, χ, δ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᵇᶠᵇexp(α, β, χ, δ)
-    x = jᵇᶠᵇ(α, β, χ, δ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᶠᵇᵇexp(α, β, χ, δ)
-    x = jᶠᵇᵇ(α, β, χ, δ)
-    return x > 0.0 ? e^-x : 0.0
-end
-
-function jᵇᵇᵇexp(α, β, χ, δ)
-    x = jᵇᵇᵇ(α, β, χ, δ)
-    return x > 0.0 ? e^-x : 0.0
-end
+jᶠᶠᶠexp(α, β, χ, δ) = jᶠᶠᶠ(α, β, χ, δ) |> x->x > 0.0 ? e^-x : 0.0
+jᵇᶠᶠexp(α, β, χ, δ) = jᵇᶠᶠ(α, β, χ, δ) |> x->x > 0.0 ? e^-x : 0.0
+jᶠᵇᶠexp(α, β, χ, δ) = jᶠᵇᶠ(α, β, χ, δ) |> x->x > 0.0 ? e^-x : 0.0
+jᵇᵇᶠexp(α, β, χ, δ) = jᵇᵇᶠ(α, β, χ, δ) |> x->x > 0.0 ? e^-x : 0.0
+jᶠᶠᵇexp(α, β, χ, δ) = jᶠᶠᵇ(α, β, χ, δ) |> x->x > 0.0 ? e^-x : 0.0
+jᵇᶠᵇexp(α, β, χ, δ) = jᵇᶠᵇ(α, β, χ, δ) |> x->x > 0.0 ? e^-x : 0.0
+jᶠᵇᵇexp(α, β, χ, δ) = jᶠᵇᵇ(α, β, χ, δ) |> x->x > 0.0 ? e^-x : 0.0
+jᵇᵇᵇexp(α, β, χ, δ) = jᵇᵇᵇ(α, β, χ, δ) |> x->x > 0.0 ? e^-x : 0.0
