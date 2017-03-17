@@ -36,7 +36,7 @@ export clique
 
 # tensor
 export AbstractSymmetricSparseTensor, AbstractTensorBlockBSSTensor
-export ValueBlock, IndexBlock, CompositeBlockedTensor
+export BlockedTensor, ValueBlock, IndexBlock, CompositeBlockedTensor
 export contract, ⊙
 
 # hopm & method
