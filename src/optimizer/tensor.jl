@@ -82,21 +82,27 @@ end
 # sparse tensor contraction
 function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,4}, 𝐕::Matrix)
     𝐌 = zeros(𝐕)
-    @inbounds for (i,j) in 𝑻.idxs, 𝒊 in CartesianRange(size(𝑻.vals))
-        a, b = 𝒊.I
-        𝐌[a,i] += 𝑻.vals[a,b] * 𝐕[b,j]
-        𝐌[b,j] += 𝑻.vals[a,b] * 𝐕[a,i]
+    Threads.@threads for idx in 𝑻.idxs
+        i, j = idx
+        @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
+            a, b = 𝒊.I
+            𝐌[a,i] += 𝑻.vals[a,b] * 𝐕[b,j]
+            𝐌[b,j] += 𝑻.vals[a,b] * 𝐕[a,i]
+        end
     end
     return 𝐌
 end
 
 function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,6}, 𝐕::Matrix)
     𝐌 = zeros(𝐕)
-    @inbounds for (i,j,k) in 𝑻.idxs, 𝒊 in CartesianRange(size(𝑻.vals))
-        a, b, c = 𝒊.I
-        𝐌[a,i] += 2.0 * vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
-        𝐌[b,j] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
-        𝐌[c,k] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
+    Threads.@threads for idx in 𝑻.idxs
+        i, j, k = idx
+        @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
+            a, b, c = 𝒊.I
+            𝐌[a,i] += 2.0 * vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
+            𝐌[b,j] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
+            𝐌[c,k] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
+        end
     end
     return 𝐌
 end
@@ -111,29 +117,38 @@ function contract(𝑻::CompositeBlockedTensor, 𝐕::Matrix)
 end
 
 function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,2}, idxs::IndexBlock{NTuple{2,Int}}, mat::Matrix{T})
-    @inbounds for (i,j) in idxs, 𝒊 in CartesianRange(size(vals))
-        a, b = 𝒊.I
-        s[a,i] += vals[a,b] * mat[b,j]
-        s[b,j] += vals[a,b] * mat[a,i]
+    Threads.@threads for idx in idxs
+        i, j = idx
+        @inbounds for 𝒊 in CartesianRange(size(vals))
+            a, b = 𝒊.I
+            s[a,i] += vals[a,b] * mat[b,j]
+            s[b,j] += vals[a,b] * mat[a,i]
+        end
     end
 end
 
 function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,3}, idxs::IndexBlock{NTuple{3,Int}}, mat::Matrix{T})
-    @inbounds for (i,j,k) in idxs, 𝒊 in CartesianRange(size(vals))
-        a, b, c = 𝒊.I
-        s[a,i] += 2.0 * vals[a,b,c] * mat[b,j] * mat[c,k]
-        s[b,j] += 2.0 * vals[a,b,c] * mat[a,i] * mat[c,k]
-        s[c,k] += 2.0 * vals[a,b,c] * mat[a,i] * mat[b,j]
+    Threads.@threads for idx in idxs
+        i, j, k = idx
+        @inbounds for 𝒊 in CartesianRange(size(vals))
+            a, b, c = 𝒊.I
+            s[a,i] += 2.0 * vals[a,b,c] * mat[b,j] * mat[c,k]
+            s[b,j] += 2.0 * vals[a,b,c] * mat[a,i] * mat[c,k]
+            s[c,k] += 2.0 * vals[a,b,c] * mat[a,i] * mat[b,j]
+        end
     end
 end
 
 function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,4}, idxs::IndexBlock{NTuple{4,Int}}, mat::Matrix{T})
-    @inbounds for (i, j, k, m) in idxs, 𝒊 in CartesianRange(size(vals))
-        a, b, c, d = 𝒊.I
-        s[a,i] += 6.0 * vals[a,b,c,d] * mat[b,j] * mat[c,k] * mat[d,m]
-        s[b,j] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[c,k] * mat[d,m]
-        s[c,k] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[b,j] * mat[d,m]
-        s[d,m] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[b,j] * mat[c,k]
+    Threads.@threads for idx in idxs
+        i, j, k, m = idx
+        @inbounds for 𝒊 in CartesianRange(size(vals))
+            a, b, c, d = 𝒊.I
+            s[a,i] += 6.0 * vals[a,b,c,d] * mat[b,j] * mat[c,k] * mat[d,m]
+            s[b,j] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[c,k] * mat[d,m]
+            s[c,k] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[b,j] * mat[d,m]
+            s[d,m] += 6.0 * vals[a,b,c,d] * mat[a,i] * mat[b,j] * mat[c,k]
+        end
     end
 end
 
