@@ -98,9 +98,9 @@ import NRIRHOPM: constrain!, hopm_mixed, hopm_canonical
     @testset "2nd order mixed" begin
         𝐭 = rand(valN, idxN)
         𝐌 = rand(valN, idxN)
-        Ex, X = hopm_canonical(𝐭, 𝐓, 𝐌, tolerance, maxIteration)
-        Ey, Y = hopm_mixed(𝐭, 𝐓, 𝐌, :vecnorm, tolerance, maxIteration)
-        Ez, Z = hopm_mixed(𝐭, 𝐓, 𝐌, :column, tolerance, maxIteration)
+        Ex, X = @inferred hopm_canonical(𝐭, 𝐓, 𝐌, tolerance, maxIteration)
+        Ey, Y = @inferred hopm_mixed(𝐭, 𝐓, 𝐌, :vecnorm, tolerance, maxIteration)
+        Ez, Z = @inferred hopm_mixed(𝐭, 𝐓, 𝐌, :column, tolerance, maxIteration)
         println("The following values should not deviate too much from each other: ")
         @show Ex, Ey, Ez/idxN
         @show vecnorm(X - Y)

@@ -50,12 +50,12 @@ using TensorOperations
         # test `contract`
         R = rand(valN, idxN)
         @tensor V[a,i] := Y[a,i,b,j] * R[b,j]
-        @test X ⊙ R ≈ V
+        @test @inferred(X ⊙ R) ≈ V
 
         r = rand(valN*idxN)
         y = reshape(Y, valN*idxN, valN*idxN)
         @tensor v[ai] := y[ai,bj] * r[bj]
-        @test X ⊙ r ≈ v
+        @test @inferred(X ⊙ r) ≈ v
     end
 
     @testset "6th order contract" begin
@@ -78,12 +78,12 @@ using TensorOperations
         # test `contract`
         R = rand(valN, idxN)
         @tensor V[a,i] := Y[a,i,b,j,c,k] * R[b,j] * R[c,k]
-        @test X ⊙ R ≈ V
+        @test @inferred(X ⊙ R) ≈ V
 
         r = rand(valN*idxN)
         y = reshape(Y, valN*idxN, valN*idxN, valN*idxN)
         @tensor v[ai] := y[ai,bj,ck] * r[bj] * r[ck]
-        @test X ⊙ r ≈ v
+        @test @inferred(X ⊙ r) ≈ v
     end
 
     @testset "8th order contract" begin
@@ -106,11 +106,11 @@ using TensorOperations
         # test `contract`
         R = rand(valN, idxN)
         @tensor V[a,i] := Y[a,i,b,j,c,k,d,m] * R[b,j] * R[c,k] * R[d,m]
-        @test X ⊙ R ≈ V
+        @test @inferred(X ⊙ R) ≈ V
 
         r = rand(valN*idxN)
         y = reshape(Y, valN*idxN, valN*idxN, valN*idxN, valN*idxN)
         @tensor v[ai] := y[ai,bj,ck,dm] * r[bj] * r[ck] * r[dm]
-        @test X ⊙ r ≈ v
+        @test @inferred(X ⊙ r) ≈ v
     end
 end
