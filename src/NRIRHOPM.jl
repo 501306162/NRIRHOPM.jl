@@ -53,7 +53,7 @@ export DVec2D, DVec3D, DVec, fieldlize
 export upsample, warp
 
 # multiscale
-export multilevel
+export multilevel, multiresolution
 
 # io
 export readDIRLab
