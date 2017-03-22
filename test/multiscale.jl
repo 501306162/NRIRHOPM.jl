@@ -18,12 +18,12 @@
         gridSet = [(2,2), (5,5)]
         originΔ = vecnorm(moving-fixed)
         # with topology preservation
-        warpped, d, spec, energy = multilevel(fixed, moving, displacementSet, gridSet, topology=TP2D(), β=0.5, χ=0.1)
+        warpped, d, spec, energy = multilevel(fixed, moving, displacementSet, gridSet, topology=TP2D(), βs=[0.5,0.5], χ=0.1)
         topologyΔ = vecnorm(warpped[end]-fixed)
         @test topologyΔ < originΔ
 
         # without topology preservation
-        warpped, d, spec, energy = multilevel(fixed, moving, displacementSet, gridSet, topology=TP2D(), β=0.5, χ=0.0)
+        warpped, d, spec, energy = multilevel(fixed, moving, displacementSet, gridSet, topology=TP2D(), βs=[0.5,0.5], χ=0.1)
         smoothΔ = vecnorm(warpped[end]-fixed)
         @test smoothΔ < originΔ
         @show originΔ, smoothΔ, topologyΔ
