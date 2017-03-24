@@ -21,3 +21,19 @@ typealias DVec Union{DVec2D, DVec3D}
     f = N == 2 ? DVec2D : DVec3D
     return :(reshape([$f(labels[i]) for i in indicator], dims))
 end
+
+function fieldmerge(displacementSet)
+    imageDims = size(displacementSet[])
+    meshgrid = Array{Vector}(imageDims)
+    for i in CartesianRange(imageDims)
+        meshgrid[i] = collect(i.I)
+    end
+    temp = copy(meshgrid)
+    for level = 1:length(displacementSet)
+        itp = interpolate(displacementSet[level], BSpline(Constant()), OnGrid())
+        for i in eachindex(temp)
+            temp[i] = temp[i] + itp[temp[i]...]
+        end
+    end
+    DVec2D.(temp .- meshgrid)
+end
