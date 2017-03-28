@@ -27,6 +27,7 @@
                     x::T
                 end
                 foorand(f, m, d, g, x) = x * rand(length(d), length(f))
+                (m::FooRand)(x...) = m.f(x..., m.x)
             end
         end)
         r = clique(fixedImg, movingImg, displacements, FooRand(foorand,10))

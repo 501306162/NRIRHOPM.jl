@@ -1,4 +1,4 @@
-abstract AbstractModel{CliqueSize}
+abstract AbstractModel{CliqueSize} <: Function
 
 # various dialects
 typealias UnaryModel AbstractModel{1}
@@ -20,21 +20,23 @@ typealias QuadraModel AbstractModel{4}
 
 The sum of absolute differences including variations.
 """
-immutable SAD{F<:Function} <: DataCost
+type SAD{F<:Function} <: DataCost
     f::F
 end
 SAD() = SAD(sadexp)
+(m::SAD)(x...) = m.f(x...)
+
 
 """
     SSD()
 
 The sum of squared differences including variations.
 """
-immutable SSD{F<:Function} <: DataCost
+type SSD{F<:Function} <: DataCost
     f::F
 end
 SSD() = SSD(ssdexp)
-
+(m::SSD)(x...) = m.f(x...)
 
 """
     default_potts(𝓭, d) -> Vector{vals}
@@ -61,7 +63,7 @@ immutable Potts{F<:Function, T<:Real} <: SmoothCost
     d::T
 end
 Potts(d=1.0) = Potts(default_potts, d)
-
+(m::Potts)(x...) = m.f(x..., m.d)
 
 """
     default_tad(𝓭, c, d) -> Vector{vals}
@@ -88,7 +90,7 @@ immutable TAD{F<:Function,Tc<:Real,Td<:Real} <: SmoothCost
 end
 TAD(c,d) = TAD(default_tad, c, d)
 TAD(;c=1.0, d=Inf) = TAD(c, d)
-
+(m::TAD)(x...) = m.f(x..., m.c, m.d)
 
 """
     default_tqd(𝓭, c, d) -> Vector{vals}
@@ -115,7 +117,7 @@ immutable TQD{F<:Function,Tc<:Real,Td<:Real} <: SmoothCost
 end
 TQD(c,d) = TQD(default_tqd, c, d)
 TQD(;c=1.0, d=Inf) = TQD(c, d)
-
+(m::TQD)(x...) = m.f(x..., m.c, m.d)
 
 """
     topology2d(d) -> Vector{vals}
@@ -134,7 +136,7 @@ immutable TP2D{F<:Function} <: TreyModel
     f::F
 end
 TP2D() = TP2D(topology2d)
-
+(m::TP2D)(x...) = m.f(x...)
 
 """
     topology3d(d) -> Vector{vals}
@@ -160,6 +162,7 @@ immutable TP3D{F<:Function} <: QuadraModel
     f::F
 end
 TP3D() = TP3D(topology3d)
+(m::TP3D)(x...) = m.f(x...)
 
 # topology
 typealias TopologyCost Union{TP2D, TP3D}

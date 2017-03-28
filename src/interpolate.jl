@@ -3,7 +3,7 @@ function upsample{T<:DVec,N}(displacementField::AbstractArray{T,N}, imageDims::N
     # scaleFactors = T(imageDims .÷ gridDims) (pending julia-v0.6)
     scaleFactors = T(map(div, imageDims, gridDims))
     knots = ntuple(x->linspace(1, gridDims[x]*scaleFactors[x], gridDims[x]), Val{N})
-    itp = interpolate(knots, [scaleFactors.*𝐝 for 𝐝 in displacementField], Gridded(Linear()))
+    itp = interpolate(knots, [𝐝 for 𝐝 in displacementField], Gridded(Linear()))
     scaledField = zeros(T, imageDims)
     scaledDims = convert(NTuple{N,Int}, map(*, gridDims, scaleFactors))
     for 𝒊 in CartesianRange(scaledDims)
