@@ -24,12 +24,15 @@ function hopm_mixed(𝐭::AbstractMatrix, 𝐓::AbstractSymmetricSparseTensor, �
     constrain!(𝐌₀, constraint)
     𝐌ᵢ = 𝐌₀
     i = 0
+    bar = Progress(maxIter, "Computing...")
     while i < maxIter
         i += 1
+        update!(bar, i)
         𝐌ᵢ₊₁ = 𝐭 + 𝐓 ⊙ 𝐌ᵢ
         constrain!(𝐌ᵢ₊₁, constraint)
         if vecnorm(𝐌ᵢ₊₁ - 𝐌ᵢ) < tol
             𝐌ᵢ = 𝐌ᵢ₊₁
+            finish!(bar)
             break
         end
         𝐌ᵢ = 𝐌ᵢ₊₁
@@ -47,12 +50,15 @@ function hopm_mixed(𝐭::AbstractMatrix, 𝐓::AbstractSymmetricSparseTensor,
     constrain!(𝐌₀, constraint)
     𝐌ᵢ = 𝐌₀
     i = 0
+    bar = Progress(maxIter, "Computing...")
     while i < maxIter
         i += 1
+        update!(bar, i)
         𝐌ᵢ₊₁ = 𝐭 + 𝐓 ⊙ 𝐌ᵢ + 𝑻 ⊙ 𝐌ᵢ
         constrain!(𝐌ᵢ₊₁, constraint)
         if vecnorm(𝐌ᵢ₊₁ - 𝐌ᵢ) < tol
             𝐌ᵢ = 𝐌ᵢ₊₁
+            finish!(bar)
             break
         end
         𝐌ᵢ = 𝐌ᵢ₊₁
