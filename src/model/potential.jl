@@ -1,7 +1,5 @@
 # unary potentials
-@generated function sum_diff_exp{N,Ti<:Real,Td<:Real}(
-    f, fixedImg::AbstractArray{Ti,N}, movingImg::AbstractArray{Ti,N},
-    displacements::AbstractArray{SVector{N,Td}}, gridDims::NTuple)
+@generated function sum_diff_exp{N,Ti<:Real,Td<:Real}(f, fixedImg::AbstractArray{Ti,N}, movingImg::AbstractArray{Ti,N}, displacements::AbstractArray{SVector{N,Td}}, gridDims::NTuple)
     quote
         imageDims = size(fixedImg)
         imageDims == size(movingImg) || throw(DimensionMismatch("fixedImg and movingImg must have the same size."))
@@ -9,23 +7,21 @@
         # blockDims = imageDims .÷ gridDims
         blockDims = map(div, imageDims, gridDims)
         cost = zeros(length(displacements), gridDims...)
-        Threads.@threads for a in eachindex(displacements)
-            for i in CartesianRange(gridDims)
-                @nexprs $N x->offset_x = (i[x] - 1) * blockDims[x]
-                s = zero(Float64)
-                for j in CartesianRange(blockDims)
-                    @nexprs $N x->k_x = offset_x + j[x]
-                    @nexprs $N x->d_x = k_x + displacements[a][x]
-                    if @nall $N x->(1 ≤ d_x ≤ imageDims[x])
-                        fixed = @nref $N fixedImg k
-                        moving = @nref $N movingImg d
-                        s += e^-f(fixed - moving)
-                    end
+        for a in eachindex(displacements), i in CartesianRange(gridDims)
+            @nexprs $N x->offset_x = (i[x] - 1) * blockDims[x]
+            s = zero(Float64)
+            for j in CartesianRange(blockDims)
+                @nexprs $N x->k_x = offset_x + j[x]
+                @nexprs $N x->d_x = k_x + displacements[a][x]
+                if @nall $N x->(1 ≤ d_x ≤ imageDims[x])
+                    fixed = @nref $N fixedImg k
+                    moving = @nref $N movingImg d
+                    s += e^-f(fixed - moving)
                 end
-                cost[a,i] = s
             end
+            cost[a,i] = s
         end
-        reshape(cost, length(displacements), prod(gridDims))::Matrix{Float64}
+        reshape(cost, length(displacements), prod(gridDims))
     end
 end
 
