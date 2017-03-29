@@ -47,13 +47,13 @@ export CanonHOPM, MixHOPM
 export optimize
 
 # label
-export DVec2D, DVec3D, DVec, fieldlize
+export DVec2D, DVec3D, DVec, fieldlize, fieldmerge
 
 # interpolate
 export upsample, warp
 
 # multiscale
-export multilevel
+export multilevel, multiresolution
 
 # io
 export readDIRLab

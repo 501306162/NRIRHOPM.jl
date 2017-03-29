@@ -12,7 +12,7 @@
             s = zero(Float64)
             for j in CartesianRange(blockDims)
                 @nexprs $N x->k_x = offset_x + j[x]
-                @nexprs $N x->d_x = k_x + blockDims[x] * displacements[a][x]
+                @nexprs $N x->d_x = k_x + displacements[a][x]
                 if @nall $N x->(1 ≤ d_x ≤ imageDims[x])
                     fixed = @nref $N fixedImg k
                     moving = @nref $N movingImg d

@@ -6,11 +6,10 @@
 Returns the **data cost** which should be a `length(labels)` by
 `length(fixedImg)` Float64 Matrix, the so called "spectrum".
 """
-@generated function clique{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N}, labels::AbstractArray, model::AbstractModel, gridDims::NTuple{N,Int}=size(fixedImg), weight::Real=1)
-    fixedArgs = [:(getfield(model, $i)) for i = 1:nfields(model)]
-    func = shift!(fixedArgs)
-    return :(weight*$func(fixedImg, movingImg, labels, gridDims, $(fixedArgs...)))
-end
+clique{T,N}(fixedImg::AbstractArray{T,N}, movingImg::AbstractArray{T,N},
+            labels::AbstractArray, model::AbstractModel, gridDims::NTuple{N,Int}=size(fixedImg),
+            weight::Real=1) = weight * model(fixedImg, movingImg, labels, gridDims)
+
 
 """
     clique(neighbor, imageDims, labels, model)
@@ -18,20 +17,20 @@ end
 
 Todo: document this
 """
-@generated function clique{N,C}(neighbor::Neighborhood{N,C}, imageDims::NTuple{N}, labels::AbstractArray, model::AbstractModel, weight::Real=1)
-    fixedArgs = [:(getfield(model, $i)) for i = 1:nfields(model)]
-    func = shift!(fixedArgs)
+@generated function clique{N,C}(neighbor::Neighborhood{N,C}, imageDims::NTuple{N},
+                                labels::AbstractArray, model::AbstractModel, weight::Real=1)
+    Order = 2*C
     if neighbor <: CnTopology
         ret = quote
-            valBlocks = $func(reshape(labels, length(labels)), $(fixedArgs...))
+            valBlocks = model(reshape(labels, length(labels)))
             idxBlocks = neighbors(neighbor, imageDims)
-            CompositeBlockedTensor(map(x->ValueBlock(weight*x), valBlocks), map(x->IndexBlock(x), idxBlocks), ntuple(x->isodd(x) ? length(labels) : prod(imageDims), Val{2*$C}))
+            CompositeBlockedTensor(map(x->ValueBlock(weight*x), valBlocks), map(x->IndexBlock(x), idxBlocks), ntuple(x->isodd(x) ? length(labels) : prod(imageDims), Val{$Order}))
         end
     else
         ret = quote
-            vals = $func(reshape(labels, length(labels)), $(fixedArgs...))
+            vals = model(reshape(labels, length(labels)))
             idxs = neighbors(neighbor, imageDims)
-            BlockedTensor(weight*vals, idxs, ntuple(x->isodd(x) ? length(labels) : prod(imageDims), Val{2*$C}))
+            BlockedTensor(weight*vals, idxs, ntuple(x->isodd(x) ? length(labels) : prod(imageDims), Val{$Order}))
         end
     end
     ret

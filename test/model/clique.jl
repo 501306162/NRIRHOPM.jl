@@ -7,14 +7,14 @@
     weight = rand()
 
     @testset "default" begin
-        s = clique(fixedImg, movingImg, displacements, SAD())
+        s = @inferred clique(fixedImg, movingImg, displacements, SAD())
         @test size(s) == (length(displacements), prod(imageDims))
 
-        bt = clique(C8Pairwise(), imageDims, displacements, TAD())
+        bt = @inferred clique(C8Pairwise(), imageDims, displacements, TAD())
         @test size(bt) == ntuple(x->isodd(x) ? labelNum : prod(imageDims), Val{4})
         @test size(bt.vals) == (labelNum, labelNum)
 
-        cbt = clique(C8Topology(), imageDims, displacements, TP2D())
+        cbt = @inferred clique(C8Topology(), imageDims, displacements, TP2D())
         @test size(cbt) == ntuple(x->isodd(x) ? labelNum : prod(imageDims), Val{6})
         @test size(cbt.valBlocks[]) == (labelNum, labelNum, labelNum)
     end
@@ -27,6 +27,7 @@
                     x::T
                 end
                 foorand(f, m, d, g, x) = x * rand(length(d), length(f))
+                (m::FooRand)(x...) = m.f(x..., m.x)
             end
         end)
         r = clique(fixedImg, movingImg, displacements, FooRand(foorand,10))

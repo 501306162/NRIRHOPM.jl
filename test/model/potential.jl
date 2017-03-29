@@ -16,7 +16,7 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
     imageDims = indices(targetImage)
 
     @testset "sadexp" begin
-        cost = sadexp(targetImage, sourceImage, displacements)
+        cost = @inferred sadexp(targetImage, sourceImage, displacements)
         @test all(cost .>= 0)
         for 𝒊 in CartesianRange(imageDims)
             i = sub2ind(imageDims, 𝒊.I...)
@@ -39,7 +39,8 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
                            0 0 1 1 0 0;
                            1 1 1 1 0 0;
                            1 1 1 1 0 0]
-            costScale = sadexp(targetScale, sourceScale, displacements, (3,3))
+            displacementsScale = [SVector(i,j) for i in -2:2:2, j in -2:2:2]
+            costScale = sadexp(targetScale, sourceScale, displacementsScale, (3,3))
             @test all(costScale .>= 0)
             for i in eachindex(targetImage)
                 @test find(cost[:,i] .== maximum(cost[:,i])) == find(costScale[:,i] .== maximum(costScale[:,i]))
@@ -48,7 +49,7 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
     end
 
     @testset "ssdexp" begin
-        cost = ssdexp(targetImage, sourceImage, displacements)
+        cost = @inferred ssdexp(targetImage, sourceImage, displacements)
         @test all(cost .>= 0)
         for 𝒊 in CartesianRange(imageDims)
             i = sub2ind(imageDims, 𝒊.I...)
@@ -64,10 +65,10 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             fp = @SVector rand(dim)
             fq = fp
             d = rand(Float32)
-            @test potts(fp, fq, d) == 0
+            @test @inferred(potts(fp, fq, d)) == 0
             fq = @SVector rand(dim)
-            @test potts(fp, fq, d) == d
-            @test pottsexp(fp, fq, d) == e^-d
+            @test @inferred(potts(fp, fq, d)) == d
+            @test @inferred(pottsexp(fp, fq, d)) == e^-d
         end
     end
 
@@ -76,9 +77,9 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             fp = @SVector rand(dim)
             fq = @SVector rand(dim)
             rate = rand(Float32)
-            @test tad(fp, fq, rate, Inf) ≈ rate * hypot(fp-fq...)
-            @test tad(fp, fq, rand(), 0) == 0
-            @test tadexp(fp, fq, rand(), 0) == 1
+            @test @inferred(tad(fp, fq, rate, Inf)) ≈ rate * hypot(fp-fq...)
+            @test @inferred(tad(fp, fq, rand(), 0)) == 0
+            @test @inferred(tadexp(fp, fq, rand(), 0)) == 1
         end
     end
 
@@ -87,9 +88,9 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             fp = @SVector rand(dim)
             fq = @SVector rand(dim)
             rate = rand(Float32)
-            @test tqd(fp, fq, rate, Inf) ≈ rate * hypot(fp-fq...)^2
-            @test tqd(fp, fq, rand(), 0) == 0
-            @test tqdexp(fp, fq, rand(), 0) == 1
+            @test @inferred(tqd(fp, fq, rate, Inf)) ≈ rate * hypot(fp-fq...)^2
+            @test @inferred(tqd(fp, fq, rand(), 0)) == 0
+            @test @inferred(tqdexp(fp, fq, rand(), 0)) == 1
         end
     end
 
@@ -121,29 +122,29 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             p1 = @SVector rand(UInt8, 2); a0 = @SVector [-1,-1]; a1 = @SVector [ 1, 1]
             p2 = p1 - [1,0];              b0 = @SVector [ 0,-1]; b1 = @SVector [ 0,-1]
             p3 = p1 + [0,1];              c0 = @SVector [-1, 1]; c1 = @SVector [-1, 1]
-            @test jᵇᶠ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
-            @test jᵇᶠ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
+            @test @inferred(jᵇᶠ(a0, b0, c0)) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
+            @test @inferred(jᵇᶠ(a1, b1, c1)) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
 
             # test for Jᵇᵇ
             p1 = @SVector rand(UInt8, 2); a0 = @SVector [-1,-1]; a1 = @SVector [1,-1]
             p2 = p1 - @SVector [1,0];     b0 = @SVector [ 0, 0]; b1 = @SVector [0, 0]
             p3 = p1 - @SVector [0,1];     c0 = @SVector [ 0, 0]; c1 = @SVector [0, 0]
-            @test jᵇᵇ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
-            @test jᵇᵇ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
+            @test @inferred(jᵇᵇ(a0, b0, c0)) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
+            @test @inferred(jᵇᵇ(a1, b1, c1)) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
 
             # test for Jᶠᵇ
             p1 = @SVector rand(UInt8, 2); a0 = @SVector [1,-1]; a1 = @SVector [-1, 1]
             p2 = p1 + @SVector [1,0];     b0 = @SVector [0, 0]; b1 = @SVector [ 0, 0]
             p3 = p1 - @SVector [0,1];     c0 = @SVector [0, 0]; c1 = @SVector [ 0, 0]
-            @test jᶠᵇ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
-            @test jᶠᵇ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
+            @test @inferred(jᶠᵇ(a0, b0, c0)) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
+            @test @inferred(jᶠᵇ(a1, b1, c1)) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
 
             # test for Jᶠᶠ
             p1 = @SVector rand(UInt8, 2); a0 = @SVector [1, 1]; a1 = @SVector [-1,-1]
             p2 = p1 + @SVector [1,0];     b0 = @SVector [0, 0]; b1 = @SVector [ 0, 0]
             p3 = p1 + @SVector [0,1];     c0 = @SVector [0, 0]; c1 = @SVector [ 0, 0]
-            @test jᶠᶠ(a0, b0, c0) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
-            @test jᶠᶠ(a1, b1, c1) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
+            @test @inferred(jᶠᶠ(a0, b0, c0)) == topology_preserving(p2, p1, p3, b0, a0, c0) ≤ 0
+            @test @inferred(jᶠᶠ(a1, b1, c1)) == topology_preserving(p2, p1, p3, b1, a1, c1) > 0
         end
 
         # coordinate system(r,c,z):
@@ -157,22 +158,22 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
             b = @SVector [0,0,0]
             c = @SVector [0,0,0]
             d = @SVector [0,0,0]
-            @test jᶠᶠᶠ(a,b,c,d) > 0
-            @test jᵇᶠᶠ(a,b,c,d) > 0
-            @test jᶠᵇᶠ(a,b,c,d) > 0
-            @test jᵇᵇᶠ(a,b,c,d) > 0
-            @test jᶠᶠᵇ(a,b,c,d) > 0
-            @test jᵇᶠᵇ(a,b,c,d) > 0
-            @test jᶠᵇᵇ(a,b,c,d) > 0
-            @test jᵇᵇᵇ(a,b,c,d) > 0
-            @test jᶠᶠᶠ(SVector( 1, 1, 1),b,c,d) ≤ 0
-            @test jᵇᶠᶠ(SVector(-1, 1, 1),b,c,d) ≤ 0
-            @test jᶠᵇᶠ(SVector( 1,-1, 1),b,c,d) ≤ 0
-            @test jᵇᵇᶠ(SVector(-1,-1, 1),b,c,d) ≤ 0
-            @test jᶠᶠᵇ(SVector( 1, 1,-1),b,c,d) ≤ 0
-            @test jᵇᶠᵇ(SVector(-1, 1,-1),b,c,d) ≤ 0
-            @test jᶠᵇᵇ(SVector( 1,-1,-1),b,c,d) ≤ 0
-            @test jᵇᵇᵇ(SVector(-1,-1,-1),b,c,d) ≤ 0
+            @test @inferred(jᶠᶠᶠ(a,b,c,d)) > 0
+            @test @inferred(jᵇᶠᶠ(a,b,c,d)) > 0
+            @test @inferred(jᶠᵇᶠ(a,b,c,d)) > 0
+            @test @inferred(jᵇᵇᶠ(a,b,c,d)) > 0
+            @test @inferred(jᶠᶠᵇ(a,b,c,d)) > 0
+            @test @inferred(jᵇᶠᵇ(a,b,c,d)) > 0
+            @test @inferred(jᶠᵇᵇ(a,b,c,d)) > 0
+            @test @inferred(jᵇᵇᵇ(a,b,c,d)) > 0
+            @test @inferred(jᶠᶠᶠ(SVector( 1, 1, 1),b,c,d)) ≤ 0
+            @test @inferred(jᵇᶠᶠ(SVector(-1, 1, 1),b,c,d)) ≤ 0
+            @test @inferred(jᶠᵇᶠ(SVector( 1,-1, 1),b,c,d)) ≤ 0
+            @test @inferred(jᵇᵇᶠ(SVector(-1,-1, 1),b,c,d)) ≤ 0
+            @test @inferred(jᶠᶠᵇ(SVector( 1, 1,-1),b,c,d)) ≤ 0
+            @test @inferred(jᵇᶠᵇ(SVector(-1, 1,-1),b,c,d)) ≤ 0
+            @test @inferred(jᶠᵇᵇ(SVector( 1,-1,-1),b,c,d)) ≤ 0
+            @test @inferred(jᵇᵇᵇ(SVector(-1,-1,-1),b,c,d)) ≤ 0
         end
     end
 end

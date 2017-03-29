@@ -155,4 +155,4 @@ end
 contract(𝑻::AbstractSymmetricSparseTensor, 𝐯::Vector) = reshape(𝑻 ⊙ reshape(𝐯,size(𝑻,1,2)), length(𝐯))
 
 # handy operator ⊙ (\odot)
-⊙ = contract
+const ⊙ = contract
