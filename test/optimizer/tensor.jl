@@ -28,11 +28,21 @@ using TensorOperations
         @test X == CompositeBlockedTensor(vals,idxs,dims)
     end
 
+    @testset "BlockedTensor" begin
+        V = rand(3,3)
+        idxs = [(1,2),(2,2),(3,1)]
+        dims = (3,3,3,2)
+        X = BlockedTensor(V,idxs,dims)
+        @test X[:,1,:,2] == X[:,2,:,2] == X[:,3,:,1] == V
+        @test X == BlockedTensor(V,idxs,dims)
+    end
+
     valN = 3
     idxN = 4
     @testset "4th order contract" begin
         # construct a CompositeBlockedTensor
-        vals = [ValueBlock(rand(valN, valN))]
+        A = rand(valN, valN)
+        vals = [ValueBlock(A)]
         index = NTuple{2,Int}[]
         for 𝒊 in CartesianRange((idxN,idxN))
             if 𝒊[1] < 𝒊[2]
@@ -42,6 +52,8 @@ using TensorOperations
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN)
         X = CompositeBlockedTensor(vals, idxs, dims)
+        # construct a BlockedTensor
+        Z = BlockedTensor(A, index, dims)
         # convert x to a full symmetric tensor
         Y = full(X)
         @test Y[1,2,2,1] == Y[2,1,1,2] == X[2,1,1,2]
@@ -51,16 +63,19 @@ using TensorOperations
         R = rand(valN, idxN)
         @tensor V[a,i] := Y[a,i,b,j] * R[b,j]
         @test @inferred(X ⊙ R) ≈ V
+        @test @inferred(Z ⊙ R) ≈ V
 
         r = rand(valN*idxN)
         y = reshape(Y, valN*idxN, valN*idxN)
         @tensor v[ai] := y[ai,bj] * r[bj]
         @test @inferred(X ⊙ r) ≈ v
+        @test @inferred(Z ⊙ r) ≈ v
     end
 
     @testset "6th order contract" begin
         # construct a CompositeBlockedTensor
-        vals = [ValueBlock(rand(valN, valN, valN))]
+        A = rand(valN, valN, valN)
+        vals = [ValueBlock(A)]
         index = NTuple{3,Int}[]
         for 𝒊 in CartesianRange((idxN,idxN,idxN))
             if 𝒊[1] < 𝒊[2] < 𝒊[3]
@@ -70,6 +85,8 @@ using TensorOperations
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN, valN, idxN)
         X = CompositeBlockedTensor(vals, idxs, dims)
+        # construct a BlockedTensor
+        Z = BlockedTensor(A, index, dims)
         # convert x to a full symmetric tensor
         Y = full(X)
         @test Y[1,2,2,3,2,1] == Y[2,3,2,1,1,2] == Y[2,1,1,2,2,3] == X[2,1,1,2,2,3]
@@ -79,16 +96,19 @@ using TensorOperations
         R = rand(valN, idxN)
         @tensor V[a,i] := Y[a,i,b,j,c,k] * R[b,j] * R[c,k]
         @test @inferred(X ⊙ R) ≈ V
+        @test @inferred(Z ⊙ R) ≈ V
 
         r = rand(valN*idxN)
         y = reshape(Y, valN*idxN, valN*idxN, valN*idxN)
         @tensor v[ai] := y[ai,bj,ck] * r[bj] * r[ck]
         @test @inferred(X ⊙ r) ≈ v
+        @test @inferred(Z ⊙ r) ≈ v
     end
 
     @testset "8th order contract" begin
         # construct a CompositeBlockedTensor
-        vals = [ValueBlock(rand(valN, valN, valN, valN))]
+        A = rand(valN, valN, valN, valN)
+        vals = [ValueBlock(A)]
         index = NTuple{4,Int}[]
         for 𝒊 in CartesianRange((idxN,idxN,idxN,idxN))
             if 𝒊[1] < 𝒊[2] < 𝒊[3] < 𝒊[4]
@@ -98,6 +118,8 @@ using TensorOperations
         idxs = [IndexBlock(index)]
         dims = (valN, idxN, valN, idxN, valN, idxN, valN, idxN)
         X = CompositeBlockedTensor(vals, idxs, dims)
+        # construct a BlockedTensor
+        # Z = BlockedTensor(A, index, dims)
         # convert x to a full symmetric tensor
         Y = full(X)
         @test Y[1,2,2,3,3,4,2,1] == Y[3,4,2,3,2,1,1,2] == Y[2,1,1,2,2,3,3,4] == X[2,1,1,2,2,3,3,4]
@@ -107,10 +129,12 @@ using TensorOperations
         R = rand(valN, idxN)
         @tensor V[a,i] := Y[a,i,b,j,c,k,d,m] * R[b,j] * R[c,k] * R[d,m]
         @test @inferred(X ⊙ R) ≈ V
+        # @test @inferred(Z ⊙ R) ≈ V
 
         r = rand(valN*idxN)
         y = reshape(Y, valN*idxN, valN*idxN, valN*idxN, valN*idxN)
         @tensor v[ai] := y[ai,bj,ck,dm] * r[bj] * r[ck] * r[dm]
         @test @inferred(X ⊙ r) ≈ v
+        # @test @inferred(Z ⊙ r) ≈ v
     end
 end
