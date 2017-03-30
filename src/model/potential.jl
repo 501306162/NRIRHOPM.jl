@@ -7,7 +7,7 @@
         # blockDims = imageDims .÷ gridDims
         blockDims = map(div, imageDims, gridDims)
         cost = zeros(length(displacements), gridDims...)
-        for a in eachindex(displacements), i in CartesianRange(gridDims)
+        @showprogress 1 "Computing..." for a in eachindex(displacements), i in CartesianRange(gridDims)
             @nexprs $N x->offset_x = (i[x] - 1) * blockDims[x]
             s = zero(Float64)
             for j in CartesianRange(blockDims)
