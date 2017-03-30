@@ -31,4 +31,4 @@ immutable MixHOPM{F<:Function,Tt<:Real,Tm<:Integer} <: AbstractHOPMMethod
     maxIteration::Tm
 end
 MixHOPM(constraint, tolerance, maxIteration) = MixHOPM(hopm_mixed, constraint, tolerance, maxIteration)
-MixHOPM(;constraint=:vecnorm, tolerance=1e-5, maxIteration=300) = MixHOPM(constraint, tolerance, maxIteration)
+MixHOPM(;constraint=:vecnorm, tolerance=1e-5, maxIteration=30) = MixHOPM(constraint, tolerance, maxIteration)

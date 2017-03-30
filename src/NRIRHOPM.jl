@@ -5,6 +5,7 @@ using Base.Cartesian
 using Reexport
 using Combinatorics
 using Memento
+using ProgressMeter
 
 using Interpolations
 @reexport using StaticArrays

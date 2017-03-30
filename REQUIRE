@@ -2,6 +2,7 @@ julia 0.5
 Reexport
 Combinatorics
 Memento
+ProgressMeter
 
 Interpolations
 StaticArrays 0.3

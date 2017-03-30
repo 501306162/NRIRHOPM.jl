@@ -106,9 +106,9 @@ function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,6}, 𝐕::M
         𝐌t = zeros(𝐕)
         @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
             a, b, c = 𝒊.I
-            𝐌t[a,i] += 2.0 * vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
-            𝐌t[b,j] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
-            𝐌t[c,k] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
+            𝐌t[a,i] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
+            𝐌t[b,j] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
+            𝐌t[c,k] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
         end
         lock(critical)
         𝐌 .+= 𝐌t
