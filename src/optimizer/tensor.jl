@@ -82,27 +82,37 @@ end
 # sparse tensor contraction
 function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,4}, 𝐕::Matrix)
     𝐌 = zeros(𝐕)
+    critical = Threads.Mutex()
     Threads.@threads for idx in 𝑻.idxs
         i, j = idx
+        𝐌t = zeros(𝐕)
         @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
             a, b = 𝒊.I
-            𝐌[a,i] += 𝑻.vals[a,b] * 𝐕[b,j]
-            𝐌[b,j] += 𝑻.vals[a,b] * 𝐕[a,i]
+            𝐌t[a,i] += 𝑻.vals[a,b] * 𝐕[b,j]
+            𝐌t[b,j] += 𝑻.vals[a,b] * 𝐕[a,i]
         end
+        lock(critical)
+        𝐌 .+= 𝐌t
+        unlock(critical)
     end
     return 𝐌
 end
 
 function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,6}, 𝐕::Matrix)
     𝐌 = zeros(𝐕)
+    critical = Threads.Mutex()
     Threads.@threads for idx in 𝑻.idxs
         i, j, k = idx
+        𝐌t = zeros(𝐕)
         @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
             a, b, c = 𝒊.I
-            𝐌[a,i] += 2.0 * vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
-            𝐌[b,j] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
-            𝐌[c,k] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
+            𝐌t[a,i] += 2.0 * vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
+            𝐌t[b,j] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
+            𝐌t[c,k] += 2.0 * vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
         end
+        lock(critical)
+        𝐌 .+= 𝐌t
+        unlock(critical)
     end
     return 𝐌
 end
@@ -117,7 +127,7 @@ function contract(𝑻::CompositeBlockedTensor, 𝐕::Matrix)
 end
 
 function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,2}, idxs::IndexBlock{NTuple{2,Int}}, mat::Matrix{T})
-    Threads.@threads for idx in idxs
+    for idx in idxs
         i, j = idx
         @inbounds for 𝒊 in CartesianRange(size(vals))
             a, b = 𝒊.I
@@ -128,7 +138,7 @@ function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,2}, idxs::IndexBlo
 end
 
 function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,3}, idxs::IndexBlock{NTuple{3,Int}}, mat::Matrix{T})
-    Threads.@threads for idx in idxs
+    for idx in idxs
         i, j, k = idx
         @inbounds for 𝒊 in CartesianRange(size(vals))
             a, b, c = 𝒊.I
@@ -140,7 +150,7 @@ function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,3}, idxs::IndexBlo
 end
 
 function _contract!{T<:Real}(s::Matrix{T}, vals::ValueBlock{T,4}, idxs::IndexBlock{NTuple{4,Int}}, mat::Matrix{T})
-    Threads.@threads for idx in idxs
+    for idx in idxs
         i, j, k, m = idx
         @inbounds for 𝒊 in CartesianRange(size(vals))
             a, b, c, d = 𝒊.I
