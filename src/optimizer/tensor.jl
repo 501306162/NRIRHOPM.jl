@@ -85,14 +85,15 @@ function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,4}, 𝐕::M
     critical = Threads.Mutex()
     Threads.@threads for idx in 𝑻.idxs
         i, j = idx
-        𝐌t = zeros(𝐕)
-        @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
+        si, sj = zeros(size(𝑻.vals,1)), zeros(size(𝑻.vals,1))
+         for 𝒊 in CartesianRange(size(𝑻.vals))
             a, b = 𝒊.I
-            𝐌t[a,i] += 𝑻.vals[a,b] * 𝐕[b,j]
-            𝐌t[b,j] += 𝑻.vals[a,b] * 𝐕[a,i]
+            si[a] += 𝑻.vals[a,b] * 𝐕[b,j]
+            sj[b] += 𝑻.vals[a,b] * 𝐕[a,i]
         end
         lock(critical)
-        𝐌 .+= 𝐌t
+        𝐌[:,i] .+= si
+        𝐌[:,j] .+= sj
         unlock(critical)
     end
     return 𝐌
@@ -103,15 +104,17 @@ function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,6}, 𝐕::M
     critical = Threads.Mutex()
     Threads.@threads for idx in 𝑻.idxs
         i, j, k = idx
-        𝐌t = zeros(𝐕)
-        @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
+        si, sj, sk = zeros(size(𝑻.vals,1)), zeros(size(𝑻.vals,1)), zeros(size(𝑻.vals,1))
+        for 𝒊 in CartesianRange(size(𝑻.vals))
             a, b, c = 𝒊.I
-            𝐌t[a,i] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
-            𝐌t[b,j] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
-            𝐌t[c,k] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
+            si[a] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
+            sj[b] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
+            sk[c] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[a,i] * 𝐕[b,j]
         end
         lock(critical)
-        𝐌 .+= 𝐌t
+        𝐌[:,i] .+= si
+        𝐌[:,j] .+= sj
+        𝐌[:,k] .+= sk
         unlock(critical)
     end
     return 𝐌
