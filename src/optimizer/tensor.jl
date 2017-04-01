@@ -86,7 +86,7 @@ function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,4}, 𝐕::M
     Threads.@threads for idx in 𝑻.idxs
         i, j = idx
         si, sj = zeros(size(𝑻.vals,1)), zeros(size(𝑻.vals,1))
-         for 𝒊 in CartesianRange(size(𝑻.vals))
+        @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
             a, b = 𝒊.I
             si[a] += 𝑻.vals[a,b] * 𝐕[b,j]
             sj[b] += 𝑻.vals[a,b] * 𝐕[a,i]
@@ -105,7 +105,7 @@ function contract{Tv<:Real,N,Ti<:NTuple}(𝑻::BlockedTensor{Tv,N,Ti,6}, 𝐕::M
     Threads.@threads for idx in 𝑻.idxs
         i, j, k = idx
         si, sj, sk = zeros(size(𝑻.vals,1)), zeros(size(𝑻.vals,1)), zeros(size(𝑻.vals,1))
-        for 𝒊 in CartesianRange(size(𝑻.vals))
+        @inbounds for 𝒊 in CartesianRange(size(𝑻.vals))
             a, b, c = 𝒊.I
             si[a] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[b,j] * 𝐕[c,k]
             sj[b] += 2.0 * 𝑻.vals[a,b,c] * 𝐕[a,i] * 𝐕[c,k]
