@@ -6,7 +6,7 @@ import NRIRHOPM: constrain!, hopm_mixed, hopm_canonical
         x = rand(5,10)
         y = copy(x)
         constrain!(x, :vecnorm)
-        @test x ≈ y/vecnorm(y)
+        @test x ≈ y/vecnorm(y,1)
     end
 
     tolerance = 1e-7
