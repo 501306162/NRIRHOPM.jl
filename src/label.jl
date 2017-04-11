@@ -22,7 +22,7 @@ typealias DVec Union{DVec2D, DVec3D}
     return :(reshape([$f(labels[i]) for i in indicator], dims))
 end
 
-function fieldmerge{T<:DVec}(displacementSet::Vector{Array{T,N}})
+function fieldmerge{T<:DVec,N}(displacementSet::Vector{Array{T,N}})
     imageDims = size(displacementSet[])
     meshgrid = Array{Vector}(imageDims)
     for i in CartesianRange(imageDims)
