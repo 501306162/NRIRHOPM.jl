@@ -22,7 +22,7 @@ function multilevel(fixedImg, movingImg, displacementSet, gridSet,
         energy[l], spectrums[l] = optimize(fixedImg, warppedImgs[l], displacementSet[l], gridSet[l], method, datacost, αSet[l], smooth, βSet[l])
         indicator = [indmax(spectrums[l][:,i]) for i in indices(spectrums[l],2)]
         newField = upsample(fieldlize(indicator, displacementSet[l], gridSet[l]), size(fixedImg))
-        displacementField = fieldmerge([displacementField, newField])
+        @time displacementField = fieldmerge([displacementField, newField])
         warppedImgs[l+1] = warp(movingImg, displacementField)
     end
     info(logger, "Multilevel processing done!")
