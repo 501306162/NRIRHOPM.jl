@@ -6,11 +6,11 @@
     @testset "fieldmerge" begin
         displacementField = DVec2D.([( 1,1) ( 1,-1);
                                      (-1,1) (-1,-1)])
-        @test fieldmerge([displacementField]) == displacementField
+        @test @inferred(fieldmerge([displacementField])) == displacementField
 
         displacementField2 = DVec2D.([(0.5,0.5) (1,0);
                                       (0.0,1.0) (0,0)])
-        @test fieldmerge([displacementField, displacementField2]) == DVec2D.([(1,1) ( 1.0, 0.0);
+        @test @inferred(fieldmerge([displacementField, displacementField2])) == DVec2D.([(1,1) ( 1.0, 0.0);
                                                                               (0,1) (-0.5,-0.5)])
     end
 end
