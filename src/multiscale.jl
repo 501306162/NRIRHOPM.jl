@@ -1,5 +1,5 @@
-function multilevel(fixedImg, movingImg, displacementSet, gridSet,
-                    method::AbstractHOPMMethod,
+function multilevel(fixedImg, movingImg, displacementSet, quantisations,
+                    gridSet, method::AbstractHOPMMethod,
                     datacost::DataCost, αSet,
                     smooth::SmoothCost, βSet
                    )
@@ -19,9 +19,11 @@ function multilevel(fixedImg, movingImg, displacementSet, gridSet,
         info(logger, "Level $(l): ")
         info(logger, "Image Dimension: $(size(fixedImg))")
         info(logger, "Grid Dimension: $(gridSet[l])")
-        energy[l], spectrums[l] = optimize(fixedImg, warppedImgs[l], displacementSet[l], gridSet[l], method, datacost, αSet[l], smooth, βSet[l])
+        energy[l], spectrums[l] = optimize(fixedImg, warppedImgs[l], displacementSet[l],
+                                           quantisations[l], gridSet[l], method,
+                                           datacost, αSet[l], smooth, βSet[l])
         indicator = [indmax(spectrums[l][:,i]) for i in indices(spectrums[l],2)]
-        newField = fieldlize(indicator, displacementSet[l], gridSet[l])
+        newField = fieldlize(indicator, displacementSet[l] .* quantisations[l], gridSet[l])
         @time displacementField = fieldmerge([upsample(displacementField, gridSet[l]), newField])
         warppedImgs[l+1] = warp(movingImg, upsample(displacementField, imageDims))
     end
@@ -29,8 +31,8 @@ function multilevel(fixedImg, movingImg, displacementSet, gridSet,
     return warppedImgs, displacementField, spectrums, energy
 end
 
-function multilevel(fixedImg, movingImg, displacementSet, gridSet,
-                    method::AbstractHOPMMethod,
+function multilevel(fixedImg, movingImg, displacementSet, quantisations,
+                    gridSet, method::AbstractHOPMMethod,
                     datacost::DataCost, αSet,
                     smooth::SmoothCost, βSet,
                     topology::TopologyCost, χSet
@@ -50,7 +52,9 @@ function multilevel(fixedImg, movingImg, displacementSet, gridSet,
         info(logger, "Level $(l): ")
         info(logger, "Image Dimension: $(size(fixedImg))")
         info(logger, "Grid Dimension: $(gridSet[l])")
-        energy[l], spectrums[l] = optimize(fixedImg, warppedImgs[l], displacementSet[l], gridSet[l], method, datacost, αSet[l], smooth, βSet[l], topology, χSet[l])
+        energy[l], spectrums[l] = optimize(fixedImg, warppedImgs[l], displacementSet[l],
+                                           quantisations[l], gridSet[l], method,
+                                           datacost, αSet[l], smooth, βSet[l], topology, χSet[l])
         indicator = [indmax(spectrums[l][:,i]) for i in indices(spectrums[l],2)]
         displacementFields[l] = upsample(fieldlize(indicator, displacementSet[l], gridSet[l]), size(fixedImg))
         warppedImgs[l+1] = warp(warppedImgs[l], displacementFields[l])
@@ -60,7 +64,7 @@ function multilevel(fixedImg, movingImg, displacementSet, gridSet,
 end
 
 
-function multiresolution(fixedImg, movingImg, displacementSet, method,
+function multiresolution(fixedImg, movingImg, displacementSet, quantisations, method,
                          datacost::DataCost, αSet,
                          smooth::SmoothCost, βSet,
                          downsample::Integer=2,
@@ -81,7 +85,9 @@ function multiresolution(fixedImg, movingImg, displacementSet, method,
         info(logger, "Level $(l): ")
         info(logger, "Image Dimension: $(size(fixedImg))")
         info(logger, "Grid Dimension: $(gridDims)")
-        energy[l], spectrums[l] = optimize(fixedPyramid[1+level-l], warppedPyramid[end], displacementSet[l], gridDims, method, datacost, αSet[l], smooth, βSet[l])
+        energy[l], spectrums[l] = optimize(fixedPyramid[1+level-l], warppedPyramid[end],
+                                           displacementSet[l], quantisations[l],
+                                           gridDims, method, datacost, αSet[l], smooth, βSet[l])
         indicator = [indmax(spectrums[l][:,i]) for i in indices(spectrums[l],2)]
         displacementFields[l] = upsample(fieldlize(indicator, displacementSet[l], gridDims), size(fixedImg))
         warppedImgs[l+1] = warp(warppedImgs[l], displacementFields[l])
@@ -90,7 +96,7 @@ function multiresolution(fixedImg, movingImg, displacementSet, method,
     return warppedImgs, displacementFields, spectrums, energy
 end
 
-function multiresolution(fixedImg, movingImg, displacementSet, method,
+function multiresolution(fixedImg, movingImg, displacementSet, quantisations, method,
                          datacost::DataCost, αSet,
                          smooth::SmoothCost, βSet,
                          topology::TopologyCost, χSet,
@@ -112,7 +118,9 @@ function multiresolution(fixedImg, movingImg, displacementSet, method,
         info(logger, "Level $(l): ")
         info(logger, "Image Dimension: $(size(fixedImg))")
         info(logger, "Grid Dimension: $(gridDims)")
-        energy[l], spectrums[l] = optimize(fixedPyramid[1+level-l], warppedPyramid[end], displacementSet[l], gridDims, method, datacost, αSet[l], smooth, βSet[l], topology, χSet[l])
+        energy[l], spectrums[l] = optimize(fixedPyramid[1+level-l], warppedPyramid[end],
+                                           displacementSet[l], quantisations[l],
+                                           gridDims, method, datacost, αSet[l], smooth, βSet[l], topology, χSet[l])
         indicator = [indmax(spectrums[l][:,i]) for i in indices(spectrums[l],2)]
         displacementFields[l] = upsample(fieldlize(indicator, displacementSet[l], gridDims), size(fixedImg))
         warppedImgs[l+1] = warp(warppedImgs[l], displacementFields[l])

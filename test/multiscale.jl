@@ -19,12 +19,14 @@
         originΔ = vecnorm(moving-fixed)
 
         # without topology preservation
-        warpped, d, spec, energy = multilevel(fixed, moving, displacementSet, gridSet, MixHOPM(), SAD(), [1,1], TAD(), [0.5,0.5])
+        warpped, d, spec, energy = multilevel(fixed, moving, displacementSet, [1,1],
+                                              gridSet, MixHOPM(), SAD(), [1,1], TAD(), [0.5,0.5])
         smoothΔ = vecnorm(warpped[end]-fixed)
         @test smoothΔ < originΔ
 
         # # with topology preservation
-        warpped, d, spec, energy = multilevel(fixed, moving, displacementSet, gridSet, MixHOPM(), SAD(), [1,1], TAD(), [0.5,0.5], TP2D(), [0.5,0.5])
+        warpped, d, spec, energy = multilevel(fixed, moving, displacementSet, [1,1],
+                                              gridSet, MixHOPM(), SAD(), [1,1], TAD(), [0.5,0.5], TP2D(), [0.5,0.5])
         topologyΔ = vecnorm(warpped[end]-fixed)
         @test topologyΔ < originΔ
 
@@ -35,12 +37,14 @@
         originΔ = vecnorm(moving-fixed)
 
         # without topology preservation
-        warpped, d, spec, energy = multiresolution(fixed, moving, displacementSet, MixHOPM(), SAD(), [1,1], TAD(), [0.5,0.5])
+        warpped, d, spec, energy = multiresolution(fixed, moving, displacementSet, [1,1],
+                                                   MixHOPM(), SAD(), [1,1], TAD(), [0.5,0.5])
         smoothΔ = vecnorm(warpped[end]-fixed)
         @test smoothΔ < originΔ
 
         # with topology preservation
-        warpped, d, spec, energy = multiresolution(fixed, moving, displacementSet, MixHOPM(), SAD(), [1,1], TAD(), [0.5,0.5], TP2D(), [0.5,0.5])
+        warpped, d, spec, energy = multiresolution(fixed, moving, displacementSet, [1,1],
+                                                   MixHOPM(), SAD(), [1,1], TAD(), [0.5,0.5], TP2D(), [0.5,0.5])
         topologyΔ = vecnorm(warpped[end]-fixed)
         @test topologyΔ < originΔ
 
