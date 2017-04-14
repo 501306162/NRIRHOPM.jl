@@ -30,9 +30,14 @@ function fieldmerge{T<:DVec,N}(displacementSet::Vector{Array{T,N}})
     end
     temp = copy(meshgrid)
     for level = 1:length(displacementSet)
-        itp = interpolate(displacementSet[level], BSpline(Constant()), OnGrid())
+        # itp = interpolate(displacementSet[level], BSpline(Constant()), OnGrid())
+        # for i in eachindex(temp)
+        #     temp[i] = temp[i] + itp[temp[i]...]
+        # end
+        d = displacementSet[level]
         for i in eachindex(temp)
-            temp[i] = temp[i] + itp[temp[i]...]
+            t = Int.(temp[i])
+            temp[i] += d[t...]
         end
     end
     T.(temp .- meshgrid)
