@@ -10,7 +10,7 @@ function multilevel(fixedImg, movingImg, displacementSet, quantisations,
     warppedImgs = Vector(level+1)
     spectrums = Vector(level)
     energy = Vector(level)
-    displacementField = ndims(fixedImg) == 2 ? zeros(DVec2D, gridSet[1]) : zeros(DVec3D, gridSet[1])
+    displacementFields = Vector(level)
 
     logger = get_logger(current_module())
     info(logger, "Start multilevel processing...")
@@ -23,12 +23,11 @@ function multilevel(fixedImg, movingImg, displacementSet, quantisations,
                                            quantisations[l], gridSet[l], method,
                                            datacost, αSet[l], smooth, βSet[l])
         indicator = [indmax(spectrums[l][:,i]) for i in indices(spectrums[l],2)]
-        newField = fieldlize(indicator, displacementSet[l] .* quantisations[l], gridSet[l])
-        @time displacementField = fieldmerge([upsample(displacementField, gridSet[l]), newField])
-        warppedImgs[l+1] = warp(movingImg, upsample(displacementField, imageDims))
+        displacementFields[l] = upsample(fieldlize(indicator, displacementSet[l] .* quantisations[l], gridSet[l]), size(fixedImg))
+        warppedImgs[l+1] = warp(warppedImgs[l], displacementFields[l])
     end
     info(logger, "Multilevel processing done!")
-    return warppedImgs, displacementField, spectrums, energy
+    return warppedImgs, displacementFields, spectrums, energy
 end
 
 function multilevel(fixedImg, movingImg, displacementSet, quantisations,
