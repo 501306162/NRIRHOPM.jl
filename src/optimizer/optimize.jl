@@ -10,7 +10,7 @@
     ret = quote
         logger = get_logger(current_module())
         info(logger, "Creating data cost with weight=$α: ")
-        @timelog datacost = clique(fixedImg, movingImg, labels .* quantisation, data, gridDims, α)
+        @timelog datacost = clique(fixedImg, movingImg, labels * quantisation, data, gridDims, α)
 
         info(logger, "Creating smooth cost with weight=$β: ")
         @timelog smoothcost = clique($pneighbor, gridDims, labels, smooth, β)

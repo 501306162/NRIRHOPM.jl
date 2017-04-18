@@ -6,6 +6,7 @@
         length(imageDims) == $N || throw(DimensionMismatch("Images and displacement vectors are NOT in the same dimension."))
         # blockDims = imageDims .÷ gridDims
         blockDims = map(div, imageDims, gridDims)
+        batchSize = prod(blockDims)
         cost = zeros(length(displacements), gridDims...)
         @showprogress 1 "Computing..." for a in eachindex(displacements), i in CartesianRange(gridDims)
             @nexprs $N x->offset_x = (i[x] - 1) * blockDims[x]
@@ -19,7 +20,7 @@
                     s += e^-f(fixed - moving)
                 end
             end
-            cost[a,i] = s
+            cost[a,i] = s/batchSize
         end
         reshape(cost, length(displacements), prod(gridDims))
     end

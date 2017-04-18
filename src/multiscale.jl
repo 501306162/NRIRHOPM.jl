@@ -23,7 +23,7 @@ function multilevel(fixedImg, movingImg, displacementSet, quantisations,
                                            quantisations[l], gridSet[l], method,
                                            datacost, αSet[l], smooth, βSet[l])
         indicator = [indmax(spectrums[l][:,i]) for i in indices(spectrums[l],2)]
-        displacementFields[l] = upsample(fieldlize(indicator, displacementSet[l] .* quantisations[l], gridSet[l]), size(fixedImg))
+        displacementFields[l] = upsample(fieldlize(indicator, displacementSet[l] * quantisations[l], gridSet[l]), size(fixedImg))
         warppedImgs[l+1] = warp(warppedImgs[l], displacementFields[l])
     end
     info(logger, "Multilevel processing done!")
