@@ -17,10 +17,10 @@
                 if @nall $N x->(1 ≤ d_x ≤ imageDims[x])
                     fixed = @nref $N fixedImg k
                     moving = @nref $N movingImg d
-                    s += -f(fixed - moving)
+                    s += -f(fixed - moving)  + 1e4
                 end
             end
-            cost[a,i] = s/blockLen + 1e3
+            cost[a,i] = s/blockLen
         end
         reshape(cost, length(displacements), prod(gridDims))
     end
@@ -90,7 +90,7 @@ end
 Calculates the truncated absolute difference between `fp` and `fq`,
 then applys `f(x)=e⁻ˣ` to the result.
 """
-tadexp(fp, fq, c, d) = -tad(fp, fq, c, d) + 1e3
+tadexp(fp, fq, c, d) = -tad(fp, fq, c, d) + 1e4
 
 
 """
