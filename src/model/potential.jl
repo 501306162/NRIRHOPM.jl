@@ -6,6 +6,7 @@
         length(imageDims) == $N || throw(DimensionMismatch("Images and displacement vectors are NOT in the same dimension."))
         # blockDims = imageDims .÷ gridDims
         blockDims = map(div, imageDims, gridDims)
+        blockLen = prod(blockDims)
         cost = zeros(length(displacements), gridDims...)
         @showprogress 1 "Computing..." for a in eachindex(displacements), i in CartesianRange(gridDims)
             @nexprs $N x->offset_x = (i[x] - 1) * blockDims[x]
@@ -16,10 +17,10 @@
                 if @nall $N x->(1 ≤ d_x ≤ imageDims[x])
                     fixed = @nref $N fixedImg k
                     moving = @nref $N movingImg d
-                    s += e^-f(fixed - moving)
+                    s += -f(fixed - moving)
                 end
             end
-            cost[a,i] = s
+            cost[a,i] = s/blockLen + 1e3
         end
         reshape(cost, length(displacements), prod(gridDims))
     end
@@ -89,7 +90,7 @@ end
 Calculates the truncated absolute difference between `fp` and `fq`,
 then applys `f(x)=e⁻ˣ` to the result.
 """
-tadexp(fp, fq, c, d) = e^-tad(fp, fq, c, d)
+tadexp(fp, fq, c, d) = -tad(fp, fq, c, d) + 1e3
 
 
 """
