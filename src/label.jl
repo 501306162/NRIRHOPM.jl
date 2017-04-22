@@ -29,11 +29,11 @@ function fieldmerge(displacementSet)
         meshgrid[i] = collect(i.I)
     end
     temp = copy(meshgrid)
-    for level = 1:length(displacementSet)
-        itp = interpolate(displacementSet[level], BSpline(Constant()), OnGrid())
+    for level = length(displacementSet):-1:1
+        itp = interpolate(displacementSet[level], BSpline(Linear()), OnGrid())
         for i in eachindex(temp)
             temp[i] = temp[i] + itp[temp[i]...]
         end
     end
-    DVec2D.(temp .- meshgrid)
+    temp .- meshgrid
 end
