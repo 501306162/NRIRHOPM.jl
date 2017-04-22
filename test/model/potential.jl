@@ -72,16 +72,16 @@ import NRIRHOPM: jᶠᶠᶠ, jᵇᶠᶠ, jᶠᵇᶠ, jᵇᵇᶠ, jᶠᶠᵇ, j�
         end
     end
 
-    @testset "tad" begin
-        for dim = 1:N
-            fp = @SVector rand(dim)
-            fq = @SVector rand(dim)
-            rate = rand(Float32)
-            @test @inferred(tad(fp, fq, rate, Inf)) ≈ rate * hypot(fp-fq...)
-            @test @inferred(tad(fp, fq, rand(), 0)) == 0
-            @test @inferred(tadexp(fp, fq, rand(), 0)) == 1
-        end
-    end
+    # @testset "tad" begin
+    #     for dim = 1:N
+    #         fp = @SVector rand(dim)
+    #         fq = @SVector rand(dim)
+    #         rate = rand(Float32)
+    #         @test @inferred(tad(fp, fq, rate, Inf)) ≈ rate * hypot(fp-fq...)
+    #         @test @inferred(tad(fp, fq, rand(), 0)) == 0
+    #         @test @inferred(tadexp(fp, fq, rand(), 0)) == 1
+    #     end
+    # end
 
     @testset "tqd" begin
         for dim = 1:N

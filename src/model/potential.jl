@@ -17,7 +17,7 @@
                 if @nall $N x->(1 ≤ d_x ≤ imageDims[x])
                     fixed = @nref $N fixedImg k
                     moving = @nref $N movingImg d
-                    s += -f(fixed - moving)  + 1e4
+                    s += -f(fixed - moving) + 1e4
                 end
             end
             cost[a,i] = s/blockLen
